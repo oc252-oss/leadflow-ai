@@ -45,11 +45,13 @@ import {
   XCircle,
   Link as LinkIcon,
   Zap,
-  GitBranch
+  GitBranch,
+  MessageSquare
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import AIFlowsTab from '@/components/settings/AIFlowsTab';
 import SalesFunnelTab from '@/components/settings/SalesFunnelTab';
+import WhatsAppTab from '@/components/settings/WhatsAppTab';
 
 export default function Settings() {
   const [company, setCompany] = useState(null);
@@ -292,6 +294,10 @@ export default function Settings() {
           <TabsTrigger value="sales-funnel" className="gap-2">
             <GitBranch className="w-4 h-4" />
             Sales Funnel
+          </TabsTrigger>
+          <TabsTrigger value="whatsapp" className="gap-2">
+            <MessageSquare className="w-4 h-4" />
+            WhatsApp
           </TabsTrigger>
           <TabsTrigger value="integrations" className="gap-2">
             <LinkIcon className="w-4 h-4" />
@@ -589,6 +595,11 @@ export default function Settings() {
         {/* Sales Funnel */}
         <TabsContent value="sales-funnel">
           <SalesFunnelTab company={company} />
+        </TabsContent>
+
+        {/* WhatsApp */}
+        <TabsContent value="whatsapp">
+          <WhatsAppTab company={company} />
         </TabsContent>
 
         {/* Integrations */}

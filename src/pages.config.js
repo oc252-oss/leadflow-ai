@@ -1,5 +1,8 @@
+import AIFlows from './pages/AIFlows';
 import Automations from './pages/Automations';
 import Campaigns from './pages/Campaigns';
+import CompanySettings from './pages/CompanySettings';
+import ConversationFlows from './pages/ConversationFlows';
 import Conversations from './pages/Conversations';
 import Dashboard from './pages/Dashboard';
 import LeadDetail from './pages/LeadDetail';
@@ -7,17 +10,17 @@ import Leads from './pages/Leads';
 import Onboarding from './pages/Onboarding';
 import Pipeline from './pages/Pipeline';
 import Reports from './pages/Reports';
-import Settings from './pages/Settings';
-import ConversationFlows from './pages/ConversationFlows';
-import CompanySettings from './pages/CompanySettings';
-import AIFlows from './pages/AIFlows';
 import SalesFunnel from './pages/SalesFunnel';
+import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AIFlows": AIFlows,
     "Automations": Automations,
     "Campaigns": Campaigns,
+    "CompanySettings": CompanySettings,
+    "ConversationFlows": ConversationFlows,
     "Conversations": Conversations,
     "Dashboard": Dashboard,
     "LeadDetail": LeadDetail,
@@ -25,11 +28,8 @@ export const PAGES = {
     "Onboarding": Onboarding,
     "Pipeline": Pipeline,
     "Reports": Reports,
-    "Settings": Settings,
-    "ConversationFlows": ConversationFlows,
-    "CompanySettings": CompanySettings,
-    "AIFlows": AIFlows,
     "SalesFunnel": SalesFunnel,
+    "Settings": Settings,
 }
 
 export const pagesConfig = {

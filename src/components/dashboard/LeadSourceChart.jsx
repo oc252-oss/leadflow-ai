@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from 'recharts';
+import { t } from '@/components/i18n';
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f97316', '#10b981'];
 
@@ -15,7 +16,7 @@ export default function LeadSourceChart({ data }) {
   return (
     <Card className="border-0 shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-slate-900">Lead Sources</CardTitle>
+        <CardTitle className="text-base font-semibold text-slate-900">{t('lead_sources')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-64">

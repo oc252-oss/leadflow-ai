@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Flame, ArrowRight, MessageSquare, Clock } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
+import { t } from '@/components/i18n';
 
 export default function HotLeadsList({ leads = [] }) {
   const hotLeads = leads.filter(l => l.temperature === 'hot').slice(0, 5);
@@ -15,11 +16,11 @@ export default function HotLeadsList({ leads = [] }) {
       <CardHeader className="flex flex-row items-center justify-between pb-2">
         <CardTitle className="text-base font-semibold text-slate-900 flex items-center gap-2">
           <Flame className="w-5 h-5 text-orange-500" />
-          Hot Leads
+          {t('hot_leads')}
         </CardTitle>
         <Link to={createPageUrl('Leads') + '?temperature=hot'}>
           <Button variant="ghost" size="sm" className="text-indigo-600">
-            View all <ArrowRight className="w-4 h-4 ml-1" />
+            {t('view_all')} <ArrowRight className="w-4 h-4 ml-1" />
           </Button>
         </Link>
       </CardHeader>
@@ -27,7 +28,7 @@ export default function HotLeadsList({ leads = [] }) {
         {hotLeads.length === 0 ? (
           <div className="text-center py-8 text-slate-500">
             <Flame className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-            <p>No hot leads right now</p>
+            <p>{t('no_hot_leads')}</p>
           </div>
         ) : (
           <div className="space-y-3">
@@ -53,7 +54,7 @@ export default function HotLeadsList({ leads = [] }) {
                 </div>
                 <div className="flex items-center gap-2">
                   <Badge className="bg-orange-100 text-orange-700 hover:bg-orange-100">
-                    Score: {lead.score}
+                    {t('score')}: {lead.score}
                   </Badge>
                   <MessageSquare className="w-4 h-4 text-slate-400" />
                 </div>

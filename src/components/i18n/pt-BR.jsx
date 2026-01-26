@@ -55,4 +55,9 @@ export const ptBR = {
   weekly_performance: "Desempenho Semanal",
   lead_sources: "Origem dos Leads",
   recent_activity: "Atividades Recentes",
+  view_all: "Ver todos",
+  no_hot_leads: "Nenhum lead quente no momento",
+  no_recent_activity: "Nenhuma atividade recente",
+  score: "Pontuação",
+  conversions: "Conversões",
 };

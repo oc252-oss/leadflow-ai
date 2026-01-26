@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { cn } from "@/lib/utils";
+import { t } from '@/components/i18n';
 
 const activityIcons = {
   lead_created: { icon: UserPlus, color: 'bg-blue-100 text-blue-600' },
@@ -24,13 +25,13 @@ export default function RecentActivity({ activities = [] }) {
   return (
     <Card className="border-0 shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-slate-900">Recent Activity</CardTitle>
+        <CardTitle className="text-base font-semibold text-slate-900">{t('recent_activity')}</CardTitle>
       </CardHeader>
       <CardContent>
         {activities.length === 0 ? (
           <div className="text-center py-8 text-slate-500">
             <Zap className="w-10 h-10 mx-auto mb-3 text-slate-300" />
-            <p>No recent activity</p>
+            <p>{t('no_recent_activity')}</p>
           </div>
         ) : (
           <div className="space-y-4">

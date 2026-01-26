@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { t } from '@/components/i18n';
 
 export default function ConversionChart({ data }) {
   const chartData = data || [
@@ -16,7 +17,7 @@ export default function ConversionChart({ data }) {
   return (
     <Card className="border-0 shadow-sm">
       <CardHeader className="pb-2">
-        <CardTitle className="text-base font-semibold text-slate-900">Weekly Performance</CardTitle>
+        <CardTitle className="text-base font-semibold text-slate-900">{t('weekly_performance')}</CardTitle>
       </CardHeader>
       <CardContent>
         <div className="h-64">
@@ -59,7 +60,7 @@ export default function ConversionChart({ data }) {
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorLeads)"
-                name="Leads"
+                name={t('leads')}
               />
               <Area
                 type="monotone"
@@ -68,7 +69,7 @@ export default function ConversionChart({ data }) {
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorConversions)"
-                name="Conversions"
+                name={t('conversions')}
               />
             </AreaChart>
           </ResponsiveContainer>

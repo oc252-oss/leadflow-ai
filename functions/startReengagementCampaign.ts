@@ -27,7 +27,6 @@ Deno.serve(async (req) => {
     }
 
     const campaign = campaigns[0];
-    const filters = campaign.filters || {};
 
     // Get leads matching filters
     const allLeads = await base44.asServiceRole.entities.Lead.filter({
@@ -35,28 +34,39 @@ Deno.serve(async (req) => {
       status: 'active'
     });
 
-    // Apply filters
+    // Apply period-based filters
     const now = new Date();
+    const minDays = {
+      '7_days': 7,
+      '30_days': 30,
+      '90_days': 90,
+      'custom': campaign.last_interaction_days || 7
+    }[campaign.period_type] || 7;
+
     const filteredLeads = allLeads.filter(lead => {
-      if (lead.last_interaction_at) {
-        const daysSince = Math.floor((now - new Date(lead.last_interaction_at)) / (1000 * 60 * 60 * 24));
-        if (filters.last_interaction_days_min && daysSince < filters.last_interaction_days_min) return false;
-        if (filters.last_interaction_days_max && daysSince > filters.last_interaction_days_max) return false;
-      }
-
-      const score = lead.score || 0;
-      if (filters.score_min !== undefined && score < filters.score_min) return false;
-      if (filters.score_max !== undefined && score > filters.score_max) return false;
-
-      if (filters.temperatures && filters.temperatures.length > 0) {
-        if (!filters.temperatures.includes(lead.temperature)) return false;
-      }
-
-      if (filters.stages && filters.stages.length > 0) {
-        if (!filters.stages.includes(lead.funnel_stage)) return false;
-      }
-
       if (!lead.phone) return false;
+      if (!lead.last_interaction_at) return false;
+      
+      const daysSince = Math.floor((now - new Date(lead.last_interaction_at)) / (1000 * 60 * 60 * 24));
+      if (daysSince < minDays) return false;
+
+      // Period-specific filters
+      if (campaign.period_type === '7_days') {
+        if (lead.funnel_stage === 'Venda Ganha') return false;
+      } else if (campaign.period_type === '30_days') {
+        const targetStages = ['Qualificado', 'Avaliação Convidada', 'Venda Perdida'];
+        if (!targetStages.includes(lead.funnel_stage)) return false;
+      } else if (campaign.period_type === '90_days') {
+        if (lead.funnel_stage === 'Venda Ganha') return false;
+      }
+
+      if (campaign.funnel_stages && campaign.funnel_stages.length > 0) {
+        if (!campaign.funnel_stages.includes(lead.funnel_stage)) return false;
+      }
+
+      if (campaign.interest_types && campaign.interest_types.length > 0) {
+        if (!campaign.interest_types.includes(lead.interest_type)) return false;
+      }
 
       return true;
     });

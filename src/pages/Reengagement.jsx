@@ -29,23 +29,39 @@ export default function Reengagement() {
   const [formData, setFormData] = useState({
     name: '',
     description: '',
+    period_type: '7_days',
     whatsapp_integration_id: '',
     message_template: '',
     max_messages_per_day: 100,
     interval_seconds_min: 60,
     interval_seconds_max: 300,
     active_hours_start: '09:00',
-    active_hours_end: '18:00',
-    filters: {
-      stages: [],
-      last_interaction_days_min: 7,
-      last_interaction_days_max: 90,
-      interest_types: [],
-      score_min: 0,
-      score_max: 100,
-      temperatures: []
-    }
+    active_hours_end: '18:00'
   });
+
+  const periodPresets = {
+    '7_days': {
+      label: 'Leads Recentes (7 dias)',
+      description: 'Leads que não interagem há 7+ dias',
+      days: 7,
+      icon: '🔥',
+      template: 'Olá {nome}! Vi que você demonstrou interesse em {interesse}. Posso ajudá-lo(a) a dar o próximo passo?'
+    },
+    '30_days': {
+      label: 'Leads Mornos (30 dias)',
+      description: 'Leads qualificados sem interação há 30+ dias',
+      days: 30,
+      icon: '🎯',
+      template: 'Olá {nome}! Gostaria de retomar nossa conversa sobre {interesse}. Ainda tem interesse?'
+    },
+    '90_days': {
+      label: 'Leads Frios (90 dias)',
+      description: 'Leads antigos há 90+ dias sem fechamento',
+      days: 90,
+      icon: '❄️',
+      template: 'Olá {nome}! Faz tempo que conversamos. Ainda tem interesse em {interesse}? Temos novidades!'
+    }
+  };
 
   useEffect(() => {
     loadData();
@@ -77,27 +93,20 @@ export default function Reengagement() {
     }
   };
 
-  const handleNewCampaign = () => {
+  const handleNewCampaign = (periodType = '7_days') => {
     setEditingId(null);
+    const preset = periodPresets[periodType];
     setFormData({
-      name: '',
-      description: '',
+      name: preset.label,
+      description: preset.description,
+      period_type: periodType,
       whatsapp_integration_id: whatsappNumbers[0]?.id || '',
-      message_template: 'Olá {nome}! Notei que você demonstrou interesse em {interesse}. Como posso ajudá-lo(a)?',
+      message_template: preset.template,
       max_messages_per_day: 100,
       interval_seconds_min: 60,
       interval_seconds_max: 300,
       active_hours_start: '09:00',
-      active_hours_end: '18:00',
-      filters: {
-        stages: ['Novo Lead', 'Atendimento Iniciado'],
-        last_interaction_days_min: 7,
-        last_interaction_days_max: 90,
-        interest_types: [],
-        score_min: 30,
-        score_max: 100,
-        temperatures: ['warm', 'hot']
-      }
+      active_hours_end: '18:00'
     });
     setShowDialog(true);
   };
@@ -107,14 +116,14 @@ export default function Reengagement() {
     setFormData({
       name: campaign.name,
       description: campaign.description || '',
+      period_type: campaign.period_type,
       whatsapp_integration_id: campaign.whatsapp_integration_id,
       message_template: campaign.message_template,
       max_messages_per_day: campaign.max_messages_per_day,
       interval_seconds_min: campaign.interval_seconds_min,
       interval_seconds_max: campaign.interval_seconds_max,
       active_hours_start: campaign.active_hours_start,
-      active_hours_end: campaign.active_hours_end,
-      filters: campaign.filters || {}
+      active_hours_end: campaign.active_hours_end
     });
     setShowDialog(true);
   };
@@ -228,19 +237,38 @@ export default function Reengagement() {
         </Button>
       </div>
 
+      {/* Quick Start Cards */}
+      <div className="grid md:grid-cols-3 gap-4 mb-6">
+        {Object.entries(periodPresets).map(([key, preset]) => (
+          <Card key={key} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={() => handleNewCampaign(key)}>
+            <CardHeader>
+              <div className="flex items-center gap-3">
+                <div className="text-3xl">{preset.icon}</div>
+                <div>
+                  <CardTitle className="text-base">{preset.label}</CardTitle>
+                  <CardDescription className="text-xs">{preset.description}</CardDescription>
+                </div>
+              </div>
+            </CardHeader>
+            <CardContent>
+              <Button variant="outline" className="w-full">
+                <Plus className="w-4 h-4 mr-2" />
+                Criar Campanha
+              </Button>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
       {campaigns.length === 0 ? (
         <Card>
           <CardContent className="py-12">
             <div className="text-center">
               <RefreshCw className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-              <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhuma campanha criada</h3>
-              <p className="text-sm text-slate-500 mb-6">
-                Crie campanhas para reengajar leads inativos e aumentar conversões
+              <h3 className="text-lg font-medium text-slate-900 mb-2">Selecione um período acima</h3>
+              <p className="text-sm text-slate-500">
+                Escolha entre 7, 30 ou 90 dias para começar sua campanha de reengajamento
               </p>
-              <Button onClick={handleNewCampaign} className="bg-indigo-600">
-                <Plus className="w-4 h-4 mr-2" />
-                Criar primeira campanha
-              </Button>
             </div>
           </CardContent>
         </Card>
@@ -350,14 +378,43 @@ export default function Reengagement() {
           </DialogHeader>
 
           <Tabs defaultValue="general" className="mt-4">
-            <TabsList className="grid w-full grid-cols-4">
+            <TabsList className="grid w-full grid-cols-3">
               <TabsTrigger value="general">Geral</TabsTrigger>
-              <TabsTrigger value="filters">Filtros</TabsTrigger>
               <TabsTrigger value="message">Mensagem</TabsTrigger>
               <TabsTrigger value="schedule">Programação</TabsTrigger>
             </TabsList>
 
             <TabsContent value="general" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label>Período *</Label>
+                <Select
+                  value={formData.period_type}
+                  onValueChange={(value) => {
+                    const preset = periodPresets[value];
+                    setFormData({ 
+                      ...formData, 
+                      period_type: value,
+                      name: preset.label,
+                      description: preset.description,
+                      message_template: preset.template
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {Object.entries(periodPresets).map(([key, preset]) => (
+                      <SelectItem key={key} value={key}>
+                        {preset.icon} {preset.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500">
+                  {periodPresets[formData.period_type]?.description}
+                </p>
+              </div>
               <div className="space-y-2">
                 <Label>Nome da Campanha *</Label>
                 <Input
@@ -394,58 +451,6 @@ export default function Reengagement() {
                     ))}
                   </SelectContent>
                 </Select>
-              </div>
-            </TabsContent>
-
-            <TabsContent value="filters" className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Dias sem interação (mínimo)</Label>
-                  <Input
-                    type="number"
-                    value={formData.filters.last_interaction_days_min}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      filters: { ...formData.filters, last_interaction_days_min: parseInt(e.target.value) }
-                    })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Dias sem interação (máximo)</Label>
-                  <Input
-                    type="number"
-                    value={formData.filters.last_interaction_days_max}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      filters: { ...formData.filters, last_interaction_days_max: parseInt(e.target.value) }
-                    })}
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Score mínimo</Label>
-                  <Input
-                    type="number"
-                    value={formData.filters.score_min}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      filters: { ...formData.filters, score_min: parseInt(e.target.value) }
-                    })}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Score máximo</Label>
-                  <Input
-                    type="number"
-                    value={formData.filters.score_max}
-                    onChange={(e) => setFormData({
-                      ...formData,
-                      filters: { ...formData.filters, score_max: parseInt(e.target.value) }
-                    })}
-                  />
-                </div>
               </div>
             </TabsContent>
 

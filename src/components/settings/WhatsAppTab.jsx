@@ -37,6 +37,8 @@ export default function WhatsAppTab({ company }) {
   });
 
   const [qrCode, setQrCode] = useState('');
+  const [sessionId, setSessionId] = useState(null);
+  const [checkingStatus, setCheckingStatus] = useState(false);
 
   useEffect(() => {
     loadIntegrations();
@@ -178,13 +180,12 @@ export default function WhatsAppTab({ company }) {
 
       if (response.data.qr_code) {
         setQrCode(response.data.qr_code);
-        
-        // Auto-update phone number when session connects
-        if (response.data.phone_number) {
-          setFormData({ ...formData, phone_number: response.data.phone_number });
-        }
+        setSessionId(response.data.session_id);
         
         toast.success('QR Code gerado! Escaneie com seu WhatsApp');
+
+        // Start polling for connection status
+        pollSessionStatus(response.data.session_id);
       }
     } catch (error) {
       console.error('Error generating QR code:', error);
@@ -192,6 +193,37 @@ export default function WhatsAppTab({ company }) {
     } finally {
       setQrLoading(false);
     }
+  };
+
+  const pollSessionStatus = async (sessionId) => {
+    let attempts = 0;
+    const maxAttempts = 60; // 60 seconds
+
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const response = await base44.functions.invoke('getWhatsAppSessionStatus', {
+          session_id: sessionId
+        });
+
+        if (response.data.status === 'connected') {
+          clearInterval(interval);
+          setFormData({
+            ...formData,
+            phone_number: response.data.phone_number,
+            instance_id: sessionId
+          });
+          setQrCode('');
+          toast.success(`WhatsApp conectado: ${response.data.phone_number}`);
+        }
+      } catch (error) {
+        console.error('Error checking session status:', error);
+      }
+
+      if (attempts >= maxAttempts) {
+        clearInterval(interval);
+      }
+    }, 1000);
   };
 
   const handleTestConnection = async (integrationId) => {
@@ -530,8 +562,13 @@ export default function WhatsAppTab({ company }) {
                 </div>
               ) : (
                 <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                  <img src={qrCode} alt="QR Code" className="w-64 h-64 border rounded-lg" />
-                  <p className="text-sm text-slate-600">Escaneie com o WhatsApp do seu celular</p>
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 w-full mb-4">
+                    <p className="text-xs text-blue-800">
+                      ℹ️ Escaneie este QR Code com o WhatsApp do seu celular. A conexão será estabelecida automaticamente.
+                    </p>
+                  </div>
+                  <img src={qrCode} alt="QR Code" className="w-64 h-64 border-2 border-slate-300 rounded-lg" />
+                  <p className="text-sm text-slate-600 font-medium">Aguardando escaneamento...</p>
                   <Button variant="outline" onClick={handleGenerateQR} disabled={qrLoading}>
                     Regenerar QR Code
                   </Button>

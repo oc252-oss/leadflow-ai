@@ -1,4 +1,8 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import QRCode from 'npm:qrcode@1.5.3';
+
+// Import session manager functions
+const sessionManagerModule = await import('./whatsAppWebSessionManager.js');
 
 Deno.serve(async (req) => {
   try {
@@ -15,43 +19,43 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'company_id is required' }, { status: 400 });
     }
 
-    console.log('Generating WhatsApp Web QR code for company:', company_id, 'unit:', unit_id, 'integration:', integration_id);
+    console.log('Generating WhatsApp Web QR code for:', { company_id, integration_id });
 
-    // This is a placeholder - in production you would:
-    // 1. Initialize a WhatsApp Web session using a library like whatsapp-web.js
-    // 2. Generate and return the QR code
-    // 3. Store the session credentials securely
+    // Create or get session
+    const result = await sessionManagerModule.createWhatsAppSession(
+      company_id,
+      unit_id || '',
+      '',
+      integration_id
+    );
 
-    // For now, generate a mock QR code URL
-    const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
-    const qrCodeData = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(sessionId)}`;
+    const sessionId = result.sessionId;
+    const qrValue = await result.qrPromise;
 
-    // Update existing or create new integration
-    if (integration_id) {
-      await base44.asServiceRole.entities.WhatsAppIntegration.update(integration_id, {
-        session_id: sessionId,
-        qr_code: qrCodeData,
-        status: 'disconnected'
-      });
-    } else {
-      // For new integrations, session will be saved when user clicks "Save"
-      // Just return the QR code
+    if (!qrValue) {
+      return Response.json({
+        error: 'QR code generation timeout',
+        sessionId: sessionId
+      }, { status: 408 });
     }
 
-    console.log('QR code generated successfully');
+    // Generate QR code data URL
+    const qrDataUrl = await QRCode.toDataURL(qrValue);
+
+    console.log('QR code generated successfully for session:', sessionId);
 
     return Response.json({
       success: true,
-      qr_code: qrCodeData,
       session_id: sessionId,
-      message: 'QR code generated. In production, this would connect to WhatsApp Web.'
+      qr_code: qrDataUrl,
+      instruction: 'Scan this QR code with WhatsApp on your phone'
     });
 
   } catch (error) {
     console.error('Error generating QR code:', error);
-    return Response.json({ 
+    return Response.json({
       error: 'Failed to generate QR code',
-      details: error.message 
+      details: error.message
     }, { status: 500 });
   }
 });

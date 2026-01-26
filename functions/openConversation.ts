@@ -29,15 +29,20 @@ Deno.serve(async (req) => {
     // Check if active conversation exists
     const existingConvs = await base44.asServiceRole.entities.Conversation.filter({
       lead_id: lead_id,
-      status: { $ne: 'closed' }
+      status: 'bot_active'
     });
+    
+    const activeConv = existingConvs.find(c => c.status !== 'closed') || 
+                      (await base44.asServiceRole.entities.Conversation.filter({
+                        lead_id: lead_id,
+                        status: 'human_active'
+                      }))[0];
 
-    if (existingConvs.length > 0) {
-      const conversation = existingConvs[0];
-      console.log('[openConversation] Reusing existing conversation:', conversation.id);
+    if (activeConv) {
+      console.log('[openConversation] Reusing existing conversation:', activeConv.id);
       return Response.json({
         success: true,
-        conversation_id: conversation.id,
+        conversation_id: activeConv.id,
         created: false
       });
     }

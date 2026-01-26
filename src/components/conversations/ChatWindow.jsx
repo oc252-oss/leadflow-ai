@@ -31,6 +31,8 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
   const [sending, setSending] = useState(false);
   const [startingAI, setStartingAI] = useState(false);
   const messagesEndRef = useRef(null);
+  const inputRef = useRef(null);
+  const pollingIntervalRef = useRef(null);
 
   useEffect(() => {
     setMessages(initialMessages || []);
@@ -40,8 +42,44 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
     scrollToBottom();
   }, [messages]);
 
+  // Real-time message polling
+  useEffect(() => {
+    if (!conversation?.id) return;
+
+    const pollMessages = async () => {
+      try {
+        const freshMessages = await base44.entities.Message.filter(
+          { conversation_id: conversation.id },
+          'created_date'
+        );
+        
+        // Only update if there are new messages
+        if (freshMessages.length > messages.length || 
+            (freshMessages.length > 0 && messages.length > 0 && 
+             freshMessages[freshMessages.length - 1].id !== messages[messages.length - 1].id)) {
+          setMessages(freshMessages);
+        }
+      } catch (error) {
+        console.error('Error polling messages:', error);
+      }
+    };
+
+    // Start polling
+    pollingIntervalRef.current = setInterval(pollMessages, 2000);
+
+    return () => {
+      if (pollingIntervalRef.current) {
+        clearInterval(pollingIntervalRef.current);
+      }
+    };
+  }, [conversation?.id]);
+
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    // Keep input focused for smooth typing
+    if (inputRef.current && !sending && !startingAI) {
+      inputRef.current.focus();
+    }
   };
 
   const handleSend = async () => {
@@ -262,12 +300,14 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
       <div className="p-4 border-t border-slate-200 bg-white">
         <div className="flex items-center gap-3">
           <Input
+            ref={inputRef}
             placeholder="Type your message..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}
             disabled={sending}
             className="flex-1"
+            autoFocus
           />
           <Button 
             onClick={handleSend}

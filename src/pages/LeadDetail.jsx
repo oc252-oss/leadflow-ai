@@ -160,30 +160,44 @@ export default function LeadDetail() {
       setOpeningChat(true);
       console.log('🔵 [Open Chat] Button clicked for lead:', leadId);
 
-      const response = await base44.functions.invoke('openConversation', {
-        lead_id: leadId
+      // Check if conversation already exists
+      const existingConversations = await base44.entities.Conversation.filter({
+        lead_id: leadId,
+        status: { $ne: 'closed' }
       });
 
-      console.log('🟢 [Open Chat] Backend response:', response);
-      console.log('🟢 [Open Chat] Response data:', response.data);
+      let conversationId;
 
-      if (response?.data?.conversation_id) {
-        const conversationId = response.data.conversation_id;
-        console.log('✅ [Open Chat] Success! Conversation ID:', conversationId);
+      if (existingConversations.length > 0) {
+        // Use existing conversation
+        conversationId = existingConversations[0].id;
+        console.log('♻️ [Open Chat] Using existing conversation:', conversationId);
+      } else {
+        // Create new conversation
+        console.log('➕ [Open Chat] Creating new conversation');
         
+        const newConversation = await base44.entities.Conversation.create({
+          company_id: lead.company_id,
+          unit_id: lead.unit_id || '',
+          lead_id: leadId,
+          channel: 'whatsapp',
+          status: 'human_active',
+          unread_count: 0,
+          last_message_at: new Date().toISOString()
+        });
+
+        conversationId = newConversation.id;
+        console.log('✨ [Open Chat] New conversation created:', conversationId);
+      }
+
+      if (conversationId) {
         const redirectUrl = createPageUrl('Conversations') + `?conversation_id=${conversationId}`;
-        console.log('🔗 [Open Chat] Redirecting to:', redirectUrl);
-        
+        console.log('🔗 [Open Chat] Navigating to:', redirectUrl);
         toast.success('Chat opened!');
         navigate(redirectUrl);
-      } else {
-        console.error('❌ [Open Chat] No conversation_id in response:', response.data);
-        toast.error('Failed to open chat - no conversation returned');
       }
     } catch (error) {
-      console.error('❌ [Open Chat] Error:', error);
-      console.error('❌ [Open Chat] Error message:', error?.message);
-      console.error('❌ [Open Chat] Error response:', error?.response);
+      console.error('❌ [Open Chat] Error:', error.message);
       toast.error(`Failed to open chat: ${error?.message || 'Unknown error'}`);
     } finally {
       setOpeningChat(false);

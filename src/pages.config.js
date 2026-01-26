@@ -2,6 +2,7 @@ import Dashboard from './pages/Dashboard';
 import Leads from './pages/Leads';
 import LeadDetail from './pages/LeadDetail';
 import Pipeline from './pages/Pipeline';
+import Conversations from './pages/Conversations';
 import __Layout from './Layout.jsx';
 
 
@@ -10,6 +11,7 @@ export const PAGES = {
     "Leads": Leads,
     "LeadDetail": LeadDetail,
     "Pipeline": Pipeline,
+    "Conversations": Conversations,
 }
 
 export const pagesConfig = {

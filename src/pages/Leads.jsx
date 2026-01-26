@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { useSearchParams } from 'react-router-dom';
+import { useSearchParams, useNavigate } from 'react-router-dom';
 import { Button } from "@/components/ui/button";
 import { 
   Plus, 
@@ -12,10 +12,12 @@ import {
 import LeadCard from '@/components/leads/LeadCard';
 import LeadFilters from '@/components/leads/LeadFilters';
 import AddLeadDialog from '@/components/leads/AddLeadDialog';
+import { createPageUrl } from '@/utils';
 import { cn } from "@/lib/utils";
 
 export default function Leads() {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
   const [leads, setLeads] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [teamMember, setTeamMember] = useState(null);
@@ -64,7 +66,7 @@ export default function Leads() {
     const newLead = await base44.entities.Lead.create({
       ...leadData,
       company_id: teamMember.company_id,
-      funnel_stage: 'new',
+      funnel_stage: 'Novo Lead',
       temperature: 'cold',
       score: 20
     });
@@ -78,6 +80,30 @@ export default function Leads() {
     });
 
     setLeads([newLead, ...leads]);
+  };
+
+  const handleOpenChat = async (lead) => {
+    try {
+      setLoading(true);
+      console.log('Opening chat for lead:', lead.id);
+
+      // Call backend to create or get conversation
+      const response = await base44.functions.invoke('createOrGetConversation', {
+        lead_id: lead.id,
+        company_id: teamMember.company_id,
+        unit_id: teamMember.unit_id
+      });
+
+      if (response.data?.conversation) {
+        console.log('Conversation ready:', response.data.conversation.id);
+        // Navigate to Conversations page with conversation selected
+        navigate(createPageUrl('Conversations') + `?conversation_id=${response.data.conversation.id}`);
+      }
+    } catch (error) {
+      console.error('Error opening chat:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const filteredLeads = leads.filter(lead => {
@@ -166,13 +192,13 @@ export default function Leads() {
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredLeads.map((lead) => (
-            <LeadCard key={lead.id} lead={lead} />
+            <LeadCard key={lead.id} lead={lead} onOpenChat={handleOpenChat} />
           ))}
         </div>
       ) : (
         <div className="space-y-2">
           {filteredLeads.map((lead) => (
-            <LeadCard key={lead.id} lead={lead} compact />
+            <LeadCard key={lead.id} lead={lead} compact onOpenChat={handleOpenChat} />
           ))}
         </div>
       )}

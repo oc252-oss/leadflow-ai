@@ -13,7 +13,8 @@ import {
   Phone,
   Mail,
   ExternalLink,
-  Loader2
+  Loader2,
+  Play
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -28,6 +29,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
   const [messages, setMessages] = useState(initialMessages || []);
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
+  const [startingAI, setStartingAI] = useState(false);
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
@@ -102,6 +104,26 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
     }
   };
 
+  const handleStartAIQualification = async () => {
+    setStartingAI(true);
+    try {
+      // Invoke the autoStartAIFlow function directly
+      const response = await base44.functions.invoke('autoStartAIFlow', {
+        conversation_id: conversation.id
+      });
+      
+      if (response.data.success) {
+        console.log(`[ChatWindow] AI Flow started for conversation ${conversation.id}`);
+        // Reload messages and conversation data
+        await onMessageSent?.();
+      }
+    } catch (error) {
+      console.error('Error starting AI qualification:', error);
+    } finally {
+      setStartingAI(false);
+    }
+  };
+
   if (!conversation) {
     return (
       <div className="flex-1 flex items-center justify-center bg-slate-50">
@@ -138,6 +160,21 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {conversation.status !== 'bot_active' && conversation.ai_flow_id === null && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleStartAIQualification}
+              disabled={startingAI}
+            >
+              {startingAI ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <Play className="w-4 h-4 mr-2" />
+              )}
+              Iniciar Qualificação por IA
+            </Button>
+          )}
           {conversation.status === 'bot_active' && (
             <Button variant="outline" size="sm" onClick={handleTakeOver}>
               <User className="w-4 h-4 mr-2" />

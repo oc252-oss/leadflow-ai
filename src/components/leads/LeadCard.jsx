@@ -1,8 +1,10 @@
 import React from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { base44 } from '@/api/base44Client';
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { 
   Phone, 
   Mail, 
@@ -42,48 +44,63 @@ const stageColors = {
   closed_lost: 'bg-red-100 text-red-700'
 };
 
-export default function LeadCard({ lead, compact = false }) {
+export default function LeadCard({ lead, compact = false, onOpenChat }) {
+  const navigate = useNavigate();
   const SourceIcon = sourceIcons[lead.source] || User;
   const tempConfig = temperatureConfig[lead.temperature] || temperatureConfig.cold;
   const TempIcon = tempConfig.icon;
 
+  const handleOpenChat = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    if (onOpenChat) {
+      await onOpenChat(lead);
+      navigate(createPageUrl('Conversations'));
+    }
+  };
+
   if (compact) {
     return (
-      <Link to={createPageUrl('LeadDetail') + `?id=${lead.id}`}>
-        <Card className="p-4 hover:shadow-md transition-shadow border-0 shadow-sm cursor-pointer">
-          <div className="flex items-center justify-between">
+      <Card className="p-4 hover:shadow-md transition-shadow border-0 shadow-sm">
+        <div className="flex items-center justify-between gap-3">
+          <Link to={createPageUrl('LeadDetail') + `?id=${lead.id}`} className="flex-1 min-w-0">
             <div className="flex items-center gap-3">
               <div className={cn(
-                "w-10 h-10 rounded-full flex items-center justify-center text-white font-medium",
+                "w-10 h-10 rounded-full flex items-center justify-center text-white font-medium flex-shrink-0",
                 lead.temperature === 'hot' ? "bg-gradient-to-br from-orange-400 to-red-500" :
                 lead.temperature === 'warm' ? "bg-gradient-to-br from-amber-400 to-orange-500" :
                 "bg-gradient-to-br from-slate-400 to-slate-500"
               )}>
                 {lead.name?.charAt(0) || '?'}
               </div>
-              <div>
+              <div className="min-w-0">
                 <p className="font-medium text-slate-900">{lead.name}</p>
-                <p className="text-sm text-slate-500">{lead.email || lead.phone}</p>
+                <p className="text-sm text-slate-500 truncate">{lead.email || lead.phone}</p>
               </div>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge className={stageColors[lead.funnel_stage]}>
-                {lead.funnel_stage?.replace('_', ' ')}
-              </Badge>
-              <Badge variant="outline" className={tempConfig.color}>
-                <TempIcon className="w-3 h-3 mr-1" />
-                {lead.score}
-              </Badge>
-            </div>
+          </Link>
+          <div className="flex items-center gap-2 flex-shrink-0">
+            <Badge className={stageColors[lead.funnel_stage]}>
+              {lead.funnel_stage?.replace('_', ' ')}
+            </Badge>
+            <Badge variant="outline" className={tempConfig.color}>
+              <TempIcon className="w-3 h-3 mr-1" />
+              {lead.score}
+            </Badge>
+            <Button size="sm" variant="outline" onClick={handleOpenChat} className="gap-1">
+              <MessageSquare className="w-3 h-3" />
+              Chat
+            </Button>
           </div>
-        </Card>
-      </Link>
+        </div>
+      </Card>
     );
   }
 
   return (
-    <Link to={createPageUrl('LeadDetail') + `?id=${lead.id}`}>
-      <Card className="p-5 hover:shadow-lg transition-all duration-200 border-0 shadow-sm cursor-pointer group">
+    <Card className="p-5 hover:shadow-lg transition-all duration-200 border-0 shadow-sm group">
+      <Link to={createPageUrl('LeadDetail') + `?id=${lead.id}`}>
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
             <div className={cn(
@@ -134,7 +151,16 @@ export default function LeadCard({ lead, compact = false }) {
             {formatDistanceToNow(new Date(lead.created_date), { addSuffix: true })}
           </div>
         </div>
-      </Card>
-    </Link>
+      </Link>
+      
+      <Button 
+        size="sm" 
+        onClick={handleOpenChat} 
+        className="w-full mt-4 gap-2 bg-indigo-600 hover:bg-indigo-700"
+      >
+        <MessageSquare className="w-4 h-4" />
+        Open Chat
+      </Button>
+    </Card>
   );
 }

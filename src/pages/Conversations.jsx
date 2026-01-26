@@ -80,6 +80,35 @@ export default function Conversations() {
     }
   };
 
+  const handleOpenChat = async (lead) => {
+    try {
+      setLoading(true);
+      
+      // Create or get conversation via backend
+      const response = await base44.functions.invoke('createOrGetConversation', {
+        lead_id: lead.id,
+        company_id: teamMember.company_id,
+        unit_id: teamMember.unit_id
+      });
+
+      if (response.data.conversation) {
+        const conversation = response.data.conversation;
+        
+        // Add to conversations list if new
+        if (!conversations.find(c => c.id === conversation.id)) {
+          setConversations([conversation, ...conversations]);
+        }
+
+        // Select the conversation
+        await handleSelectConversation(conversation);
+      }
+    } catch (error) {
+      console.error('Error opening chat:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const filteredConversations = conversations.filter(conv => {
     const lead = leads.find(l => l.id === conv.lead_id);
     
@@ -162,6 +191,8 @@ export default function Conversations() {
         lead={selectedLead}
         messages={messages}
         onMessageSent={loadData}
+        onOpenChat={handleOpenChat}
+        availableLeads={leads}
       />
     </div>
   );

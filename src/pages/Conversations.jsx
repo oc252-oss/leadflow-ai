@@ -34,21 +34,25 @@ export default function Conversations() {
       if (conv) {
         console.log('[Conversations] Found in list, selecting:', conversationId);
         handleSelectConversation(conv);
-      } else if (conversations.length > 0) {
-        // If not in list after conversations loaded, fetch directly
-        console.log('[Conversations] Not in list, fetching directly:', conversationId);
+      } else {
+        // Fetch directly if not in list yet
+        console.log('[Conversations] Fetching conversation:', conversationId);
         base44.entities.Conversation.filter({ id: conversationId })
           .then(convs => {
             if (convs.length > 0) {
-              console.log('[Conversations] Fetched conversation:', conversationId);
-              setConversations(prev => [convs[0], ...prev.filter(c => c.id !== conversationId)]);
+              console.log('[Conversations] Fetched and selecting:', conversationId);
+              // Add to list if new
+              setConversations(prev => {
+                const exists = prev.some(c => c.id === conversationId);
+                return exists ? prev : [convs[0], ...prev];
+              });
               handleSelectConversation(convs[0]);
             }
           })
           .catch(err => console.error('[Conversations] Error fetching:', err));
       }
     }
-  }, [conversations, selectedConversation]);
+  }, [conversationId, selectedConversation, conversations]);
 
   const loadData = async () => {
     try {

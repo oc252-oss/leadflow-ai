@@ -56,7 +56,7 @@ const platformConfig = {
   manual: { icon: Target, color: 'bg-slate-100 text-slate-600' }
 };
 
-export default function Campaigns() {
+function Campaigns() {
   const [campaigns, setCampaigns] = useState([]);
   const [leads, setLeads] = useState([]);
   const [teamMember, setTeamMember] = useState(null);
@@ -494,3 +494,5 @@ export default function Campaigns() {
     </div>
   );
 }
+
+export default Campaigns;

@@ -48,7 +48,7 @@ const triggerConfig = {
   time_based: { icon: Clock, color: 'bg-indigo-100 text-indigo-600', label: 'Time Based' }
 };
 
-export default function Automations() {
+function Automations() {
   const [automations, setAutomations] = useState([]);
   const [teamMember, setTeamMember] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -345,3 +345,5 @@ export default function Automations() {
     </div>
   );
 }
+
+export default Automations;

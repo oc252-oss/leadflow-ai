@@ -42,7 +42,7 @@ import { format, subDays, eachDayOfInterval } from 'date-fns';
 
 const COLORS = ['#6366f1', '#8b5cf6', '#ec4899', '#f97316', '#10b981', '#06b6d4'];
 
-export default function Reports() {
+function Reports() {
   const [leads, setLeads] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
@@ -469,3 +469,5 @@ export default function Reports() {
     </div>
   );
 }
+
+export default Reports;

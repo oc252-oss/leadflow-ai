@@ -52,7 +52,7 @@ export default function Conversations() {
           .catch(err => console.error('[Conversations] Error fetching:', err));
       }
     }
-  }, [conversationId, selectedConversation, conversations]);
+  }, [selectedConversation, conversations]);
 
   const loadData = async () => {
     try {

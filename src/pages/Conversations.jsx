@@ -26,24 +26,29 @@ export default function Conversations() {
     const params = new URLSearchParams(window.location.search);
     const conversationId = params.get('conversation_id');
     
-    if (conversationId) {
+    if (conversationId && !selectedConversation) {
+      console.log('[Conversations] Auto-selecting from URL:', conversationId);
+      
       // First check in current conversations list
       const conv = conversations.find(c => c.id === conversationId);
       if (conv) {
-        console.log('Auto-selecting conversation:', conversationId);
+        console.log('[Conversations] Found in list, selecting:', conversationId);
         handleSelectConversation(conv);
-      } else {
-        // If not in list, try to fetch it directly (might be newly created)
-        base44.entities.Conversation.filter({ id: conversationId }).then(convs => {
-          if (convs.length > 0) {
-            console.log('Fetched newly created conversation:', conversationId);
-            setConversations(prev => [convs[0], ...prev]);
-            handleSelectConversation(convs[0]);
-          }
-        }).catch(err => console.error('Error fetching conversation:', err));
+      } else if (conversations.length > 0) {
+        // If not in list after conversations loaded, fetch directly
+        console.log('[Conversations] Not in list, fetching directly:', conversationId);
+        base44.entities.Conversation.filter({ id: conversationId })
+          .then(convs => {
+            if (convs.length > 0) {
+              console.log('[Conversations] Fetched conversation:', conversationId);
+              setConversations(prev => [convs[0], ...prev.filter(c => c.id !== conversationId)]);
+              handleSelectConversation(convs[0]);
+            }
+          })
+          .catch(err => console.error('[Conversations] Error fetching:', err));
       }
     }
-  }, [conversations]);
+  }, [conversations, selectedConversation]);
 
   const loadData = async () => {
     try {

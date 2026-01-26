@@ -9,10 +9,10 @@ import LeadDetail from './pages/LeadDetail';
 import Leads from './pages/Leads';
 import Onboarding from './pages/Onboarding';
 import Pipeline from './pages/Pipeline';
+import Reengagement from './pages/Reengagement';
 import Reports from './pages/Reports';
 import SalesFunnel from './pages/SalesFunnel';
 import Settings from './pages/Settings';
-import Reengagement from './pages/Reengagement';
 import __Layout from './Layout.jsx';
 
 
@@ -28,10 +28,10 @@ export const PAGES = {
     "Leads": Leads,
     "Onboarding": Onboarding,
     "Pipeline": Pipeline,
+    "Reengagement": Reengagement,
     "Reports": Reports,
     "SalesFunnel": SalesFunnel,
     "Settings": Settings,
-    "Reengagement": Reengagement,
 }
 
 export const pagesConfig = {

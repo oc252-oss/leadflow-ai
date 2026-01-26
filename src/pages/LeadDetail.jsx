@@ -68,6 +68,7 @@ export default function LeadDetail() {
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [editData, setEditData] = useState({});
+  const [openingChat, setOpeningChat] = useState(false);
 
   useEffect(() => {
     if (leadId) {
@@ -150,6 +151,28 @@ export default function LeadDetail() {
       console.error('Error saving lead:', error);
     } finally {
       setSaving(false);
+    }
+  };
+
+  const handleOpenChat = async () => {
+    try {
+      setOpeningChat(true);
+      console.log('[LeadDetail] Opening chat for lead:', leadId);
+
+      const response = await base44.functions.invoke('openConversation', {
+        lead_id: leadId
+      });
+
+      if (response.data?.conversation_id) {
+        console.log('[LeadDetail] Chat opened, conversation:', response.data.conversation_id);
+        navigate(createPageUrl('Conversations') + `?conversation_id=${response.data.conversation_id}`);
+      } else {
+        console.error('[LeadDetail] No conversation_id in response');
+      }
+    } catch (error) {
+      console.error('[LeadDetail] Error opening chat:', error);
+    } finally {
+      setOpeningChat(false);
     }
   };
 
@@ -547,9 +570,14 @@ export default function LeadDetail() {
               <Button 
                 variant="outline" 
                 className="w-full justify-start"
-                onClick={() => navigate(createPageUrl('Conversations') + `?lead=${leadId}`)}
+                onClick={handleOpenChat}
+                disabled={openingChat}
               >
-                <MessageSquare className="w-4 h-4 mr-2" />
+                {openingChat ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                )}
                 Open Chat
               </Button>
             </CardContent>

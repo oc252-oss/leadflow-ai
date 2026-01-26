@@ -44,10 +44,12 @@ import {
   CheckCircle,
   XCircle,
   Link as LinkIcon,
-  Zap
+  Zap,
+  GitBranch
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import AIFlowsTab from '@/components/settings/AIFlowsTab';
+import SalesFunnelTab from '@/components/settings/SalesFunnelTab';
 
 export default function Settings() {
   const [company, setCompany] = useState(null);
@@ -254,6 +256,10 @@ export default function Settings() {
             <Zap className="w-4 h-4" />
             AI Flows
           </TabsTrigger>
+          <TabsTrigger value="sales-funnel" className="gap-2">
+            <GitBranch className="w-4 h-4" />
+            Sales Funnel
+          </TabsTrigger>
           <TabsTrigger value="integrations" className="gap-2">
             <LinkIcon className="w-4 h-4" />
             Integrations
@@ -417,6 +423,11 @@ export default function Settings() {
         {/* AI Flows */}
         <TabsContent value="ai-flows">
           <AIFlowsTab company={company} />
+        </TabsContent>
+
+        {/* Sales Funnel */}
+        <TabsContent value="sales-funnel">
+          <SalesFunnelTab company={company} />
         </TabsContent>
 
         {/* Integrations */}

@@ -97,17 +97,33 @@ export default function AIFlowsTab({ company }) {
   const loadData = async () => {
     try {
       setLoading(true);
+      console.log('Loading AI Flows data...');
+      
       const [flowsData, companiesData, campaignsData] = await Promise.all([
         base44.entities.AIConversationFlow.list('-priority', 100),
         base44.entities.Company.list(),
         base44.entities.Campaign.list()
       ]);
+      
+      console.log('Data loaded successfully:', {
+        flows: flowsData.length,
+        companies: companiesData.length,
+        campaigns: campaignsData.length
+      });
+      
       setFlows(flowsData);
       setCompanies(companiesData);
       setCampaigns(campaignsData);
     } catch (error) {
-      toast.error('Erro ao carregar dados');
-      console.error(error);
+      console.error('Error loading AI flows data:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response?.data
+      });
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Erro desconhecido';
+      toast.error(`Erro ao carregar dados: ${errorMessage}`);
     } finally {
       setLoading(false);
     }
@@ -115,8 +131,16 @@ export default function AIFlowsTab({ company }) {
 
   const handleSave = async () => {
     try {
-      if (!formData.company_id || !formData.name) {
-        toast.error('Empresa e nome são obrigatórios');
+      // Validation
+      if (!formData.company_id) {
+        toast.error('Empresa é obrigatória');
+        console.error('Validation error: company_id is required');
+        return;
+      }
+
+      if (!formData.name || formData.name.trim() === '') {
+        toast.error('Nome é obrigatório');
+        console.error('Validation error: name is required');
         return;
       }
 
@@ -125,32 +149,78 @@ export default function AIFlowsTab({ company }) {
         const existingDefault = flows.find(f => f.company_id === formData.company_id && f.is_default);
         if (existingDefault) {
           toast.error('Já existe um fluxo padrão para esta empresa');
+          console.error('Validation error: default flow already exists for company', formData.company_id);
           return;
         }
       }
 
+      // Prepare data - only include fields that have values
       const dataToSave = {
-        ...formData,
-        trigger_sources: formData.trigger_sources.length > 0 ? formData.trigger_sources : undefined,
-        trigger_campaigns: formData.trigger_campaigns.length > 0 ? formData.trigger_campaigns : undefined,
-        trigger_keywords: formData.trigger_keywords.length > 0 ? formData.trigger_keywords : undefined,
-        unit_id: formData.unit_id || undefined,
-        fallback_flow_id: formData.fallback_flow_id || undefined
+        company_id: formData.company_id,
+        name: formData.name.trim(),
+        description: formData.description || undefined,
+        industry: formData.industry,
+        is_default: formData.is_default,
+        is_active: formData.is_active,
+        priority: formData.priority || 0,
+        greeting_message: formData.greeting_message || undefined,
+        outside_hours_message: formData.outside_hours_message || undefined,
+        handoff_message: formData.handoff_message || undefined,
+        hot_lead_threshold: formData.hot_lead_threshold,
+        warm_lead_threshold: formData.warm_lead_threshold,
+        auto_assign_hot_leads: formData.auto_assign_hot_leads,
+        auto_assign_agent_role: formData.auto_assign_agent_role,
       };
 
+      // Only include optional fields if they have values
+      if (formData.unit_id && formData.unit_id.trim() !== '') {
+        dataToSave.unit_id = formData.unit_id.trim();
+      }
+
+      if (formData.trigger_sources && formData.trigger_sources.length > 0) {
+        dataToSave.trigger_sources = formData.trigger_sources;
+      }
+
+      if (formData.trigger_campaigns && formData.trigger_campaigns.length > 0) {
+        dataToSave.trigger_campaigns = formData.trigger_campaigns;
+      }
+
+      if (formData.trigger_keywords && formData.trigger_keywords.length > 0) {
+        dataToSave.trigger_keywords = formData.trigger_keywords;
+      }
+
+      if (formData.qualification_questions && formData.qualification_questions.length > 0) {
+        dataToSave.qualification_questions = formData.qualification_questions;
+      }
+
+      if (formData.fallback_flow_id && formData.fallback_flow_id !== '') {
+        dataToSave.fallback_flow_id = formData.fallback_flow_id;
+      }
+
+      console.log('Saving AI Flow:', editingFlow ? 'UPDATE' : 'CREATE', dataToSave);
+
       if (editingFlow) {
-        await base44.entities.AIConversationFlow.update(editingFlow.id, dataToSave);
-        toast.success('Fluxo atualizado');
+        const updated = await base44.entities.AIConversationFlow.update(editingFlow.id, dataToSave);
+        console.log('Flow updated successfully:', updated);
+        toast.success('Fluxo atualizado com sucesso');
       } else {
-        await base44.entities.AIConversationFlow.create(dataToSave);
-        toast.success('Fluxo criado');
+        const created = await base44.entities.AIConversationFlow.create(dataToSave);
+        console.log('Flow created successfully:', created);
+        toast.success('Fluxo criado com sucesso');
       }
 
       await loadData();
       handleCloseDialog();
     } catch (error) {
-      toast.error('Erro ao salvar fluxo');
-      console.error(error);
+      console.error('Error saving AI flow:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response?.data
+      });
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Erro desconhecido';
+      toast.error(`Erro ao salvar fluxo: ${errorMessage}`);
     }
   };
 
@@ -211,22 +281,41 @@ export default function AIFlowsTab({ company }) {
     if (!confirm('Tem certeza que deseja excluir este fluxo?')) return;
     
     try {
+      console.log('Deleting flow:', id);
       await base44.entities.AIConversationFlow.delete(id);
-      toast.success('Fluxo excluído');
+      console.log('Flow deleted successfully');
+      toast.success('Fluxo excluído com sucesso');
       await loadData();
     } catch (error) {
-      toast.error('Erro ao excluir fluxo');
-      console.error(error);
+      console.error('Error deleting AI flow:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response?.data
+      });
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Erro desconhecido';
+      toast.error(`Erro ao excluir fluxo: ${errorMessage}`);
     }
   };
 
   const handleToggleActive = async (flow) => {
     try {
+      console.log('Toggling active status for flow:', flow.id, 'from', flow.is_active, 'to', !flow.is_active);
       await base44.entities.AIConversationFlow.update(flow.id, { is_active: !flow.is_active });
-      toast.success('Status atualizado');
+      console.log('Status toggled successfully');
+      toast.success('Status atualizado com sucesso');
       await loadData();
     } catch (error) {
-      toast.error('Erro ao atualizar status');
+      console.error('Error toggling active status:', error);
+      console.error('Error details:', {
+        message: error.message,
+        stack: error.stack,
+        response: error.response?.data
+      });
+      
+      const errorMessage = error.response?.data?.message || error.message || 'Erro desconhecido';
+      toast.error(`Erro ao atualizar status: ${errorMessage}`);
     }
   };
 

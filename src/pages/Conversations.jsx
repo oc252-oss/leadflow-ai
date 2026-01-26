@@ -22,25 +22,25 @@ export default function Conversations() {
   }, []);
 
   useEffect(() => {
-    // If conversation_id in URL, select it automatically
+    // Auto-select conversation from URL
     const params = new URLSearchParams(window.location.search);
     const conversationId = params.get('conversation_id');
-    if (conversationId && conversations.length > 0) {
+    
+    if (conversationId) {
+      // First check in current conversations list
       const conv = conversations.find(c => c.id === conversationId);
       if (conv) {
+        console.log('Auto-selecting conversation:', conversationId);
         handleSelectConversation(conv);
-      }
-    }
-  }, [conversations]);
-
-  useEffect(() => {
-    // Check URL params for specific lead conversation
-    const urlParams = new URLSearchParams(window.location.search);
-    const leadId = urlParams.get('lead');
-    if (leadId && conversations.length > 0) {
-      const conv = conversations.find(c => c.lead_id === leadId);
-      if (conv) {
-        handleSelectConversation(conv);
+      } else {
+        // If not in list, try to fetch it directly (might be newly created)
+        base44.entities.Conversation.filter({ id: conversationId }).then(convs => {
+          if (convs.length > 0) {
+            console.log('Fetched newly created conversation:', conversationId);
+            setConversations(prev => [convs[0], ...prev]);
+            handleSelectConversation(convs[0]);
+          }
+        }).catch(err => console.error('Error fetching conversation:', err));
       }
     }
   }, [conversations]);

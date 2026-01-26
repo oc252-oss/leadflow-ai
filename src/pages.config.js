@@ -11,6 +11,7 @@ import Settings from './pages/Settings';
 import ConversationFlows from './pages/ConversationFlows';
 import CompanySettings from './pages/CompanySettings';
 import AIFlows from './pages/AIFlows';
+import SalesFunnel from './pages/SalesFunnel';
 import __Layout from './Layout.jsx';
 
 
@@ -28,6 +29,7 @@ export const PAGES = {
     "ConversationFlows": ConversationFlows,
     "CompanySettings": CompanySettings,
     "AIFlows": AIFlows,
+    "SalesFunnel": SalesFunnel,
 }
 
 export const pagesConfig = {

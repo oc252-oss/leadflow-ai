@@ -89,6 +89,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Automations', label: t('automations'), href: createPageUrl('Automations'), icon: Zap, roles: ['company_admin'] },
     { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['company_admin', 'sales_manager'] },
     { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Bot, roles: ['company_admin'] },
+    { name: 'SalesFunnel', label: 'Funil de Vendas', href: createPageUrl('SalesFunnel'), icon: GitBranch, roles: ['company_admin'] },
     { name: 'CompanySettings', label: 'Configurações da Empresa', href: createPageUrl('CompanySettings'), icon: Building2, roles: ['company_admin'] },
     { name: 'Settings', label: t('settings'), href: createPageUrl('Settings'), icon: Settings, roles: ['company_admin'] },
   ];

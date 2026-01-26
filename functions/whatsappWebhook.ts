@@ -9,11 +9,12 @@ Deno.serve(async (req) => {
 
     // Parse message from different providers
     let phoneNumber, senderNumber, messageContent, externalMessageId, timestamp;
-    let instanceId;
+    let instanceId, integrationType;
 
     // Z-API format
     if (payload.instanceId) {
       instanceId = payload.instanceId;
+      integrationType = 'provider';
       phoneNumber = payload.phone?.split('@')[0];
       senderNumber = payload.key?.remoteJid?.split('@')[0];
       messageContent = payload.message?.conversation || payload.message?.extendedTextMessage?.text || '';
@@ -22,6 +23,7 @@ Deno.serve(async (req) => {
     }
     // Gupshup format
     else if (payload.payload) {
+      integrationType = 'provider';
       phoneNumber = payload.app;
       senderNumber = payload.payload.sender?.phone;
       messageContent = payload.payload.payload?.text;
@@ -30,12 +32,21 @@ Deno.serve(async (req) => {
     }
     // Meta Cloud API format
     else if (payload.entry?.[0]?.changes?.[0]?.value?.messages) {
+      integrationType = 'meta';
       const message = payload.entry[0].changes[0].value.messages[0];
       phoneNumber = payload.entry[0].changes[0].value.metadata.phone_number_id;
       senderNumber = message.from;
       messageContent = message.text?.body || '';
       externalMessageId = message.id;
       timestamp = new Date(message.timestamp * 1000).toISOString();
+    }
+    // WhatsApp Web format
+    else if (payload.type === 'web' && payload.message) {
+      integrationType = 'web';
+      senderNumber = payload.from;
+      messageContent = payload.message;
+      externalMessageId = payload.message_id;
+      timestamp = new Date(payload.timestamp || Date.now()).toISOString();
     }
 
     if (!senderNumber || !messageContent) {

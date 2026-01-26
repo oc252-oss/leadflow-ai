@@ -84,7 +84,6 @@ export default function Leads() {
 
   const handleOpenChat = async (lead) => {
     try {
-      setLoading(true);
       console.log('Opening chat for lead:', lead.id);
 
       // Call backend to create or get conversation
@@ -98,11 +97,11 @@ export default function Leads() {
         console.log('Conversation ready:', response.data.conversation.id);
         // Navigate to Conversations page with conversation selected
         navigate(createPageUrl('Conversations') + `?conversation_id=${response.data.conversation.id}`);
+      } else {
+        console.error('No conversation in response:', response.data);
       }
     } catch (error) {
       console.error('Error opening chat:', error);
-    } finally {
-      setLoading(false);
     }
   };
 

@@ -55,8 +55,11 @@ export default function LeadCard({ lead, compact = false, onOpenChat }) {
     e.stopPropagation();
     
     if (onOpenChat) {
-      await onOpenChat(lead);
-      navigate(createPageUrl('Conversations'));
+      try {
+        await onOpenChat(lead);
+      } catch (error) {
+        console.error('Error opening chat:', error);
+      }
     }
   };
 

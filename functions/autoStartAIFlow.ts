@@ -3,20 +3,28 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
-    const { conversation_id } = await req.json();
+    const payload = await req.json();
 
-    if (!conversation_id) {
-      return Response.json({ error: 'conversation_id required' }, { status: 400 });
+    // Handle both direct invocation and entity automation trigger
+    let conversation;
+    const conversationId = payload.conversation_id || payload.event?.entity_id;
+
+    if (payload.data && payload.event?.entity_name === 'Conversation') {
+      // Entity automation payload
+      conversation = payload.data;
+    } else if (conversationId) {
+      // Direct invocation - fetch conversation
+      const conversations = await base44.asServiceRole.entities.Conversation.filter({ id: conversationId });
+      if (!conversations.length) {
+        console.log(`[autoStartAIFlow] Conversation ${conversationId} not found`);
+        return Response.json({ error: 'Conversation not found' }, { status: 404 });
+      }
+      conversation = conversations[0];
+    } else {
+      return Response.json({ error: 'conversation_id or event data required' }, { status: 400 });
     }
 
-    // Fetch conversation
-    const conversations = await base44.asServiceRole.entities.Conversation.filter({ id: conversation_id });
-    if (!conversations.length) {
-      console.log(`[autoStartAIFlow] Conversation ${conversation_id} not found`);
-      return Response.json({ error: 'Conversation not found' }, { status: 404 });
-    }
-
-    const conversation = conversations[0];
+    const conversationId = conversation.id;
 
     // Fetch lead
     const leads = await base44.asServiceRole.entities.Lead.filter({ id: conversation.lead_id });
@@ -55,18 +63,18 @@ Deno.serve(async (req) => {
     }
 
     if (!matchedFlow) {
-      console.log(`[autoStartAIFlow] No matching AI flow found for conversation ${conversation_id}, source: ${triggerSource}`);
+      console.log(`[autoStartAIFlow] No matching AI flow found for conversation ${conversationId}, source: ${triggerSource}`);
       return Response.json({ success: false, message: 'No matching flow' });
     }
 
-    console.log(`[autoStartAIFlow] Starting AI flow ${matchedFlow.id} for conversation ${conversation_id}`);
+    console.log(`[autoStartAIFlow] Starting AI flow ${matchedFlow.id} for conversation ${conversationId}`);
 
     // Send greeting message
     if (matchedFlow.greeting_message) {
       await base44.asServiceRole.entities.Message.create({
         company_id: conversation.company_id,
         unit_id: conversation.unit_id,
-        conversation_id: conversation_id,
+        conversation_id: conversationId,
         lead_id: conversation.lead_id,
         sender_type: 'bot',
         content: matchedFlow.greeting_message,
@@ -86,7 +94,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.Message.create({
         company_id: conversation.company_id,
         unit_id: conversation.unit_id,
-        conversation_id: conversation_id,
+        conversation_id: conversationId,
         lead_id: conversation.lead_id,
         sender_type: 'bot',
         content: firstQuestion.question,
@@ -97,26 +105,26 @@ Deno.serve(async (req) => {
     }
 
     // Update conversation
-    await base44.asServiceRole.entities.Conversation.update(conversation_id, {
+    await base44.asServiceRole.entities.Conversation.update(conversationId, {
       status: 'bot_active',
       ai_active: true,
       ai_flow_id: matchedFlow.id,
-      qualification_step: firstQuestion ? 1 : 0,
+      current_question_index: 0,
       last_message_preview: firstQuestion?.question || matchedFlow.greeting_message,
       last_message_at: new Date().toISOString()
     });
 
     // Update lead with active conversation
     await base44.asServiceRole.entities.Lead.update(conversation.lead_id, {
-      active_conversation_id: conversation_id
+      active_conversation_id: conversationId
     });
 
-    console.log(`[autoStartAIFlow] AI Flow auto-started for conversation ${conversation_id}`);
+    console.log(`[autoStartAIFlow] AI Flow execution engine started for conversation ${conversationId}`);
 
     return Response.json({ 
       success: true, 
       flow_id: matchedFlow.id,
-      conversation_id 
+      conversation_id: conversationId
     });
 
   } catch (error) {

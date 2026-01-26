@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from './utils';
 import { base44 } from '@/api/base44Client';
+import { t } from '@/i18n';
 import { 
   LayoutDashboard, 
   Users, 
@@ -80,14 +81,14 @@ export default function Layout({ children, currentPageName }) {
   }
 
   const navigation = [
-    { name: 'Dashboard', href: createPageUrl('Dashboard'), icon: LayoutDashboard, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'Leads', href: createPageUrl('Leads'), icon: Users, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'Pipeline', href: createPageUrl('Pipeline'), icon: GitBranch, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'Conversations', href: createPageUrl('Conversations'), icon: MessageSquare, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'Campaigns', href: createPageUrl('Campaigns'), icon: Target, roles: ['company_admin', 'sales_manager'] },
-    { name: 'Automations', href: createPageUrl('Automations'), icon: Zap, roles: ['company_admin'] },
-    { name: 'Reports', href: createPageUrl('Reports'), icon: BarChart3, roles: ['company_admin', 'sales_manager'] },
-    { name: 'Settings', href: createPageUrl('Settings'), icon: Settings, roles: ['company_admin'] },
+    { name: 'Dashboard', label: t('dashboard'), href: createPageUrl('Dashboard'), icon: LayoutDashboard, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Leads', label: t('leads'), href: createPageUrl('Leads'), icon: Users, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Pipeline', label: t('pipeline'), href: createPageUrl('Pipeline'), icon: GitBranch, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Conversations', label: t('conversations'), href: createPageUrl('Conversations'), icon: MessageSquare, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Campaigns', label: t('campaigns'), href: createPageUrl('Campaigns'), icon: Target, roles: ['company_admin', 'sales_manager'] },
+    { name: 'Automations', label: t('automations'), href: createPageUrl('Automations'), icon: Zap, roles: ['company_admin'] },
+    { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['company_admin', 'sales_manager'] },
+    { name: 'Settings', label: t('settings'), href: createPageUrl('Settings'), icon: Settings, roles: ['company_admin'] },
   ];
 
   const filteredNav = navigation.filter(item => 
@@ -155,7 +156,7 @@ export default function Layout({ children, currentPageName }) {
                   onClick={() => setSidebarOpen(false)}
                 >
                   <item.icon className={cn("w-5 h-5", isActive ? "text-indigo-600" : "text-slate-400")} />
-                  {item.name}
+                  {item.label}
                 </Link>
               );
             })}
@@ -177,16 +178,16 @@ export default function Layout({ children, currentPageName }) {
                 </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
-                <DropdownMenuLabel>My Account</DropdownMenuLabel>
+                <DropdownMenuLabel>{t('my_account')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={() => navigate(createPageUrl('Settings'))}>
                   <Settings className="w-4 h-4 mr-2" />
-                  Settings
+                  {t('settings')}
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={handleLogout} className="text-red-600">
                   <LogOut className="w-4 h-4 mr-2" />
-                  Log out
+                  {t('logout')}
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -225,11 +226,11 @@ export default function Layout({ children, currentPageName }) {
                   </Button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent align="end" className="w-80">
-                  <DropdownMenuLabel>Notifications</DropdownMenuLabel>
+                  <DropdownMenuLabel>{t('notifications')}</DropdownMenuLabel>
                   <DropdownMenuSeparator />
                   {notifications.length === 0 ? (
                     <div className="px-4 py-6 text-center text-sm text-slate-500">
-                      No new notifications
+                      {t('no_results')}
                     </div>
                   ) : (
                     notifications.slice(0, 5).map((notif) => (

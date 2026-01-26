@@ -43,20 +43,41 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
   };
 
   const handleSend = async () => {
-    if (!newMessage.trim() || sending) return;
+    if (!newMessage.trim() || sending || !conversation?.id) return;
 
     setSending(true);
     try {
-      // Send message via backend to trigger AI
-      const response = await base44.functions.invoke('sendLeadMessage', {
+      const user = await base44.auth.me();
+      const messageContent = newMessage.trim();
+
+      // Create message in Message entity
+      const newMsg = await base44.entities.Message.create({
+        company_id: conversation.company_id,
+        unit_id: conversation.unit_id,
         conversation_id: conversation.id,
         lead_id: lead.id,
-        content: newMessage.trim()
+        sender_type: 'agent',
+        sender_id: user.id,
+        content: messageContent,
+        message_type: 'text',
+        direction: 'outbound',
+        read: true,
+        delivered: true
       });
 
-      // Reload messages to get AI response
-      await onMessageSent?.();
+      // Update Conversation with last message preview
+      await base44.entities.Conversation.update(conversation.id, {
+        last_message_preview: messageContent.substring(0, 80),
+        last_message_at: new Date().toISOString(),
+        unread_count: 0
+      });
+
+      // Add message to UI immediately
+      setMessages(prev => [...prev, newMsg]);
       setNewMessage('');
+      
+      // Reload full conversation data
+      await onMessageSent?.();
     } catch (error) {
       console.error('Error sending message:', error);
     } finally {

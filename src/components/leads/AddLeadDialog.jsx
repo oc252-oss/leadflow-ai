@@ -108,6 +108,11 @@ export default function AddLeadDialog({ open, onOpenChange, onSave, campaigns = 
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="manual">Manual Entry</SelectItem>
+                  <SelectItem value="facebook_lead_ad">Facebook Lead Ad</SelectItem>
+                  <SelectItem value="messenger">Messenger</SelectItem>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="instagram">Instagram</SelectItem>
+                  <SelectItem value="referral">Referral</SelectItem>
                   <SelectItem value="webchat">Webchat</SelectItem>
                   <SelectItem value="import">Import</SelectItem>
                 </SelectContent>

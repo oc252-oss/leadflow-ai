@@ -10,6 +10,7 @@ import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import ConversationFlows from './pages/ConversationFlows';
 import CompanySettings from './pages/CompanySettings';
+import AIFlows from './pages/AIFlows';
 import __Layout from './Layout.jsx';
 
 
@@ -26,6 +27,7 @@ export const PAGES = {
     "Settings": Settings,
     "ConversationFlows": ConversationFlows,
     "CompanySettings": CompanySettings,
+    "AIFlows": AIFlows,
 }
 
 export const pagesConfig = {

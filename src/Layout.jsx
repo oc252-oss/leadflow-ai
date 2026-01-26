@@ -18,7 +18,8 @@ import {
   Zap,
   Target,
   GitBranch,
-  Facebook
+  Facebook,
+  Bot
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

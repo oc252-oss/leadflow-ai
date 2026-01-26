@@ -1,3 +1,4 @@
+
 import * as React from "react"
 import * as TabsPrimitive from "@radix-ui/react-tabs"
 
@@ -39,3 +40,4 @@ const TabsContent = React.forwardRef(({ className, ...props }, ref) => (
 TabsContent.displayName = TabsPrimitive.Content.displayName
 
 export { Tabs, TabsList, TabsTrigger, TabsContent }
+export default Tabs

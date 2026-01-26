@@ -154,3 +154,4 @@ export {
   DropdownMenuSubTrigger,
   DropdownMenuRadioGroup,
 }
+export default DropdownMenu

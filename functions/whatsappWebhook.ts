@@ -203,6 +203,20 @@ Deno.serve(async (req) => {
       last_interaction_at: timestamp
     });
 
+    // Trigger AI response if bot is active
+    if (conversation.status === 'bot_active' && conversation.ai_active && conversation.ai_flow_id) {
+      console.log('Triggering AI response...');
+      try {
+        await base44.asServiceRole.functions.invoke('processAIConversation', {
+          conversation_id: conversation.id,
+          lead_id: lead.id,
+          message_content: messageContent
+        });
+      } catch (error) {
+        console.error('Error triggering AI:', error);
+      }
+    }
+
     console.log('WhatsApp message processed successfully');
 
     return Response.json({ success: true });

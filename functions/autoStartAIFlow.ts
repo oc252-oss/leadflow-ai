@@ -67,52 +67,78 @@ Deno.serve(async (req) => {
       return Response.json({ success: false, message: 'No matching flow' });
     }
 
+    // Prevent duplicate flow starts: check if flow already running
+    if (conversation.ai_flow_id === matchedFlow.id && conversation.current_question_index !== null) {
+      console.log(`[autoStartAIFlow] Flow already running for conversation ${conversationId}, skipping restart`);
+      return Response.json({ success: false, message: 'Flow already running' });
+    }
+
+    // Check if greeting message was already sent
+    const existingMessages = await base44.asServiceRole.entities.Message.filter({
+      conversation_id: conversationId,
+      sender_type: 'bot'
+    });
+
+    const greetingAlreadySent = existingMessages.some(msg => 
+      msg.content === matchedFlow.greeting_message
+    );
+
     console.log(`[autoStartAIFlow] Starting AI flow ${matchedFlow.id} for conversation ${conversationId}`);
 
-    // Send greeting message
-    if (matchedFlow.greeting_message) {
-      await base44.asServiceRole.entities.Message.create({
-        company_id: conversation.company_id,
-        unit_id: conversation.unit_id,
-        conversation_id: conversationId,
-        lead_id: conversation.lead_id,
-        sender_type: 'bot',
-        content: matchedFlow.greeting_message,
-        message_type: 'text',
-        direction: 'outbound',
-        delivered: true
-      });
+    // Only send greeting + first question if not already sent
+    if (!greetingAlreadySent && conversation.current_question_index === null) {
+      // Send greeting message
+      if (matchedFlow.greeting_message) {
+        await base44.asServiceRole.entities.Message.create({
+          company_id: conversation.company_id,
+          unit_id: conversation.unit_id,
+          conversation_id: conversationId,
+          lead_id: conversation.lead_id,
+          sender_type: 'bot',
+          content: matchedFlow.greeting_message,
+          message_type: 'text',
+          direction: 'outbound',
+          delivered: true
+        });
+      }
+
+      // Get first question
+      const firstQuestion = matchedFlow.qualification_questions && matchedFlow.qualification_questions.length > 0
+        ? matchedFlow.qualification_questions[0]
+        : null;
+
+      // Send first question if exists
+      if (firstQuestion) {
+        await base44.asServiceRole.entities.Message.create({
+          company_id: conversation.company_id,
+          unit_id: conversation.unit_id,
+          conversation_id: conversationId,
+          lead_id: conversation.lead_id,
+          sender_type: 'bot',
+          content: firstQuestion.question,
+          message_type: 'text',
+          direction: 'outbound',
+          delivered: true
+        });
+      }
     }
 
-    // Get first question
-    const firstQuestion = matchedFlow.qualification_questions && matchedFlow.qualification_questions.length > 0
-      ? matchedFlow.qualification_questions[0]
-      : null;
-
-    // Send first question if exists
-    if (firstQuestion) {
-      await base44.asServiceRole.entities.Message.create({
-        company_id: conversation.company_id,
-        unit_id: conversation.unit_id,
-        conversation_id: conversationId,
-        lead_id: conversation.lead_id,
-        sender_type: 'bot',
-        content: firstQuestion.question,
-        message_type: 'text',
-        direction: 'outbound',
-        delivered: true
+    // Update conversation only if not already bot_active
+    if (conversation.status !== 'bot_active') {
+      await base44.asServiceRole.entities.Conversation.update(conversationId, {
+        status: 'bot_active',
+        ai_active: true,
+        ai_flow_id: matchedFlow.id,
+        current_question_index: 0,
+        last_message_at: new Date().toISOString()
+      });
+    } else if (conversation.current_question_index === null) {
+      // Just set the current_question_index if status already bot_active
+      await base44.asServiceRole.entities.Conversation.update(conversationId, {
+        current_question_index: 0,
+        last_message_at: new Date().toISOString()
       });
     }
-
-    // Update conversation
-    await base44.asServiceRole.entities.Conversation.update(conversationId, {
-      status: 'bot_active',
-      ai_active: true,
-      ai_flow_id: matchedFlow.id,
-      current_question_index: 0,
-      last_message_preview: firstQuestion?.question || matchedFlow.greeting_message,
-      last_message_at: new Date().toISOString()
-    });
 
     // Update lead with active conversation
     await base44.asServiceRole.entities.Lead.update(conversation.lead_id, {

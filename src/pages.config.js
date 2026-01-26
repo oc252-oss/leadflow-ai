@@ -12,6 +12,7 @@ import Pipeline from './pages/Pipeline';
 import Reports from './pages/Reports';
 import SalesFunnel from './pages/SalesFunnel';
 import Settings from './pages/Settings';
+import Reengagement from './pages/Reengagement';
 import __Layout from './Layout.jsx';
 
 
@@ -30,6 +31,7 @@ export const PAGES = {
     "Reports": Reports,
     "SalesFunnel": SalesFunnel,
     "Settings": Settings,
+    "Reengagement": Reengagement,
 }
 
 export const pagesConfig = {

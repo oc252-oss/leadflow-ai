@@ -19,7 +19,8 @@ import {
   Target,
   GitBranch,
   Facebook,
-  Bot
+  Bot,
+  RefreshCw
 } from 'lucide-react';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -87,6 +88,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Pipeline', label: t('pipeline'), href: createPageUrl('Pipeline'), icon: GitBranch, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
     { name: 'Conversations', label: t('conversations'), href: createPageUrl('Conversations'), icon: MessageSquare, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
     { name: 'Campaigns', label: t('campaigns'), href: createPageUrl('Campaigns'), icon: Target, roles: ['company_admin', 'sales_manager'] },
+    { name: 'Reengagement', label: 'Reengajamento', href: createPageUrl('Reengagement'), icon: RefreshCw, roles: ['company_admin', 'sales_manager'] },
     { name: 'Automations', label: t('automations'), href: createPageUrl('Automations'), icon: Zap, roles: ['company_admin'] },
     { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['company_admin', 'sales_manager'] },
     { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Bot, roles: ['company_admin'] },

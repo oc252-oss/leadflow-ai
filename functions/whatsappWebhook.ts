@@ -232,6 +232,40 @@ Deno.serve(async (req) => {
       last_interaction_at: timestamp
     });
 
+    // Check if this is a reengagement campaign reply
+    const campaignContacts = await base44.asServiceRole.entities.CampaignContact.filter({
+      lead_id: lead.id,
+      status: 'sent'
+    }, '-sent_at', 1);
+
+    if (campaignContacts.length > 0) {
+      const contact = campaignContacts[0];
+      console.log('Reply to reengagement campaign detected');
+      
+      // Update contact status
+      await base44.asServiceRole.entities.CampaignContact.update(contact.id, {
+        status: 'replied',
+        replied_at: timestamp
+      });
+
+      // Update campaign stats
+      const campaigns = await base44.asServiceRole.entities.ReengagementCampaign.filter({
+        id: contact.campaign_id
+      });
+      
+      if (campaigns.length > 0) {
+        await base44.asServiceRole.entities.ReengagementCampaign.update(campaigns[0].id, {
+          total_replies: (campaigns[0].total_replies || 0) + 1,
+          total_conversations_reopened: (campaigns[0].total_conversations_reopened || 0) + 1
+        });
+      }
+
+      // Increase lead score for replying
+      await base44.asServiceRole.entities.Lead.update(lead.id, {
+        score: Math.min(100, (lead.score || 0) + 10)
+      });
+    }
+
     // Trigger AI response if bot is active
     if (conversation.status === 'bot_active' && conversation.ai_active && conversation.ai_flow_id) {
       console.log('Triggering AI response...');

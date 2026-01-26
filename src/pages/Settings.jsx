@@ -73,6 +73,14 @@ export default function Settings() {
     business_hours_end: '18:00',
     ai_enabled: true
   });
+
+  const [aiConfigForm, setAiConfigForm] = useState({
+    ai_enabled: true,
+    default_flow_id: '',
+    response_delay: 2,
+    max_questions_per_flow: 5,
+    auto_handoff_enabled: true
+  });
   
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'sales_agent' });
   
@@ -117,6 +125,13 @@ export default function Settings() {
             business_hours_end: companyData[0].business_hours_end || '18:00',
             ai_enabled: companyData[0].ai_enabled !== false
           });
+          setAiConfigForm({
+            ai_enabled: companyData[0].ai_enabled !== false,
+            default_flow_id: companyData[0].default_flow_id || '',
+            response_delay: companyData[0].response_delay || 2,
+            max_questions_per_flow: companyData[0].max_questions_per_flow || 5,
+            auto_handoff_enabled: companyData[0].auto_handoff_enabled !== false
+          });
         }
 
         setTeamMembers(teamData);
@@ -141,6 +156,20 @@ export default function Settings() {
       setCompany({ ...company, ...companyForm });
     } catch (error) {
       console.error('Error saving company:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleSaveAiConfig = async () => {
+    if (!company) return;
+    
+    setSaving(true);
+    try {
+      await base44.entities.Company.update(company.id, aiConfigForm);
+      setCompany({ ...company, ...aiConfigForm });
+    } catch (error) {
+      console.error('Error saving AI config:', error);
     } finally {
       setSaving(false);
     }
@@ -251,6 +280,10 @@ export default function Settings() {
           <TabsTrigger value="team" className="gap-2">
             <Users className="w-4 h-4" />
             Team
+          </TabsTrigger>
+          <TabsTrigger value="ai-assistant" className="gap-2">
+            <Bot className="w-4 h-4" />
+            AI Assistant
           </TabsTrigger>
           <TabsTrigger value="ai-flows" className="gap-2">
             <Zap className="w-4 h-4" />
@@ -416,6 +449,134 @@ export default function Settings() {
                   ))}
                 </TableBody>
               </Table>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* AI Assistant */}
+        <TabsContent value="ai-assistant">
+          <Card className="border-0 shadow-sm">
+            <CardHeader>
+              <CardTitle>AI Assistant Configuration</CardTitle>
+              <CardDescription>Control AI behavior and select default conversation flow</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              {/* AI Enable/Disable */}
+              <div className="flex items-center justify-between p-4 rounded-lg bg-slate-50">
+                <div>
+                  <p className="font-medium text-slate-900">Enable AI Assistant</p>
+                  <p className="text-sm text-slate-500">Automatically respond to leads with AI</p>
+                </div>
+                <Switch
+                  checked={aiConfigForm.ai_enabled}
+                  onCheckedChange={(checked) => setAiConfigForm({ ...aiConfigForm, ai_enabled: checked })}
+                />
+              </div>
+
+              {/* Default Flow Selection */}
+              <div className="space-y-2">
+                <Label>Default Conversation Flow</Label>
+                <Select
+                  value={aiConfigForm.default_flow_id}
+                  onValueChange={(value) => setAiConfigForm({ ...aiConfigForm, default_flow_id: value })}
+                  disabled={!aiConfigForm.ai_enabled}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select default flow" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>None</SelectItem>
+                    {aiFlows.filter(f => f.is_active).map(flow => (
+                      <SelectItem key={flow.id} value={flow.id}>
+                        {flow.name}
+                        {flow.is_default && ' (Default)'}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500">Flow used when no specific trigger matches</p>
+              </div>
+
+              {/* AI Behavior Settings */}
+              <div className="space-y-4 pt-4 border-t">
+                <h4 className="font-medium text-slate-900">AI Behavior</h4>
+                
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Response Delay (seconds)</Label>
+                    <Input
+                      type="number"
+                      min={0}
+                      max={30}
+                      value={aiConfigForm.response_delay}
+                      onChange={(e) => setAiConfigForm({ ...aiConfigForm, response_delay: parseInt(e.target.value) || 0 })}
+                      disabled={!aiConfigForm.ai_enabled}
+                    />
+                    <p className="text-xs text-slate-500">Delay before AI responds to appear more human</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label>Max Questions Per Flow</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={20}
+                      value={aiConfigForm.max_questions_per_flow}
+                      onChange={(e) => setAiConfigForm({ ...aiConfigForm, max_questions_per_flow: parseInt(e.target.value) || 5 })}
+                      disabled={!aiConfigForm.ai_enabled}
+                    />
+                    <p className="text-xs text-slate-500">Limit questions before handoff</p>
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between p-4 rounded-lg border">
+                  <div>
+                    <p className="font-medium text-slate-900">Auto Handoff</p>
+                    <p className="text-sm text-slate-500">Automatically transfer to agent when flow completes</p>
+                  </div>
+                  <Switch
+                    checked={aiConfigForm.auto_handoff_enabled}
+                    onCheckedChange={(checked) => setAiConfigForm({ ...aiConfigForm, auto_handoff_enabled: checked })}
+                    disabled={!aiConfigForm.ai_enabled}
+                  />
+                </div>
+              </div>
+
+              {/* Current Flow Info */}
+              {aiConfigForm.default_flow_id && (
+                <div className="space-y-3 pt-4 border-t">
+                  <h4 className="font-medium text-slate-900">Active Flow Information</h4>
+                  {(() => {
+                    const activeFlow = aiFlows.find(f => f.id === aiConfigForm.default_flow_id);
+                    if (!activeFlow) return null;
+                    return (
+                      <div className="grid grid-cols-3 gap-4">
+                        <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
+                          <p className="text-xs text-blue-600 font-medium">Flow Name</p>
+                          <p className="text-sm font-semibold text-blue-900 mt-1">{activeFlow.name}</p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-red-50 border border-red-100">
+                          <p className="text-xs text-red-600 font-medium">Hot Lead</p>
+                          <p className="text-sm font-semibold text-red-900 mt-1">{activeFlow.hot_lead_threshold || 80}+ points</p>
+                        </div>
+                        <div className="p-3 rounded-lg bg-amber-50 border border-amber-100">
+                          <p className="text-xs text-amber-600 font-medium">Warm Lead</p>
+                          <p className="text-sm font-semibold text-amber-900 mt-1">{activeFlow.warm_lead_threshold || 50}+ points</p>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                </div>
+              )}
+
+              {/* Save Button */}
+              <div className="flex justify-end pt-4">
+                <Button onClick={handleSaveAiConfig} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700">
+                  {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                  <Save className="w-4 h-4 mr-2" />
+                  Save AI Configuration
+                </Button>
+              </div>
             </CardContent>
           </Card>
         </TabsContent>

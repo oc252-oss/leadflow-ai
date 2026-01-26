@@ -488,7 +488,13 @@ export default function AIFlowsTab({ company }) {
           <h3 className="text-lg font-semibold">AI Conversation Flows</h3>
           <p className="text-sm text-slate-500">Configure automated qualification flows</p>
         </div>
-        <Button onClick={() => setShowDialog(true)} className="bg-indigo-600 hover:bg-indigo-700">
+        <Button onClick={() => {
+          setFormData({
+            ...formData,
+            company_id: company?.id || formData.company_id
+          });
+          setShowDialog(true);
+        }} className="bg-indigo-600 hover:bg-indigo-700">
           <Plus className="w-4 h-4 mr-2" />
           Novo Fluxo
         </Button>
@@ -633,29 +639,42 @@ export default function AIFlowsTab({ company }) {
             </TabsList>
 
             <TabsContent value="general" className="space-y-4 mt-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Empresa *</Label>
-                  <Select value={formData.company_id} onValueChange={(value) => setFormData({ ...formData, company_id: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {companies.map(c => (
-                        <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {!company && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Empresa *</Label>
+                    <Select value={formData.company_id} onValueChange={(value) => setFormData({ ...formData, company_id: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {companies.map(c => (
+                          <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Unidade</Label>
+                    <Input
+                      value={formData.unit_id}
+                      onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
+                      placeholder="ID da unidade (opcional)"
+                    />
+                  </div>
                 </div>
+              )}
+              
+              {company && (
                 <div className="space-y-2">
-                  <Label>Unidade</Label>
+                  <Label>Unidade (opcional)</Label>
                   <Input
                     value={formData.unit_id}
                     onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
-                    placeholder="ID da unidade (opcional)"
+                    placeholder="ID da unidade"
                   />
                 </div>
-              </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Nome *</Label>

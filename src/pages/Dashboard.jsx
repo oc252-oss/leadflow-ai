@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { t } from '@/components/i18n';
 import { 
   Users, 
   MessageSquare, 
@@ -91,14 +92,14 @@ export default function Dashboard() {
       {/* Welcome section */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Welcome back!</h2>
-          <p className="text-slate-500 mt-1">Here's what's happening with your leads today.</p>
+          <h2 className="text-2xl font-bold text-slate-900">{t('welcome_back')}</h2>
+          <p className="text-slate-500 mt-1">{t('dashboard_subtitle')}</p>
         </div>
         <div className="flex gap-3">
           <Link to={createPageUrl('Leads')}>
             <Button className="bg-indigo-600 hover:bg-indigo-700">
               <Users className="w-4 h-4 mr-2" />
-              View Leads
+              {t('view_leads')}
             </Button>
           </Link>
         </div>
@@ -107,31 +108,31 @@ export default function Dashboard() {
       {/* Stats grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <StatsCard
-          title="Total Leads"
+          title={t('total_leads')}
           value={stats.totalLeads}
-          change="+12% from last week"
+          change={`+12% ${t('from_last_week')}`}
           changeType="positive"
           icon={Users}
           iconColor="bg-indigo-100 text-indigo-600"
         />
         <StatsCard
-          title="New Today"
+          title={t('new_today')}
           value={stats.newLeadsToday}
-          subtitle="leads captured"
+          subtitle={t('leads_captured')}
           icon={Target}
           iconColor="bg-emerald-100 text-emerald-600"
         />
         <StatsCard
-          title="Hot Leads"
+          title={t('hot_leads')}
           value={stats.hotLeads}
-          subtitle="ready to convert"
+          subtitle={t('ready_to_convert')}
           icon={Flame}
           iconColor="bg-orange-100 text-orange-600"
         />
         <StatsCard
-          title="Conversion Rate"
+          title={t('conversion_rate')}
           value={`${stats.conversionRate}%`}
-          change="+2.5% from last month"
+          change={`+2.5% ${t('from_last_month')}`}
           changeType="positive"
           icon={TrendingUp}
           iconColor="bg-violet-100 text-violet-600"

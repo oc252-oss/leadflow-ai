@@ -24,16 +24,16 @@ Deno.serve(async (req) => {
     }
     const lead = leads[0];
 
-    // Check if conversation already exists
+    // Check if conversation already exists (not closed)
     let conversation = null;
-    if (lead.active_conversation_id) {
-      const existingConvs = await base44.asServiceRole.entities.Conversation.filter({
-        id: lead.active_conversation_id
-      });
-      if (existingConvs.length > 0) {
-        conversation = existingConvs[0];
-        console.log('Existing conversation found:', conversation.id);
-      }
+    const existingConvs = await base44.asServiceRole.entities.Conversation.filter({
+      lead_id: lead_id,
+      status: { $ne: 'closed' }
+    });
+    
+    if (existingConvs.length > 0) {
+      conversation = existingConvs[0];
+      console.log('Existing active conversation found:', conversation.id);
     }
 
     // If no conversation, create one
@@ -43,14 +43,12 @@ Deno.serve(async (req) => {
       // Find active AI flow
       const flows = await base44.asServiceRole.entities.AIConversationFlow.filter({
         company_id,
-        is_active: true,
-        is_default: true
-      }, '-priority', 1);
+        is_active: true
+      }, '-priority', 10);
 
-      let flow = null;
-      if (flows.length > 0) {
-        flow = flows[0];
-        console.log('Selected default flow:', flow.name);
+      let flow = flows.find(f => f.is_default) || flows[0];
+      if (flow) {
+        console.log('Selected flow:', flow.name);
       }
 
       // Create conversation
@@ -62,7 +60,8 @@ Deno.serve(async (req) => {
         status: 'bot_active',
         ai_active: true,
         ai_flow_id: flow?.id,
-        unread_count: 0
+        unread_count: 0,
+        last_message_at: new Date().toISOString()
       });
 
       console.log('Conversation created:', conversation.id, 'with flow:', flow?.id);
@@ -81,7 +80,7 @@ Deno.serve(async (req) => {
           .replace(/{nome}/g, lead.name || 'Cliente')
           .replace(/{interesse}/g, lead.interest_type || 'nossos serviços');
 
-        await base44.asServiceRole.entities.Message.create({
+        const greeting = await base44.asServiceRole.entities.Message.create({
           company_id,
           unit_id: unit_id || lead.unit_id,
           conversation_id: conversation.id,
@@ -94,8 +93,12 @@ Deno.serve(async (req) => {
           read: false
         });
 
-        // Update conversation metadata
+        console.log('Greeting message created:', greeting.id);
+
+        // Update conversation with greeting info
         await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+          last_message_preview: greetingMsg.substring(0, 100),
+          last_message_at: new Date().toISOString(),
           qualification_step: 1
         });
       }

@@ -117,29 +117,44 @@ Deno.serve(async (req) => {
     if (isFirstMessage) {
       console.log('Creating new WhatsApp conversation');
 
-      // Find matching AI flow - consider unit_id for better targeting
-      const flows = await base44.asServiceRole.entities.AIConversationFlow.filter({
-        company_id: integration.company_id,
-        is_active: true
-      }, '-priority');
-
-      // First try to find flow matching unit_id and trigger source
-      let matchingFlows = flows.filter(flow => {
-        const unitMatch = !integration.unit_id || !flow.unit_id || flow.unit_id === integration.unit_id;
-        const sourceMatch = !flow.trigger_sources || flow.trigger_sources.length === 0 || flow.trigger_sources.includes('whatsapp');
-        return unitMatch && sourceMatch;
-      });
-
-      // If no unit-specific flow, fall back to company-wide flows
-      if (matchingFlows.length === 0) {
-        matchingFlows = flows.filter(flow => {
-          const sourceMatch = !flow.trigger_sources || flow.trigger_sources.length === 0 || flow.trigger_sources.includes('whatsapp');
-          return sourceMatch && !flow.unit_id;
+      // Select AI flow - prioritize integration's default_flow_id
+      let selectedFlow;
+      
+      if (integration.default_flow_id) {
+        // Use the default flow configured for this specific WhatsApp number
+        const defaultFlows = await base44.asServiceRole.entities.AIConversationFlow.filter({
+          id: integration.default_flow_id,
+          is_active: true
         });
+        selectedFlow = defaultFlows[0];
+        console.log('Using default flow from integration:', selectedFlow?.name);
       }
 
-      const selectedFlow = matchingFlows[0];
-      console.log('Selected AI flow:', selectedFlow?.name, 'for unit:', integration.unit_id);
+      // If no default flow, use automatic matching
+      if (!selectedFlow) {
+        const flows = await base44.asServiceRole.entities.AIConversationFlow.filter({
+          company_id: integration.company_id,
+          is_active: true
+        }, '-priority');
+
+        // First try to find flow matching unit_id and trigger source
+        let matchingFlows = flows.filter(flow => {
+          const unitMatch = !integration.unit_id || !flow.unit_id || flow.unit_id === integration.unit_id;
+          const sourceMatch = !flow.trigger_sources || flow.trigger_sources.length === 0 || flow.trigger_sources.includes('whatsapp');
+          return unitMatch && sourceMatch;
+        });
+
+        // If no unit-specific flow, fall back to company-wide flows
+        if (matchingFlows.length === 0) {
+          matchingFlows = flows.filter(flow => {
+            const sourceMatch = !flow.trigger_sources || flow.trigger_sources.length === 0 || flow.trigger_sources.includes('whatsapp');
+            return sourceMatch && !flow.unit_id;
+          });
+        }
+
+        selectedFlow = matchingFlows[0];
+        console.log('Auto-selected AI flow:', selectedFlow?.name, 'for unit:', integration.unit_id);
+      }
 
       conversation = await base44.asServiceRole.entities.Conversation.create({
         company_id: integration.company_id,

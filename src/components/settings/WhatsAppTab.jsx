@@ -14,6 +14,7 @@ import { toast } from 'sonner';
 export default function WhatsAppTab({ company }) {
   const [integrations, setIntegrations] = useState([]);
   const [units, setUnits] = useState([]);
+  const [aiFlows, setAiFlows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [qrLoading, setQrLoading] = useState(false);
@@ -24,13 +25,15 @@ export default function WhatsAppTab({ company }) {
   const [formData, setFormData] = useState({
     company_id: company?.id || '',
     unit_id: '',
+    label: '',
     integration_type: 'web',
     provider: 'none',
     phone_number: '',
     instance_id: '',
     api_key: '',
     api_token: '',
-    webhook_url: ''
+    webhook_url: '',
+    default_flow_id: ''
   });
 
   const [qrCode, setQrCode] = useState('');
@@ -42,16 +45,18 @@ export default function WhatsAppTab({ company }) {
   const loadIntegrations = async () => {
     try {
       setLoading(true);
-      const [integrationsData, unitsData] = await Promise.all([
+      const [integrationsData, flowsData] = await Promise.all([
         base44.entities.WhatsAppIntegration.filter({
           company_id: company.id
         }),
-        base44.entities.Company.filter({ id: company.id })
+        base44.entities.AIConversationFlow.filter({
+          company_id: company.id,
+          is_active: true
+        })
       ]);
       
       setIntegrations(integrationsData);
-      // Note: In a real implementation, you'd have a Units entity
-      setUnits([]);
+      setAiFlows(flowsData);
     } catch (error) {
       console.error('Error loading WhatsApp integrations:', error);
       toast.error('Erro ao carregar integrações');
@@ -65,13 +70,15 @@ export default function WhatsAppTab({ company }) {
     setFormData({
       company_id: company.id,
       unit_id: '',
+      label: '',
       integration_type: 'web',
       provider: 'none',
       phone_number: '',
       instance_id: '',
       api_key: '',
       api_token: '',
-      webhook_url: ''
+      webhook_url: '',
+      default_flow_id: ''
     });
     setSelectedMode('web');
     setQrCode('');
@@ -83,13 +90,15 @@ export default function WhatsAppTab({ company }) {
     setFormData({
       company_id: integration.company_id,
       unit_id: integration.unit_id || '',
+      label: integration.label || '',
       integration_type: integration.integration_type,
       provider: integration.provider || 'none',
       phone_number: integration.phone_number || '',
       instance_id: integration.instance_id || '',
       api_key: integration.api_key || '',
       api_token: integration.api_token || '',
-      webhook_url: integration.webhook_url || ''
+      webhook_url: integration.webhook_url || '',
+      default_flow_id: integration.default_flow_id || ''
     });
     setSelectedMode(integration.integration_type);
     setQrCode(integration.qr_code || '');
@@ -275,11 +284,19 @@ export default function WhatsAppTab({ company }) {
                         <h4 className="font-semibold text-slate-900">
                           {integration.phone_number || 'Aguardando conexão...'}
                         </h4>
+                        {integration.label && (
+                          <Badge variant="outline" className="text-xs">
+                            {integration.label}
+                          </Badge>
+                        )}
                         {getStatusBadge(integration.status)}
                       </div>
                       <div className="flex items-center gap-4 text-sm text-slate-500">
                         <span className="capitalize">{integration.integration_type}</span>
                         {integration.unit_id && <span>• Unidade: {integration.unit_id}</span>}
+                        {integration.default_flow_id && (
+                          <span>• Fluxo: {aiFlows.find(f => f.id === integration.default_flow_id)?.name || 'N/A'}</span>
+                        )}
                         {integration.last_connected_at && (
                           <span>• Última atividade: {new Date(integration.last_connected_at).toLocaleDateString()}</span>
                         )}
@@ -343,17 +360,50 @@ export default function WhatsAppTab({ company }) {
           </DialogHeader>
           
           <div className="space-y-4">
-          <Tabs value={selectedMode} onValueChange={(value) => {
-            setSelectedMode(value);
-            setFormData({ ...formData, integration_type: value });
-          }}>
-            <TabsList className="grid w-full grid-cols-3">
-              <TabsTrigger value="provider">Provider (Z-API)</TabsTrigger>
-              <TabsTrigger value="meta">Meta Cloud API</TabsTrigger>
-              <TabsTrigger value="web">WhatsApp Web</TabsTrigger>
-            </TabsList>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Nome/Etiqueta</Label>
+                <Input
+                  value={formData.label}
+                  onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+                  placeholder="Ex: Comercial, Relacionamento, Agendamento"
+                />
+                <p className="text-xs text-slate-500">Identifique a finalidade deste número</p>
+              </div>
 
-            <TabsContent value="provider" className="space-y-4 mt-4">
+              <div className="space-y-2">
+                <Label>Fluxo de IA Padrão</Label>
+                <Select
+                  value={formData.default_flow_id}
+                  onValueChange={(value) => setFormData({ ...formData, default_flow_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um fluxo" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>Nenhum (usar regras automáticas)</SelectItem>
+                    {aiFlows.map(flow => (
+                      <SelectItem key={flow.id} value={flow.id}>
+                        {flow.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500">Fluxo usado para este número</p>
+              </div>
+            </div>
+
+            <Tabs value={selectedMode} onValueChange={(value) => {
+              setSelectedMode(value);
+              setFormData({ ...formData, integration_type: value });
+            }}>
+              <TabsList className="grid w-full grid-cols-3">
+                <TabsTrigger value="web">WhatsApp Web</TabsTrigger>
+                <TabsTrigger value="provider">Provider (Z-API)</TabsTrigger>
+                <TabsTrigger value="meta">Meta Cloud API</TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="provider" className="space-y-4 mt-4">
               <div className="space-y-2">
                 <Label>Provedor</Label>
                 <Select value={formData.provider} onValueChange={(value) => setFormData({ ...formData, provider: value })}>
@@ -487,8 +537,8 @@ export default function WhatsAppTab({ company }) {
                   </Button>
                 </div>
               )}
-            </TabsContent>
-          </Tabs>
+              </TabsContent>
+            </Tabs>
 
           </div>
 

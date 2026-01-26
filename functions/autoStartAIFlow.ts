@@ -30,30 +30,28 @@ Deno.serve(async (req) => {
     // Determine trigger source from lead.source or conversation.channel
     const triggerSource = lead.source || conversation.channel;
 
-    // Find matching AI flow
+    // Find matching AI flow: is_default=true, is_active=true, highest priority
     const flows = await base44.asServiceRole.entities.AIConversationFlow.filter({
       company_id: conversation.company_id,
-      is_active: true
+      is_active: true,
+      is_default: true
     }, '-priority');
 
     let matchedFlow = null;
 
-    // First, try to find a flow with highest priority that has this source in trigger_sources
-    for (const flow of flows) {
-      if (flow.trigger_sources && flow.trigger_sources.includes(triggerSource)) {
-        matchedFlow = flow;
-        break;
-      }
-    }
-
-    // If no exact source match, try default flow
-    if (!matchedFlow) {
+    // Find flow with matching trigger_source, sorted by priority (highest first)
+    if (flows.length > 0) {
       for (const flow of flows) {
-        if (flow.is_default) {
+        if (flow.trigger_sources && flow.trigger_sources.includes(triggerSource)) {
           matchedFlow = flow;
           break;
         }
       }
+    }
+
+    // If no source match, use highest priority default flow (first in list since sorted by -priority)
+    if (!matchedFlow && flows.length > 0) {
+      matchedFlow = flows[0];
     }
 
     if (!matchedFlow) {

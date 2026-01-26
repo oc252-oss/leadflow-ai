@@ -9,13 +9,13 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Unauthorized' }, { status: 401 });
     }
 
-    const { company_id } = await req.json();
+    const { company_id, unit_id, integration_id } = await req.json();
 
     if (!company_id) {
       return Response.json({ error: 'company_id is required' }, { status: 400 });
     }
 
-    console.log('Generating WhatsApp Web QR code for company:', company_id);
+    console.log('Generating WhatsApp Web QR code for company:', company_id, 'unit:', unit_id, 'integration:', integration_id);
 
     // This is a placeholder - in production you would:
     // 1. Initialize a WhatsApp Web session using a library like whatsapp-web.js
@@ -26,27 +26,16 @@ Deno.serve(async (req) => {
     const sessionId = `session_${Date.now()}_${Math.random().toString(36).substring(7)}`;
     const qrCodeData = `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(sessionId)}`;
 
-    // Find or create WhatsApp integration
-    const integrations = await base44.asServiceRole.entities.WhatsAppIntegration.filter({
-      company_id,
-      integration_type: 'web'
-    });
-
-    if (integrations.length > 0) {
-      await base44.asServiceRole.entities.WhatsAppIntegration.update(integrations[0].id, {
+    // Update existing or create new integration
+    if (integration_id) {
+      await base44.asServiceRole.entities.WhatsAppIntegration.update(integration_id, {
         session_id: sessionId,
         qr_code: qrCodeData,
         status: 'disconnected'
       });
     } else {
-      await base44.asServiceRole.entities.WhatsAppIntegration.create({
-        company_id,
-        integration_type: 'web',
-        provider: 'none',
-        session_id: sessionId,
-        qr_code: qrCodeData,
-        status: 'disconnected'
-      });
+      // For new integrations, session will be saved when user clicks "Save"
+      // Just return the QR code
     }
 
     console.log('QR code generated successfully');

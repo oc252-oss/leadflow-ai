@@ -87,8 +87,11 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
 
     setSending(true);
     try {
-      const user = await base44.auth.me();
       const messageContent = newMessage.trim();
+      
+      // Determine sender type based on conversation status
+      const senderType = conversation.status === 'bot_active' ? 'lead' : 'agent';
+      const user = senderType === 'agent' ? await base44.auth.me() : null;
 
       // Create message in Message entity
       const newMsg = await base44.entities.Message.create({
@@ -96,8 +99,8 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
         unit_id: conversation.unit_id,
         conversation_id: conversation.id,
         lead_id: lead.id,
-        sender_type: 'agent',
-        sender_id: user.id,
+        sender_type: senderType,
+        sender_id: user?.id || null,
         content: messageContent,
         message_type: 'text',
         direction: 'outbound',
@@ -115,6 +118,20 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
       // Add message to UI immediately
       setMessages(prev => [...prev, newMsg]);
       setNewMessage('');
+
+      // If bot is active, process answer for AI flow
+      if (conversation.status === 'bot_active' && conversation.ai_flow_id) {
+        try {
+          const response = await base44.functions.invoke('processAIFlowAnswer', {
+            conversation_id: conversation.id,
+            user_message: messageContent
+          });
+
+          console.log('[ChatWindow] AI flow answer processed:', response.data);
+        } catch (error) {
+          console.error('Error processing AI flow answer:', error);
+        }
+      }
       
       // Reload full conversation data
       await onMessageSent?.();

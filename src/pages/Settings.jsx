@@ -43,9 +43,11 @@ import {
   Loader2,
   CheckCircle,
   XCircle,
-  Link as LinkIcon
+  Link as LinkIcon,
+  Zap
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import AIFlowsTab from '@/components/settings/AIFlowsTab';
 
 export default function Settings() {
   const [company, setCompany] = useState(null);
@@ -248,9 +250,9 @@ export default function Settings() {
             <Users className="w-4 h-4" />
             Team
           </TabsTrigger>
-          <TabsTrigger value="ai" className="gap-2">
-            <Bot className="w-4 h-4" />
-            AI Assistant
+          <TabsTrigger value="ai-flows" className="gap-2">
+            <Zap className="w-4 h-4" />
+            AI Flows
           </TabsTrigger>
           <TabsTrigger value="integrations" className="gap-2">
             <LinkIcon className="w-4 h-4" />
@@ -412,82 +414,9 @@ export default function Settings() {
           </Card>
         </TabsContent>
 
-        {/* AI Settings */}
-        <TabsContent value="ai">
-          <Card className="border-0 shadow-sm">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle>AI Conversation Flows</CardTitle>
-                <CardDescription>Configure how AI interacts with your leads</CardDescription>
-              </div>
-              <Button onClick={() => setShowAiFlowDialog(true)} className="bg-indigo-600 hover:bg-indigo-700">
-                <Plus className="w-4 h-4 mr-2" />
-                Create Flow
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {aiFlows.length === 0 ? (
-                <div className="text-center py-12 text-slate-500">
-                  <Bot className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                  <p>No AI flows configured yet</p>
-                  <Button 
-                    variant="outline" 
-                    className="mt-4"
-                    onClick={() => setShowAiFlowDialog(true)}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    Create your first flow
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {aiFlows.map((flow) => (
-                    <div 
-                      key={flow.id}
-                      className="flex items-center justify-between p-4 rounded-lg border border-slate-200"
-                    >
-                      <div className="flex items-center gap-3">
-                        <div className={cn(
-                          "p-2 rounded-lg",
-                          flow.is_active ? "bg-violet-100" : "bg-slate-100"
-                        )}>
-                          <Bot className={cn(
-                            "w-5 h-5",
-                            flow.is_active ? "text-violet-600" : "text-slate-400"
-                          )} />
-                        </div>
-                        <div>
-                          <div className="flex items-center gap-2">
-                            <p className="font-medium text-slate-900">{flow.name}</p>
-                            {flow.is_default && (
-                              <Badge variant="secondary" className="text-xs">Default</Badge>
-                            )}
-                          </div>
-                          {flow.description && (
-                            <p className="text-sm text-slate-500">{flow.description}</p>
-                          )}
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className={cn(
-                          flow.is_active ? "bg-emerald-100 text-emerald-700" : "bg-slate-100 text-slate-700"
-                        )}>
-                          {flow.is_active ? 'Active' : 'Inactive'}
-                        </Badge>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleEditFlow(flow)}
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        {/* AI Flows */}
+        <TabsContent value="ai-flows">
+          <AIFlowsTab company={company} />
         </TabsContent>
 
         {/* Integrations */}

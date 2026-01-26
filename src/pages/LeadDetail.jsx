@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { formatDistanceToNow, format } from 'date-fns';
 import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 const stageColors = {
   new: 'bg-slate-100 text-slate-600',
@@ -157,20 +158,33 @@ export default function LeadDetail() {
   const handleOpenChat = async () => {
     try {
       setOpeningChat(true);
-      console.log('[LeadDetail] Opening chat for lead:', leadId);
+      console.log('🔵 [Open Chat] Button clicked for lead:', leadId);
 
       const response = await base44.functions.invoke('openConversation', {
         lead_id: leadId
       });
 
-      if (response.data?.conversation_id) {
-        console.log('[LeadDetail] Chat opened, conversation:', response.data.conversation_id);
-        navigate(createPageUrl('Conversations') + `?conversation_id=${response.data.conversation_id}`);
+      console.log('🟢 [Open Chat] Backend response:', response);
+      console.log('🟢 [Open Chat] Response data:', response.data);
+
+      if (response?.data?.conversation_id) {
+        const conversationId = response.data.conversation_id;
+        console.log('✅ [Open Chat] Success! Conversation ID:', conversationId);
+        
+        const redirectUrl = createPageUrl('Conversations') + `?conversation_id=${conversationId}`;
+        console.log('🔗 [Open Chat] Redirecting to:', redirectUrl);
+        
+        toast.success('Chat opened!');
+        navigate(redirectUrl);
       } else {
-        console.error('[LeadDetail] No conversation_id in response');
+        console.error('❌ [Open Chat] No conversation_id in response:', response.data);
+        toast.error('Failed to open chat - no conversation returned');
       }
     } catch (error) {
-      console.error('[LeadDetail] Error opening chat:', error);
+      console.error('❌ [Open Chat] Error:', error);
+      console.error('❌ [Open Chat] Error message:', error?.message);
+      console.error('❌ [Open Chat] Error response:', error?.response);
+      toast.error(`Failed to open chat: ${error?.message || 'Unknown error'}`);
     } finally {
       setOpeningChat(false);
     }

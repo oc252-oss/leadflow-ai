@@ -9,6 +9,7 @@ import Pipeline from './pages/Pipeline';
 import Reports from './pages/Reports';
 import Settings from './pages/Settings';
 import ConversationFlows from './pages/ConversationFlows';
+import CompanySettings from './pages/CompanySettings';
 import __Layout from './Layout.jsx';
 
 
@@ -24,6 +25,7 @@ export const PAGES = {
     "Reports": Reports,
     "Settings": Settings,
     "ConversationFlows": ConversationFlows,
+    "CompanySettings": CompanySettings,
 }
 
 export const pagesConfig = {

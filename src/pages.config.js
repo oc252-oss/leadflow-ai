@@ -5,6 +5,9 @@ import Pipeline from './pages/Pipeline';
 import Conversations from './pages/Conversations';
 import Campaigns from './pages/Campaigns';
 import Automations from './pages/Automations';
+import Reports from './pages/Reports';
+import Settings from './pages/Settings';
+import Onboarding from './pages/Onboarding';
 import __Layout from './Layout.jsx';
 
 
@@ -16,6 +19,9 @@ export const PAGES = {
     "Conversations": Conversations,
     "Campaigns": Campaigns,
     "Automations": Automations,
+    "Reports": Reports,
+    "Settings": Settings,
+    "Onboarding": Onboarding,
 }
 
 export const pagesConfig = {

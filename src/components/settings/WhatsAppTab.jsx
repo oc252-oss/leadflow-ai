@@ -41,6 +41,10 @@ export default function WhatsAppTab({ company }) {
   const [checkingStatus, setCheckingStatus] = useState(false);
   const [testModeEnabled, setTestModeEnabled] = useState(false);
   const [testModeEndpoints, setTestModeEndpoints] = useState(null);
+  const [webServiceMode, setWebServiceMode] = useState(false);
+  const [webServiceQr, setWebServiceQr] = useState(null);
+  const [webSessionId, setWebSessionId] = useState(null);
+  const [webServiceConnecting, setWebServiceConnecting] = useState(false);
 
   useEffect(() => {
     loadIntegrations();
@@ -195,6 +199,79 @@ export default function WhatsAppTab({ company }) {
     } finally {
       setQrLoading(false);
     }
+  };
+
+  const handleGenerateWebServiceQR = async () => {
+    try {
+      setWebServiceConnecting(true);
+      console.log('Generating QR code via WhatsApp Web service...');
+
+      const response = await base44.functions.invoke('generateWhatsAppQRWeb', {
+        company_id: company.id,
+        unit_id: formData.unit_id
+      });
+
+      if (response.data.success) {
+        setWebSessionId(response.data.session_id);
+        
+        if (response.data.qr_code) {
+          setWebServiceQr(response.data.qr_code);
+          toast.success('QR Code gerado! Escaneie com seu WhatsApp');
+          
+          // Start polling for connection status
+          pollWebServiceStatus(response.data.session_id);
+        } else if (response.data.status === 'connected') {
+          toast.success('WhatsApp já conectado!');
+          setFormData({
+            ...formData,
+            phone_number: response.data.phone,
+            instance_id: response.data.session_id
+          });
+          setWebServiceMode(false);
+        }
+      } else {
+        toast.error('Erro: ' + response.data.error);
+      }
+    } catch (error) {
+      console.error('Error generating QR:', error);
+      toast.error('Serviço WhatsApp Web indisponível');
+    } finally {
+      setWebServiceConnecting(false);
+    }
+  };
+
+  const pollWebServiceStatus = async (sessionId) => {
+    let attempts = 0;
+    const maxAttempts = 120; // 2 minutes
+
+    const interval = setInterval(async () => {
+      attempts++;
+      try {
+        const response = await base44.functions.invoke('checkWhatsAppWebStatus', {
+          session_id: sessionId
+        });
+
+        if (response.data.status === 'connected') {
+          clearInterval(interval);
+          setFormData({
+            ...formData,
+            phone_number: response.data.phone,
+            instance_id: sessionId,
+            integration_type: 'web'
+          });
+          setWebServiceQr(null);
+          setWebServiceMode(false);
+          toast.success(`WhatsApp conectado: ${response.data.phone}`);
+        }
+      } catch (error) {
+        console.error('Error checking status:', error);
+      }
+
+      if (attempts >= maxAttempts) {
+        clearInterval(interval);
+        toast.error('Tempo limite para conexão expirado');
+      }
+    }, 1000);
   };
 
   const pollSessionStatus = async (sessionId) => {
@@ -539,106 +616,127 @@ export default function WhatsAppTab({ company }) {
 
             <TabsContent value="web" className="space-y-4 mt-4">
               <div className="space-y-4">
-                {/* Test Mode Section */}
-                <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                {/* Web Service Mode - Native QR via External Service */}
+                <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                   <div className="flex items-start justify-between">
                     <div>
-                      <h4 className="font-semibold text-blue-900 text-sm mb-1">Modo Teste - Sessão Externa</h4>
-                      <p className="text-xs text-blue-800">
-                        Use com um cliente externo WhatsApp Web. Nenhum QR Code gerado aqui.
+                      <h4 className="font-semibold text-green-900 text-sm mb-1">🚀 WhatsApp Web Service</h4>
+                      <p className="text-xs text-green-800">
+                        Conecte via serviço externo com geração nativa de QR Code (recomendado)
                       </p>
                     </div>
                     <Button
-                      variant={testModeEnabled ? 'default' : 'outline'}
+                      variant={webServiceMode ? 'default' : 'outline'}
                       size="sm"
                       onClick={() => {
-                        setTestModeEnabled(!testModeEnabled);
-                        if (!testModeEnabled) {
-                          setTestModeEndpoints({
-                            receive: `${window.location.origin}/api/functions/whatsappWebReceiveMessage`,
-                            send: `${window.location.origin}/api/functions/whatsappWebSendMessage`
-                          });
+                        setWebServiceMode(!webServiceMode);
+                        if (webServiceMode) {
+                          setWebServiceQr(null);
+                          setWebSessionId(null);
                         }
                       }}
-                      className={testModeEnabled ? 'bg-blue-600' : ''}
+                      className={webServiceMode ? 'bg-green-600' : ''}
                     >
-                      {testModeEnabled ? 'Ativo' : 'Ativar Teste'}
+                      {webServiceMode ? 'Ativo' : 'Usar Serviço'}
                     </Button>
                   </div>
 
-                  {testModeEnabled && testModeEndpoints && (
-                    <div className="mt-4 space-y-3">
-                      <div className="bg-white rounded p-3 space-y-2">
-                        <div>
-                          <p className="text-xs font-semibold text-slate-700 mb-1">Endpoint Receber Mensagens (POST):</p>
-                          <div className="bg-slate-100 p-2 rounded font-mono text-xs text-slate-600 break-all">
-                            {testModeEndpoints.receive}
-                          </div>
-                          <p className="text-xs text-slate-500 mt-1">Payload: {`{ phone, message, timestamp }`}</p>
+                  {webServiceMode && (
+                    <div className="mt-4">
+                      {!webServiceQr ? (
+                        <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                          <QrCode className="w-16 h-16 text-green-300" />
+                          <p className="text-sm text-green-700">Gere um QR Code para conectar</p>
+                          <Button onClick={handleGenerateWebServiceQR} disabled={webServiceConnecting} className="bg-green-600">
+                            {webServiceConnecting ? (
+                              <>
+                                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                                Gerando...
+                              </>
+                            ) : (
+                              <>
+                                <QrCode className="w-4 h-4 mr-2" />
+                                Gerar QR Code
+                              </>
+                            )}
+                          </Button>
                         </div>
-                      </div>
-
-                      <div className="bg-white rounded p-3 space-y-2">
-                        <div>
-                          <p className="text-xs font-semibold text-slate-700 mb-1">Endpoint Enviar Mensagens (POST):</p>
-                          <div className="bg-slate-100 p-2 rounded font-mono text-xs text-slate-600 break-all">
-                            {testModeEndpoints.send}
+                      ) : (
+                        <div className="flex flex-col items-center justify-center py-8 space-y-4">
+                          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 w-full mb-4">
+                            <p className="text-xs text-blue-800">
+                              ℹ️ Escaneie este QR Code com o WhatsApp do seu celular no navegador (web.whatsapp.com)
+                            </p>
                           </div>
-                          <p className="text-xs text-slate-500 mt-1">Payload: {`{ conversation_id, content, phone? }`}</p>
+                          <img src={webServiceQr} alt="WhatsApp QR Code" className="w-64 h-64 border-2 border-slate-300 rounded-lg" />
+                          <p className="text-sm text-slate-600 font-medium">Aguardando escaneamento...</p>
+                          <Button variant="outline" onClick={handleGenerateWebServiceQR} disabled={webServiceConnecting}>
+                            Gerar Novo QR
+                          </Button>
                         </div>
-                      </div>
-
-                      <div className="bg-green-50 border border-green-200 rounded p-3">
-                        <p className="text-xs text-green-800">
-                          ✓ Status: <span className="font-semibold">Conectado</span> - Pronto para receber e enviar mensagens
-                        </p>
-                      </div>
+                      )}
                     </div>
                   )}
                 </div>
 
-                {/* Traditional QR Code Section (hidden when test mode enabled) */}
-                {!testModeEnabled && (
-                  <>
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
-                      <p className="text-sm text-amber-800">
-                        ⚠️ Modo experimental: Use apenas para testes. Para produção, use Provider ou Meta Cloud API.
-                      </p>
+                {/* Test Mode Section */}
+                {!webServiceMode && (
+                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <h4 className="font-semibold text-blue-900 text-sm mb-1">Modo Teste - Sessão Externa</h4>
+                        <p className="text-xs text-blue-800">
+                          Use com um cliente externo WhatsApp Web. Nenhum QR Code gerado aqui.
+                        </p>
+                      </div>
+                      <Button
+                        variant={testModeEnabled ? 'default' : 'outline'}
+                        size="sm"
+                        onClick={() => {
+                          setTestModeEnabled(!testModeEnabled);
+                          if (!testModeEnabled) {
+                            setTestModeEndpoints({
+                              receive: `${window.location.origin}/api/functions/whatsappWebReceiveMessage`,
+                              send: `${window.location.origin}/api/functions/whatsappWebSendMessage`
+                            });
+                          }
+                        }}
+                        className={testModeEnabled ? 'bg-blue-600' : ''}
+                      >
+                        {testModeEnabled ? 'Ativo' : 'Ativar Teste'}
+                      </Button>
                     </div>
 
-                    {!qrCode ? (
-                      <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                        <QrCode className="w-16 h-16 text-slate-300" />
-                        <p className="text-sm text-slate-500">Gere um QR Code para conectar</p>
-                        <Button onClick={handleGenerateQR} disabled={qrLoading}>
-                          {qrLoading ? (
-                            <>
-                              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                              Gerando...
-                            </>
-                          ) : (
-                            <>
-                              <QrCode className="w-4 h-4 mr-2" />
-                              Gerar QR Code
-                            </>
-                          )}
-                        </Button>
-                      </div>
-                    ) : (
-                      <div className="flex flex-col items-center justify-center py-8 space-y-4">
-                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 w-full mb-4">
-                          <p className="text-xs text-blue-800">
-                            ℹ️ Escaneie este QR Code com o WhatsApp do seu celular. A conexão será estabelecida automaticamente.
+                    {testModeEnabled && testModeEndpoints && (
+                      <div className="mt-4 space-y-3">
+                        <div className="bg-white rounded p-3 space-y-2">
+                          <div>
+                            <p className="text-xs font-semibold text-slate-700 mb-1">Endpoint Receber Mensagens (POST):</p>
+                            <div className="bg-slate-100 p-2 rounded font-mono text-xs text-slate-600 break-all">
+                              {testModeEndpoints.receive}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">Payload: {`{ phone, message, timestamp }`}</p>
+                          </div>
+                        </div>
+
+                        <div className="bg-white rounded p-3 space-y-2">
+                          <div>
+                            <p className="text-xs font-semibold text-slate-700 mb-1">Endpoint Enviar Mensagens (POST):</p>
+                            <div className="bg-slate-100 p-2 rounded font-mono text-xs text-slate-600 break-all">
+                              {testModeEndpoints.send}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-1">Payload: {`{ conversation_id, content, phone? }`}</p>
+                          </div>
+                        </div>
+
+                        <div className="bg-green-50 border border-green-200 rounded p-3">
+                          <p className="text-xs text-green-800">
+                            ✓ Status: <span className="font-semibold">Conectado</span> - Pronto para receber e enviar mensagens
                           </p>
                         </div>
-                        <img src={qrCode} alt="QR Code" className="w-64 h-64 border-2 border-slate-300 rounded-lg" />
-                        <p className="text-sm text-slate-600 font-medium">Aguardando escaneamento...</p>
-                        <Button variant="outline" onClick={handleGenerateQR} disabled={qrLoading}>
-                          Regenerar QR Code
-                        </Button>
                       </div>
                     )}
-                  </>
+                  </div>
                 )}
               </div>
               </TabsContent>

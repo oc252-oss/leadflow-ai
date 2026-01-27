@@ -101,15 +101,24 @@ Deno.serve(async (req) => {
 
         // Create task for sales
         try {
-          await base44.asServiceRole.entities.Task.create({
+          const taskData = {
             company_id: lead.company_id,
             lead_id: lead.id,
             title: `Acompanhar lead qualificado por voz - ${lead.name}`,
             description: `Lead respondeu positivamente à campanha de voz. Transcrição: "${transcript}"`,
-            assigned_to: lead.assigned_agent_id,
             priority: 'high',
             status: 'open'
-          });
+          };
+
+          // Assign based on campaign configuration
+          if (campaign.assigned_to_type === 'specific' && campaign.assigned_to_user_id) {
+            taskData.assigned_to = campaign.assigned_to_user_id;
+          } else {
+            // Queue mode - leave unassigned
+            taskData.assigned_to = null;
+          }
+
+          await base44.asServiceRole.entities.Task.create(taskData);
         } catch (error) {
           console.log('[zenviaCampaignWebhook] Could not create task:', error.message);
         }
@@ -134,16 +143,24 @@ Deno.serve(async (req) => {
       } else if (intentData.result === 'maybe') {
         // Schedule follow-up
         try {
-          await base44.asServiceRole.entities.Task.create({
+          const taskData = {
             company_id: lead.company_id,
             lead_id: lead.id,
             title: `Acompanhamento - Resposta indefinida em campanha de voz`,
             description: `Lead respondeu de forma indefinida: "${transcript}". Agendar novo contato.`,
-            assigned_to: lead.assigned_agent_id,
             priority: 'medium',
             status: 'open',
             due_date: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString()
-          });
+          };
+
+          // Assign based on campaign configuration
+          if (campaign.assigned_to_type === 'specific' && campaign.assigned_to_user_id) {
+            taskData.assigned_to = campaign.assigned_to_user_id;
+          } else {
+            taskData.assigned_to = null;
+          }
+
+          await base44.asServiceRole.entities.Task.create(taskData);
         } catch (error) {
           console.log('[zenviaCampaignWebhook] Could not create task:', error.message);
         }

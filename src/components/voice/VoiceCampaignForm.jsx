@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { base44 } from '@/api/base44Client';
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -18,10 +19,33 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel }) {
     business_hours_end: '18:00',
     calling_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
     max_attempts_per_lead: 3,
+    assigned_to_type: 'queue',
+    assigned_to_user_id: null,
     is_active: true
   });
 
   const [saving, setSaving] = useState(false);
+  const [teamMembers, setTeamMembers] = useState([]);
+
+  useEffect(() => {
+    loadTeamMembers();
+  }, []);
+
+  const loadTeamMembers = async () => {
+    try {
+      const user = await base44.auth.me();
+      const teamMembersData = await base44.entities.TeamMember.filter({ user_email: user.email });
+      if (teamMembersData.length > 0) {
+        const allMembers = await base44.entities.TeamMember.filter({
+          company_id: teamMembersData[0].company_id,
+          status: 'active'
+        });
+        setTeamMembers(allMembers);
+      }
+    } catch (error) {
+      console.error('Error loading team members:', error);
+    }
+  };
 
   const handleSave = async () => {
     if (!data.name || !data.script_text) {
@@ -149,6 +173,46 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel }) {
           value={data.max_attempts_per_lead}
           onChange={(e) => setData({ ...data, max_attempts_per_lead: parseInt(e.target.value) })}
         />
+      </div>
+
+      <div className="space-y-3 border-t pt-4">
+        <h3 className="font-semibold text-sm text-slate-900">Atribuição de Tarefas</h3>
+        
+        <div className="space-y-2">
+          <Label>Modo de Atribuição</Label>
+          <Select value={data.assigned_to_type} onValueChange={(val) => setData({ ...data, assigned_to_type: val, assigned_to_user_id: null })}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="queue">Fila Geral (Sem Atribuição)</SelectItem>
+              <SelectItem value="specific">Atribuir a Membro Específico</SelectItem>
+            </SelectContent>
+          </Select>
+          <p className="text-xs text-slate-500">
+            {data.assigned_to_type === 'queue' 
+              ? 'Tarefas ficarão visíveis para toda a equipe' 
+              : 'Tarefas serão atribuídas ao membro selecionado'}
+          </p>
+        </div>
+
+        {data.assigned_to_type === 'specific' && (
+          <div className="space-y-2">
+            <Label>Atribuir Para</Label>
+            <Select value={data.assigned_to_user_id || ''} onValueChange={(val) => setData({ ...data, assigned_to_user_id: val })}>
+              <SelectTrigger>
+                <SelectValue placeholder="Selecione um membro" />
+              </SelectTrigger>
+              <SelectContent>
+                {teamMembers.map(member => (
+                  <SelectItem key={member.id} value={member.id}>
+                    {member.user_email}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+        )}
       </div>
 
       <div className="flex items-center gap-2">

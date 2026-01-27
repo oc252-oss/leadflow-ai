@@ -22,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   Plus, 
   Zap, 
@@ -35,9 +36,12 @@ import {
   Star,
   ArrowRight,
   Bell,
-  Loader2
+  Loader2,
+  Phone
 } from 'lucide-react';
 import { cn } from "@/lib/utils";
+import VoiceCampaignsList from '@/components/voice/VoiceCampaignsList';
+import VoiceCampaignForm from '@/components/voice/VoiceCampaignForm';
 
 const triggerConfig = {
   new_lead: { icon: User, color: 'bg-blue-100 text-blue-600', label: 'New Lead' },
@@ -49,11 +53,17 @@ const triggerConfig = {
 };
 
 function Automations() {
+  const [activeTab, setActiveTab] = useState('rules');
   const [automations, setAutomations] = useState([]);
+  const [voiceCampaigns, setVoiceCampaigns] = useState([]);
   const [teamMember, setTeamMember] = useState(null);
+  const [company, setCompany] = useState(null);
+  const [teamMembers, setTeamMembers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
+  const [showVoiceDialog, setShowVoiceDialog] = useState(false);
   const [editingAutomation, setEditingAutomation] = useState(null);
+  const [editingVoiceCampaign, setEditingVoiceCampaign] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
@@ -77,11 +87,21 @@ function Automations() {
       if (members.length > 0) {
         setTeamMember(members[0]);
         const companyId = members[0].company_id;
-        const automationsData = await base44.entities.AutomationRule.filter({ company_id: companyId }, '-created_date');
+        
+        const [automationsData, companiesData, teamMembersData, voiceCampaignsData] = await Promise.all([
+          base44.entities.AutomationRule.filter({ company_id: companyId }, '-created_date'),
+          base44.entities.Company.filter({ id: companyId }),
+          base44.entities.TeamMember.filter({ company_id: companyId, status: 'active' }),
+          base44.entities.VoiceCampaign.filter({ company_id: companyId }, '-created_date')
+        ]);
+        
         setAutomations(automationsData);
+        setCompany(companiesData[0]);
+        setTeamMembers(teamMembersData);
+        setVoiceCampaigns(voiceCampaignsData);
       }
     } catch (error) {
-      console.error('Error loading automations:', error);
+      console.error('Error loading data:', error);
     } finally {
       setLoading(false);
     }
@@ -145,6 +165,74 @@ function Automations() {
     }
   };
 
+  // Voice Campaign handlers
+  const handleVoiceCampaignSave = async (data) => {
+    if (!teamMember) return;
+    
+    setSaving(true);
+    try {
+      if (editingVoiceCampaign) {
+        await base44.entities.VoiceCampaign.update(editingVoiceCampaign.id, data);
+        setVoiceCampaigns(voiceCampaigns.map(c => 
+          c.id === editingVoiceCampaign.id ? { ...c, ...data } : c
+        ));
+      } else {
+        const newCampaign = await base44.entities.VoiceCampaign.create({
+          ...data,
+          company_id: teamMember.company_id
+        });
+        setVoiceCampaigns([newCampaign, ...voiceCampaigns]);
+      }
+      
+      setShowVoiceDialog(false);
+      setEditingVoiceCampaign(null);
+    } catch (error) {
+      console.error('Error saving voice campaign:', error);
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handleVoiceCampaignEdit = (campaign) => {
+    setEditingVoiceCampaign(campaign);
+    setShowVoiceDialog(true);
+  };
+
+  const handleVoiceCampaignDelete = async (campaignId) => {
+    try {
+      await base44.entities.VoiceCampaign.delete(campaignId);
+      setVoiceCampaigns(voiceCampaigns.filter(c => c.id !== campaignId));
+    } catch (error) {
+      console.error('Error deleting voice campaign:', error);
+    }
+  };
+
+  const handleVoiceCampaignToggle = async (campaign) => {
+    try {
+      await base44.entities.VoiceCampaign.update(campaign.id, { 
+        is_active: !campaign.is_active 
+      });
+      setVoiceCampaigns(voiceCampaigns.map(c => 
+        c.id === campaign.id ? { ...c, is_active: !c.is_active } : c
+      ));
+    } catch (error) {
+      console.error('Error toggling voice campaign:', error);
+    }
+  };
+
+  const handleVoiceCampaignDuplicate = async (campaign) => {
+    try {
+      const duplicated = await base44.entities.VoiceCampaign.create({
+        ...campaign,
+        id: undefined,
+        name: `${campaign.name} (Cópia)`
+      });
+      setVoiceCampaigns([duplicated, ...voiceCampaigns]);
+    } catch (error) {
+      console.error('Error duplicating voice campaign:', error);
+    }
+  };
+
   const handleEdit = (automation) => {
     setEditingAutomation(automation);
     setFormData({
@@ -174,17 +262,34 @@ function Automations() {
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Automations</h2>
           <p className="text-slate-500 mt-1">
-            Create rules to automate your lead management workflow
+            Manage automation rules and voice campaigns
           </p>
         </div>
-        <Button onClick={() => setShowAddDialog(true)} className="bg-indigo-600 hover:bg-indigo-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Create Automation
-        </Button>
       </div>
 
-      {/* Automations Grid */}
-      {automations.length === 0 ? (
+      {/* Tabs */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="rules" className="flex items-center gap-2">
+            <Zap className="w-4 h-4" />
+            Automation Rules
+          </TabsTrigger>
+          <TabsTrigger value="voice" className="flex items-center gap-2">
+            <Phone className="w-4 h-4" />
+            Voice Campaigns
+          </TabsTrigger>
+        </TabsList>
+
+        {/* RULES TAB */}
+        <TabsContent value="rules" className="space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={() => setShowAddDialog(true)} className="bg-indigo-600 hover:bg-indigo-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Automation Rule
+            </Button>
+          </div>
+
+          {automations.length === 0 ? (
         <Card className="border-0 shadow-sm">
           <CardContent className="py-16 text-center">
             <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
@@ -260,9 +365,60 @@ function Automations() {
             );
           })}
         </div>
-      )}
+          )}
+        </TabsContent>
 
-      {/* Add/Edit Dialog */}
+        {/* VOICE CAMPAIGNS TAB */}
+        <TabsContent value="voice" className="space-y-4">
+          <div className="flex justify-end">
+            <Button onClick={() => {
+              setEditingVoiceCampaign(null);
+              setShowVoiceDialog(true);
+            }} className="bg-indigo-600 hover:bg-indigo-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Voice Campaign
+            </Button>
+          </div>
+
+          <VoiceCampaignsList
+            campaigns={voiceCampaigns}
+            teamMembers={teamMembers}
+            onEdit={handleVoiceCampaignEdit}
+            onDelete={handleVoiceCampaignDelete}
+            onToggle={handleVoiceCampaignToggle}
+            onDuplicate={handleVoiceCampaignDuplicate}
+            onAddNew={() => {
+              setEditingVoiceCampaign(null);
+              setShowVoiceDialog(true);
+            }}
+          />
+        </TabsContent>
+      </Tabs>
+
+      {/* Voice Campaign Dialog */}
+      <Dialog open={showVoiceDialog} onOpenChange={setShowVoiceDialog}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{editingVoiceCampaign ? 'Edit Voice Campaign' : 'Create Voice Campaign'}</DialogTitle>
+            <DialogDescription>
+              Configure your voice campaign for lead reengagement
+            </DialogDescription>
+          </DialogHeader>
+
+          <VoiceCampaignForm
+            campaign={editingVoiceCampaign}
+            onSave={handleVoiceCampaignSave}
+            onCancel={() => {
+              setShowVoiceDialog(false);
+              setEditingVoiceCampaign(null);
+            }}
+            teamMembers={teamMembers}
+            company={company}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Add/Edit Automation Rule Dialog */}
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>

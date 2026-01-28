@@ -9,7 +9,6 @@ import { useNavigate } from 'react-router-dom';
 import { isOrgLevel } from '@/components/hierarchy/HierarchyUtils';
 import { toast } from 'sonner';
 import PoweredBy from '@/components/branding/PoweredBy';
-import CliniqLogo from '@/components/branding/CliniqLogo';
 
 export default function OrganizationSettings() {
   const navigate = useNavigate();
@@ -19,7 +18,6 @@ export default function OrganizationSettings() {
   const [organization, setOrganization] = useState(null);
   const [brandingConfig, setBrandingConfig] = useState({
     show_powered_by: true,
-    show_logo_seal: false,
     ai_message_signature: false
   });
 
@@ -54,7 +52,6 @@ export default function OrganizationSettings() {
         if (org.branding_config) {
           setBrandingConfig({
             show_powered_by: org.branding_config.show_powered_by !== false,
-            show_logo_seal: org.branding_config.show_logo_seal || false,
             ai_message_signature: org.branding_config.ai_message_signature || false
           });
         }
@@ -112,41 +109,19 @@ export default function OrganizationSettings() {
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
-          {/* Logo Examples */}
-          <div className="grid grid-cols-3 gap-4 p-4 rounded-lg bg-slate-50 border border-slate-200">
-            <div className="text-center space-y-2">
-              <p className="text-xs font-medium text-slate-600">Logo Completo</p>
-              <div className="bg-white p-4 rounded border border-slate-200 flex items-center justify-center">
-                <CliniqLogo variant="full" size="lg" />
-              </div>
-            </div>
-            <div className="text-center space-y-2">
-              <p className="text-xs font-medium text-slate-600">Monocromático</p>
-              <div className="bg-white p-4 rounded border border-slate-200 flex items-center justify-center">
-                <CliniqLogo variant="monochrome" size="lg" />
-              </div>
-            </div>
-            <div className="text-center space-y-2">
-              <p className="text-xs font-medium text-slate-600">Ícone</p>
-              <div className="bg-white p-4 rounded border border-slate-200 flex items-center justify-center">
-                <CliniqLogo variant="icon" size="lg" />
-              </div>
-            </div>
-          </div>
-
           {/* Preview */}
           <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
-            <p className="text-xs font-medium text-slate-600 mb-3">Pré-visualização do Selo:</p>
+            <p className="text-xs font-medium text-slate-600 mb-3">Pré-visualização:</p>
             <div className="space-y-3">
               {brandingConfig.show_powered_by && (
                 <div className="bg-white p-3 rounded border border-slate-200">
-                  <PoweredBy variant="dashboard" showLogo={brandingConfig.show_logo_seal} />
+                  <PoweredBy variant="dashboard" />
                 </div>
               )}
               {brandingConfig.ai_message_signature && (
                 <div className="bg-white p-3 rounded border border-slate-200">
                   <p className="text-sm text-slate-700 mb-2">Olá! Como posso ajudar?</p>
-                  <PoweredBy variant="message" showLogo={brandingConfig.show_logo_seal} />
+                  <PoweredBy variant="message" />
                 </div>
               )}
               {!brandingConfig.show_powered_by && !brandingConfig.ai_message_signature && (
@@ -169,22 +144,6 @@ export default function OrganizationSettings() {
                 onCheckedChange={(checked) => 
                   setBrandingConfig({ ...brandingConfig, show_powered_by: checked })
                 }
-              />
-            </div>
-
-            <div className="flex items-center justify-between p-4 border rounded-lg">
-              <div className="space-y-0.5">
-                <Label className="text-base">Incluir Logo no Selo</Label>
-                <p className="text-sm text-slate-600">
-                  Adiciona o ícone da CLINIQ.AI junto ao texto "powered by"
-                </p>
-              </div>
-              <Switch
-                checked={brandingConfig.show_logo_seal}
-                onCheckedChange={(checked) => 
-                  setBrandingConfig({ ...brandingConfig, show_logo_seal: checked })
-                }
-                disabled={!brandingConfig.show_powered_by && !brandingConfig.ai_message_signature}
               />
             </div>
 

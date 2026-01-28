@@ -300,10 +300,7 @@ export default function Layout({ children, currentPageName }) {
         {organization?.branding_config?.show_powered_by !== false && (
           <footer className="fixed bottom-0 right-0 lg:left-72 left-0 bg-white/80 backdrop-blur-sm border-t border-slate-100 py-2 px-4 lg:px-8 z-20">
             <div className="flex items-center justify-center">
-              <PoweredBy 
-                variant="dashboard" 
-                showLogo={organization?.branding_config?.show_logo_seal}
-              />
+              <PoweredBy variant="dashboard" />
             </div>
           </footer>
         )}

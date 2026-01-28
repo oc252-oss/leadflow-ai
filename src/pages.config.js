@@ -13,8 +13,9 @@ import Reengagement from './pages/Reengagement';
 import Reports from './pages/Reports';
 import SalesFunnel from './pages/SalesFunnel';
 import Settings from './pages/Settings';
-import VoiceCampaigns from './pages/VoiceCampaigns';
 import Tasks from './pages/Tasks';
+import VoiceCampaigns from './pages/VoiceCampaigns';
+import AISimulator from './pages/AISimulator';
 import __Layout from './Layout.jsx';
 
 
@@ -34,8 +35,9 @@ export const PAGES = {
     "Reports": Reports,
     "SalesFunnel": SalesFunnel,
     "Settings": Settings,
-    "VoiceCampaigns": VoiceCampaigns,
     "Tasks": Tasks,
+    "VoiceCampaigns": VoiceCampaigns,
+    "AISimulator": AISimulator,
 }
 
 export const pagesConfig = {

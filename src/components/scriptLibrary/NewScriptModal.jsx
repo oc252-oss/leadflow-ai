@@ -25,7 +25,12 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
   const [voiceSpeed, setVoiceSpeed] = useState([1.0]);
   const [saving, setSaving] = useState(false);
 
-  const isFormValid = formData.name.trim() && formData.usage_type && formData.channel && formData.system_prompt.trim();
+  const isFormValid = !!(
+    formData.name?.trim() &&
+    formData.usage_type &&
+    formData.channel &&
+    formData.system_prompt?.trim()
+  );
 
   const handleSave = async () => {
     if (!isFormValid) {

@@ -55,6 +55,7 @@ import AISimulator from './pages/AISimulator';
 import AssistantCentral from './pages/AssistantCentral';
 import Automations from './pages/Automations';
 import Campaigns from './pages/Campaigns';
+import ChannelsIntegrations from './pages/ChannelsIntegrations';
 import ConversationFlows from './pages/ConversationFlows';
 import Conversations from './pages/Conversations';
 import Dashboard from './pages/Dashboard';
@@ -79,7 +80,6 @@ import VoiceFunnel from './pages/VoiceFunnel';
 import VoiceSimulator from './pages/VoiceSimulator';
 import WhatsAppChannels from './pages/WhatsAppChannels';
 import WhatsAppIntegration from './pages/WhatsAppIntegration';
-import ChannelsIntegrations from './pages/ChannelsIntegrations';
 import __Layout from './Layout.jsx';
 
 
@@ -92,6 +92,7 @@ export const PAGES = {
     "AssistantCentral": AssistantCentral,
     "Automations": Automations,
     "Campaigns": Campaigns,
+    "ChannelsIntegrations": ChannelsIntegrations,
     "ConversationFlows": ConversationFlows,
     "Conversations": Conversations,
     "Dashboard": Dashboard,
@@ -116,7 +117,6 @@ export const PAGES = {
     "VoiceSimulator": VoiceSimulator,
     "WhatsAppChannels": WhatsAppChannels,
     "WhatsAppIntegration": WhatsAppIntegration,
-    "ChannelsIntegrations": ChannelsIntegrations,
 }
 
 export const pagesConfig = {

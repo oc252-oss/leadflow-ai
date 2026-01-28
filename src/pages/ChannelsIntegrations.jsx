@@ -1,31 +1,27 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Loader } from 'lucide-react';
-import WhatsAppCard from '../components/channels/WhatsAppCard';
-import InstagramCard from '../components/channels/InstagramCard';
-import FacebookCard from '../components/channels/FacebookCard';
+import WhatsAppCardSimple from '../components/channels/WhatsAppCardSimple';
 
 export default function ChannelsIntegrations() {
-  const [integrations, setIntegrations] = useState([]);
+  const [connection, setConnection] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    loadIntegrations();
+    loadConnection();
   }, []);
 
-  const loadIntegrations = async () => {
+  const loadConnection = async () => {
     try {
-      const data = await base44.entities.ChannelIntegration.list('-updated_date', 100);
-      setIntegrations(data);
+      const data = await base44.entities.ChannelConnection.list('-updated_date', 1);
+      if (data.length > 0) {
+        setConnection(data[0]);
+      }
     } catch (error) {
-      console.error('Erro ao carregar integrações:', error);
+      console.error('Erro ao carregar conexão:', error);
     } finally {
       setLoading(false);
     }
-  };
-
-  const getIntegrationByType = (type) => {
-    return integrations.find(i => i.channel_type === type);
   };
 
   if (loading) {
@@ -40,21 +36,13 @@ export default function ChannelsIntegrations() {
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Canais & Integrações</h1>
-        <p className="text-slate-600 mt-2">Central de integrações com canais externos</p>
+        <p className="text-slate-600 mt-2">Central de conexão com canais externos</p>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <WhatsAppCard
-          integration={getIntegrationByType('whatsapp')}
-          onRefresh={loadIntegrations}
-        />
-        <InstagramCard
-          integration={getIntegrationByType('instagram')}
-          onRefresh={loadIntegrations}
-        />
-        <FacebookCard
-          integration={getIntegrationByType('facebook')}
-          onRefresh={loadIntegrations}
+      <div className="max-w-md">
+        <WhatsAppCardSimple
+          connection={connection}
+          onRefresh={loadConnection}
         />
       </div>
     </div>

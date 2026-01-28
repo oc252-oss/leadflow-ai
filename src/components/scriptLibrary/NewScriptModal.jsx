@@ -20,10 +20,31 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
     greeting_message: '',
     tone: 'elegante',
     behavior_rules: {},
-    voice_settings: {}
+    voice_settings: {},
+    assistant_id: ''
   });
   const [voiceSpeed, setVoiceSpeed] = useState([1.0]);
   const [saving, setSaving] = useState(false);
+  const [assistants, setAssistants] = useState([]);
+  const [loadingAssistants, setLoadingAssistants] = useState(false);
+
+  React.useEffect(() => {
+    if (open) {
+      loadAssistants();
+    }
+  }, [open]);
+
+  const loadAssistants = async () => {
+    setLoadingAssistants(true);
+    try {
+      const data = await base44.entities.Assistant.list('-updated_date', 100);
+      setAssistants(data);
+    } catch (error) {
+      console.error('Erro ao carregar assistentes:', error);
+    } finally {
+      setLoadingAssistants(false);
+    }
+  };
 
   const handleSave = async () => {
     const hasName = formData.name && formData.name.trim().length > 0;

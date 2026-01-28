@@ -89,10 +89,7 @@ export default function AIAssistantsSimple() {
         return;
       }
 
-      if (!formData.ai_flow_id) {
-        toast.error('Fluxo de IA é obrigatório');
-        return;
-      }
+
 
       const dataToSave = {
         ...formData,

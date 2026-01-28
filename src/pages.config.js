@@ -1,5 +1,13 @@
+import AIAssistants from './pages/AIAssistants';
+import AIAssistantsSimple from './pages/AIAssistantsSimple';
+import AIFlows from './pages/AIFlows';
+import AIFlowsSimple from './pages/AIFlowsSimple';
+import AISimulator from './pages/AISimulator';
+import AssistantCentral from './pages/AssistantCentral';
 import Automations from './pages/Automations';
+import Campaigns from './pages/Campaigns';
 import ChannelsIntegrations from './pages/ChannelsIntegrations';
+import ConversationFlows from './pages/ConversationFlows';
 import Conversations from './pages/Conversations';
 import Dashboard from './pages/Dashboard';
 import FranchiseDashboard from './pages/FranchiseDashboard';
@@ -10,32 +18,32 @@ import Onboarding from './pages/Onboarding';
 import Pipeline from './pages/Pipeline';
 import Reengagement from './pages/Reengagement';
 import Reports from './pages/Reports';
+import SalesFunnel from './pages/SalesFunnel';
+import ScriptLibrary from './pages/ScriptLibrary';
 import Settings from './pages/Settings';
+import SimulationTraining from './pages/SimulationTraining';
 import Tasks from './pages/Tasks';
+import TreinarAssistente from './pages/TreinarAssistente';
 import Units from './pages/Units';
 import VoiceCampaigns from './pages/VoiceCampaigns';
 import VoiceFunnel from './pages/VoiceFunnel';
-import WhatsAppIntegration from './pages/WhatsAppIntegration';
-import AIFlows from './pages/AIFlows';
-import Campaigns from './pages/Campaigns';
-import SalesFunnel from './pages/SalesFunnel';
-import ScriptLibrary from './pages/ScriptLibrary';
-import AIAssistantsSimple from './pages/AIAssistantsSimple';
-import AISimulator from './pages/AISimulator';
-import ConversationFlows from './pages/ConversationFlows';
-import TreinarAssistente from './pages/TreinarAssistente';
-import WhatsAppChannels from './pages/WhatsAppChannels';
-import AIAssistants from './pages/AIAssistants';
-import SimulationTraining from './pages/SimulationTraining';
-import AIFlowsSimple from './pages/AIFlowsSimple';
-import AssistantCentral from './pages/AssistantCentral';
 import VoiceSimulator from './pages/VoiceSimulator';
+import WhatsAppChannels from './pages/WhatsAppChannels';
+import WhatsAppIntegration from './pages/WhatsAppIntegration';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AIAssistants": AIAssistants,
+    "AIAssistantsSimple": AIAssistantsSimple,
+    "AIFlows": AIFlows,
+    "AIFlowsSimple": AIFlowsSimple,
+    "AISimulator": AISimulator,
+    "AssistantCentral": AssistantCentral,
     "Automations": Automations,
+    "Campaigns": Campaigns,
     "ChannelsIntegrations": ChannelsIntegrations,
+    "ConversationFlows": ConversationFlows,
     "Conversations": Conversations,
     "Dashboard": Dashboard,
     "FranchiseDashboard": FranchiseDashboard,
@@ -46,26 +54,18 @@ export const PAGES = {
     "Pipeline": Pipeline,
     "Reengagement": Reengagement,
     "Reports": Reports,
+    "SalesFunnel": SalesFunnel,
+    "ScriptLibrary": ScriptLibrary,
     "Settings": Settings,
+    "SimulationTraining": SimulationTraining,
     "Tasks": Tasks,
+    "TreinarAssistente": TreinarAssistente,
     "Units": Units,
     "VoiceCampaigns": VoiceCampaigns,
     "VoiceFunnel": VoiceFunnel,
-    "WhatsAppIntegration": WhatsAppIntegration,
-    "AIFlows": AIFlows,
-    "Campaigns": Campaigns,
-    "SalesFunnel": SalesFunnel,
-    "ScriptLibrary": ScriptLibrary,
-    "AIAssistantsSimple": AIAssistantsSimple,
-    "AISimulator": AISimulator,
-    "ConversationFlows": ConversationFlows,
-    "TreinarAssistente": TreinarAssistente,
-    "WhatsAppChannels": WhatsAppChannels,
-    "AIAssistants": AIAssistants,
-    "SimulationTraining": SimulationTraining,
-    "AIFlowsSimple": AIFlowsSimple,
-    "AssistantCentral": AssistantCentral,
     "VoiceSimulator": VoiceSimulator,
+    "WhatsAppChannels": WhatsAppChannels,
+    "WhatsAppIntegration": WhatsAppIntegration,
 }
 
 export const pagesConfig = {

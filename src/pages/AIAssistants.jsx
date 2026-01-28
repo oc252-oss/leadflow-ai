@@ -44,15 +44,20 @@ export default function AIAssistants() {
 
   const loadData = async () => {
     try {
+      const user = await base44.auth.me();
       const [assistantsData, flowsData] = await Promise.all([
         base44.entities.Assistant.list('-updated_date', 100),
-        base44.entities.AIConversationFlow.filter({ is_active: true }, '-updated_date', 100)
+        base44.entities.AIConversationFlow.list('-updated_date', 100)
       ]);
       setAssistants(assistantsData);
-      setFlows(flowsData);
+      setFlows(flowsData.sort((a, b) => {
+        if (a.is_default) return -1;
+        if (b.is_default) return 1;
+        return new Date(b.updated_date) - new Date(a.updated_date);
+      }));
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
-      toast.error('Erro ao carregar dados');
+      toast.error('Erro ao carregar fluxos de IA');
     } finally {
       setLoading(false);
     }

@@ -27,6 +27,7 @@ import VoiceSimulator from './pages/VoiceSimulator';
 import IntegrationHub from './pages/IntegrationHub';
 import AIFlows from './pages/AIFlows';
 import AIAssistants from './pages/AIAssistants';
+import WhatsAppIntegration from './pages/WhatsAppIntegration';
 import __Layout from './Layout.jsx';
 
 
@@ -60,6 +61,7 @@ export const PAGES = {
     "IntegrationHub": IntegrationHub,
     "AIFlows": AIFlows,
     "AIAssistants": AIAssistants,
+    "WhatsAppIntegration": WhatsAppIntegration,
 }
 
 export const pagesConfig = {

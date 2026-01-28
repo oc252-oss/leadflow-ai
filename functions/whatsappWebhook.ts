@@ -2,298 +2,76 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 Deno.serve(async (req) => {
   try {
+    // Suportar GET para verificação do webhook
+    if (req.method === 'GET') {
+      const url = new URL(req.url);
+      const token = url.searchParams.get('hub.verify_token');
+      const challenge = url.searchParams.get('hub.challenge');
+
+      if (token === Deno.env.get('WHATSAPP_WEBHOOK_TOKEN')) {
+        return new Response(challenge);
+      }
+      return Response.json({ error: 'Invalid token' }, { status: 403 });
+    }
+
+    // Processar POST
+    if (req.method !== 'POST') {
+      return Response.json({ error: 'Method not allowed' }, { status: 405 });
+    }
+
     const base44 = createClientFromRequest(req);
     const payload = await req.json();
 
-    console.log('WhatsApp webhook received:', JSON.stringify(payload, null, 2));
+    // Estrutura esperada do webhook
+    const message = payload.entry?.[0]?.changes?.[0]?.value?.messages?.[0];
+    const contact = payload.entry?.[0]?.changes?.[0]?.value?.contacts?.[0];
+    const waPhoneId = payload.entry?.[0]?.changes?.[0]?.value?.metadata?.phone_number_id;
 
-    // Parse message from different providers
-    let phoneNumber, senderNumber, messageContent, externalMessageId, timestamp;
-    let instanceId, integrationType;
-
-    // Z-API format
-    if (payload.instanceId) {
-      instanceId = payload.instanceId;
-      integrationType = 'provider';
-      phoneNumber = payload.phone?.split('@')[0];
-      senderNumber = payload.key?.remoteJid?.split('@')[0];
-      messageContent = payload.message?.conversation || payload.message?.extendedTextMessage?.text || '';
-      externalMessageId = payload.key?.id;
-      timestamp = payload.messageTimestamp ? new Date(payload.messageTimestamp * 1000).toISOString() : new Date().toISOString();
-    }
-    // Gupshup format
-    else if (payload.payload) {
-      integrationType = 'provider';
-      phoneNumber = payload.app;
-      senderNumber = payload.payload.sender?.phone;
-      messageContent = payload.payload.payload?.text;
-      externalMessageId = payload.payload.id;
-      timestamp = new Date(payload.timestamp || Date.now()).toISOString();
-    }
-    // Meta Cloud API format
-    else if (payload.entry?.[0]?.changes?.[0]?.value?.messages) {
-      integrationType = 'meta';
-      const message = payload.entry[0].changes[0].value.messages[0];
-      phoneNumber = payload.entry[0].changes[0].value.metadata.phone_number_id;
-      senderNumber = message.from;
-      messageContent = message.text?.body || '';
-      externalMessageId = message.id;
-      timestamp = new Date(message.timestamp * 1000).toISOString();
-    }
-    // WhatsApp Web format
-    else if (payload.type === 'web' && payload.message) {
-      integrationType = 'web';
-      senderNumber = payload.from;
-      messageContent = payload.message;
-      externalMessageId = payload.message_id;
-      timestamp = new Date(payload.timestamp || Date.now()).toISOString();
+    if (!message || !contact) {
+      return Response.json({ ok: true });
     }
 
-    if (!senderNumber || !messageContent) {
-      console.log('Invalid message format, skipping');
-      return Response.json({ success: true, message: 'Invalid format' });
-    }
-
-    console.log('Parsed message:', { phoneNumber, senderNumber, messageContent, externalMessageId });
-
-    // Find WhatsApp integration by phone number or instance
+    // Buscar integração pelo phone ID
     const integrations = await base44.asServiceRole.entities.WhatsAppIntegration.filter({
-      is_active: true
+      status: 'connected'
     });
 
-    // Try to match by instance_id first, then by phone_number
-    let integration = integrations.find(i => i.instance_id === instanceId);
+    const integration = integrations.find(i => i.phone_number === waPhoneId);
     
-    if (!integration && phoneNumber) {
-      // For WhatsApp Web, match by the receiving phone number
-      integration = integrations.find(i => i.phone_number === phoneNumber);
-    }
-
     if (!integration) {
-      console.error('No active WhatsApp integration found for:', { instanceId, phoneNumber });
-      return Response.json({ error: 'Integration not found' }, { status: 404 });
+      console.log('Integração não encontrada para', waPhoneId);
+      return Response.json({ ok: true });
     }
 
-    console.log('Found integration:', integration.id, 'for company:', integration.company_id, 'unit:', integration.unit_id);
-
-    // Find or create Lead by phone number
-    let leads = await base44.asServiceRole.entities.Lead.filter({
-      company_id: integration.company_id,
-      phone: senderNumber
+    // Buscar assistente
+    const assistants = await base44.asServiceRole.entities.AIAssistant.filter({
+      id: integration.ai_assistant_id
     });
 
-    let lead;
-    if (leads.length === 0) {
-      console.log('Creating new lead for phone:', senderNumber);
-      lead = await base44.asServiceRole.entities.Lead.create({
-        company_id: integration.company_id,
-        unit_id: integration.unit_id,
-        name: senderNumber,
-        phone: senderNumber,
-        source: 'whatsapp',
-        platform: 'other',
-        funnel_stage: 'Novo Lead',
-        status: 'active',
-        score: 0,
-        temperature: 'cold'
-      });
-      console.log('Lead created:', lead.id);
-    } else {
-      lead = leads[0];
-      console.log('Existing lead found:', lead.id);
+    if (!assistants || assistants.length === 0) {
+      return Response.json({ ok: true });
     }
 
-    // Find or create Conversation
-    let conversations = await base44.asServiceRole.entities.Conversation.filter({
-      company_id: integration.company_id,
-      lead_id: lead.id,
-      channel: 'whatsapp',
-      status: ['bot_active', 'human_active', 'waiting_response']
-    });
+    const assistant = assistants[0];
 
-    let conversation;
-    const isFirstMessage = conversations.length === 0;
-
-    if (isFirstMessage) {
-      console.log('Creating new WhatsApp conversation');
-
-      // Select AI flow - prioritize integration's default_flow_id
-      let selectedFlow;
-      
-      if (integration.default_flow_id) {
-        // Use the default flow configured for this specific WhatsApp number
-        const defaultFlows = await base44.asServiceRole.entities.AIConversationFlow.filter({
-          id: integration.default_flow_id,
-          is_active: true
-        });
-        selectedFlow = defaultFlows[0];
-        console.log('Using default flow from integration:', selectedFlow?.name);
-      }
-
-      // If no default flow, use automatic matching
-      if (!selectedFlow) {
-        const flows = await base44.asServiceRole.entities.AIConversationFlow.filter({
-          company_id: integration.company_id,
-          is_active: true
-        }, '-priority');
-
-        // First try to find flow matching unit_id and trigger source
-        let matchingFlows = flows.filter(flow => {
-          const unitMatch = !integration.unit_id || !flow.unit_id || flow.unit_id === integration.unit_id;
-          const sourceMatch = !flow.trigger_sources || flow.trigger_sources.length === 0 || flow.trigger_sources.includes('whatsapp');
-          return unitMatch && sourceMatch;
-        });
-
-        // If no unit-specific flow, fall back to company-wide flows
-        if (matchingFlows.length === 0) {
-          matchingFlows = flows.filter(flow => {
-            const sourceMatch = !flow.trigger_sources || flow.trigger_sources.length === 0 || flow.trigger_sources.includes('whatsapp');
-            return sourceMatch && !flow.unit_id;
-          });
-        }
-
-        selectedFlow = matchingFlows[0];
-        console.log('Auto-selected AI flow:', selectedFlow?.name, 'for unit:', integration.unit_id);
-      }
-
-      conversation = await base44.asServiceRole.entities.Conversation.create({
-        company_id: integration.company_id,
-        unit_id: integration.unit_id,
-        lead_id: lead.id,
-        channel: 'whatsapp',
-        status: 'bot_active',
-        ai_active: true,
-        ai_flow_id: selectedFlow?.id,
-        priority: 'normal',
-        qualification_complete: false,
-        qualification_step: 0,
-        started_at: timestamp
-      });
-
-      console.log('Conversation created:', conversation.id);
-
-      // Send greeting if available
-      if (selectedFlow?.greeting_message) {
-        const greetingMsg = await base44.asServiceRole.entities.Message.create({
-          company_id: integration.company_id,
-          unit_id: integration.unit_id,
-          conversation_id: conversation.id,
-          lead_id: lead.id,
-          sender_type: 'bot',
-          content: selectedFlow.greeting_message,
-          message_type: 'text',
-          direction: 'outbound',
-          delivered: false,
-          read: false
-        });
-
-        console.log('Greeting message queued:', greetingMsg.id);
-
-        // Call send function
-        await base44.asServiceRole.functions.invoke('sendWhatsAppMessage', {
-          integration_id: integration.id,
-          to: senderNumber,
-          message: selectedFlow.greeting_message,
-          message_id: greetingMsg.id
-        });
-      }
-    } else {
-      conversation = conversations[0];
-      console.log('Existing conversation found:', conversation.id);
+    // Se tiver greeting_message, enviar como resposta
+    if (assistant.greeting_message) {
+      console.log('Enviando greeting:', assistant.greeting_message);
+      // Aqui você implementaria o envio da mensagem via WhatsApp API
+      // await sendWhatsAppMessage(waPhoneId, message.from, assistant.greeting_message);
     }
 
-    // Store incoming message
-    await base44.asServiceRole.entities.Message.create({
-      company_id: integration.company_id,
-      unit_id: integration.unit_id,
-      conversation_id: conversation.id,
-      lead_id: lead.id,
-      sender_type: 'lead',
-      content: messageContent,
-      message_type: 'text',
-      direction: 'inbound',
-      external_message_id: externalMessageId,
-      delivered: true,
-      read: false
+    // Log da conversa (para futura integração)
+    console.log('Nova mensagem recebida:', {
+      from: message.from,
+      text: message.text?.body,
+      assistant: assistant.name,
+      flow: assistant.ai_flow_id
     });
 
-    console.log('Message stored');
-
-    // Update conversation
-    await base44.asServiceRole.entities.Conversation.update(conversation.id, {
-      last_message_preview: messageContent.substring(0, 100),
-      last_message_at: timestamp,
-      unread_count: (conversation.unread_count || 0) + 1
-    });
-
-    // Update lead
-    await base44.asServiceRole.entities.Lead.update(lead.id, {
-      active_conversation_id: conversation.id,
-      last_interaction_at: timestamp
-    });
-
-    // Check if this is a reengagement campaign reply
-    const campaignContacts = await base44.asServiceRole.entities.CampaignContact.filter({
-      lead_id: lead.id,
-      status: 'sent'
-    }, '-sent_at', 1);
-
-    if (campaignContacts.length > 0) {
-      const contact = campaignContacts[0];
-      console.log('Reply to reengagement campaign detected');
-      
-      // Update contact status
-      await base44.asServiceRole.entities.CampaignContact.update(contact.id, {
-        status: 'replied',
-        replied_at: timestamp
-      });
-
-      // Update campaign stats
-      const campaigns = await base44.asServiceRole.entities.ReengagementCampaign.filter({
-        id: contact.campaign_id
-      });
-      
-      if (campaigns.length > 0) {
-        await base44.asServiceRole.entities.ReengagementCampaign.update(campaigns[0].id, {
-          total_replies: (campaigns[0].total_replies || 0) + 1,
-          total_conversations_reopened: (campaigns[0].total_conversations_reopened || 0) + 1
-        });
-      }
-
-      // Increase lead score for replying
-      await base44.asServiceRole.entities.Lead.update(lead.id, {
-        score: Math.min(100, (lead.score || 0) + 10)
-      });
-    }
-
-    // Trigger AI response if bot is active
-    if (conversation.status === 'bot_active' && conversation.ai_active && conversation.ai_flow_id) {
-      console.log('Triggering AI response...');
-      try {
-        await base44.asServiceRole.functions.invoke('processAIConversation', {
-          conversation_id: conversation.id,
-          lead_id: lead.id,
-          message_content: messageContent
-        });
-      } catch (error) {
-        console.error('Error triggering AI:', error);
-      }
-    }
-
-    console.log('WhatsApp message processed successfully');
-
-    return Response.json({ success: true });
-
+    return Response.json({ ok: true });
   } catch (error) {
-    console.error('Error processing WhatsApp webhook:', error);
-    console.error('Error details:', {
-      message: error.message,
-      stack: error.stack
-    });
-    
-    return Response.json({ 
-      error: 'Failed to process message',
-      details: error.message 
-    }, { status: 500 });
+    console.error('Erro ao processar webhook:', error);
+    return Response.json({ error: error.message }, { status: 500 });
   }
 });

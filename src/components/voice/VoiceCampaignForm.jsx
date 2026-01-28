@@ -59,33 +59,19 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
     <div className="space-y-6 max-w-2xl">
       {/* SECTION 1: GENERAL INFORMATION */}
       <div className="space-y-4 border-b pb-6">
-        <h3 className="font-semibold text-slate-900">Informações Gerais</h3>
+        <h3 className="font-semibold text-slate-900">Informações da Campanha</h3>
         
-      <div className="grid grid-cols-2 gap-4">
-        <div className="space-y-2">
-          <Label>Nome da Campanha*</Label>
-          <Input
-            value={data.name}
-            onChange={(e) => setData({ ...data, name: e.target.value })}
-            placeholder="Reengajamento Março"
-          />
-        </div>
-
-        <div className="space-y-2">
-          <Label>Dias Inatividade*</Label>
-          <Select value={String(data.inactivity_days)} onValueChange={(val) => setData({ ...data, inactivity_days: parseInt(val) })}>
-            <SelectTrigger>
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="7">7 dias</SelectItem>
-              <SelectItem value="30">30 dias</SelectItem>
-            </SelectContent>
-          </Select>
-        </div>
+      <div className="space-y-2">
+        <Label>Nome da Campanha*</Label>
+        <Input
+          value={data.name}
+          onChange={(e) => setData({ ...data, name: e.target.value })}
+          placeholder="Ex: Reengajamento de leads – 7 dias"
+        />
+        <p className="text-xs text-slate-500">Use um nome que facilite a identificação dessa campanha no dia a dia.</p>
       </div>
 
-      <div className="col-span-2 space-y-2">
+      <div className="space-y-2">
         <Label>Descrição</Label>
         <Input
           value={data.description}
@@ -94,16 +80,22 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
         />
       </div>
 
-      <div className="col-span-2 space-y-2">
+      <div className="space-y-2">
         <Label>Tipo de Campanha</Label>
-        <div className="flex items-center gap-4">
-          <label className="flex items-center gap-2 cursor-pointer">
+        <div className="space-y-2">
+          <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 bg-blue-50 border-blue-300">
             <input type="radio" name="campaign_type" value="reengagement" defaultChecked className="w-4 h-4" />
-            <span className="text-sm text-slate-700">Reengajamento</span>
+            <div>
+              <p className="font-medium text-sm text-slate-900">Reengajamento de Leads</p>
+              <p className="text-xs text-slate-500">Para leads que já tiveram contato com a clínica</p>
+            </div>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer opacity-50">
+          <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer opacity-50">
             <input type="radio" name="campaign_type" value="prospecting" disabled className="w-4 h-4" />
-            <span className="text-sm text-slate-700">Prospecting <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded">Em Breve</span></span>
+            <div>
+              <p className="font-medium text-sm text-slate-900">Prospecção Ativa <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded ml-2">Em Breve</span></p>
+              <p className="text-xs text-slate-500">No momento, as campanhas de voz são para reengajar leads</p>
+            </div>
           </label>
         </div>
       </div>
@@ -111,10 +103,10 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
 
       {/* SECTION 2: LEAD SELECTION */}
       <div className="space-y-4 border-b pb-6">
-        <h3 className="font-semibold text-slate-900">Seleção de Leads</h3>
+        <h3 className="font-semibold text-slate-900">Quem a IA vai Ligar</h3>
         
         <div className="space-y-2">
-          <Label>Período de Inatividade*</Label>
+          <Label>Leads Sem Interação Há*</Label>
           <Select value={String(data.inactivity_days)} onValueChange={(val) => setData({ ...data, inactivity_days: parseInt(val) })}>
             <SelectTrigger>
               <SelectValue />
@@ -124,10 +116,11 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
               <SelectItem value="30">30 dias</SelectItem>
             </SelectContent>
           </Select>
+          <p className="text-xs text-slate-500">A IA entrará em contato com leads que não responderam dentro desse período.</p>
         </div>
 
         <div className="space-y-2">
-          <Label>Fontes de Lead</Label>
+          <Label>Origem dos Leads</Label>
           <div className="space-y-2">
             {leadSources.map(source => (
               <label key={source} className="flex items-center gap-2 cursor-pointer">
@@ -147,53 +140,60 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
               </label>
             ))}
           </div>
+          <p className="text-xs text-slate-500">Selecione de onde vêm os leads que a campanha deve considerar.</p>
         </div>
 
         <div className="space-y-2">
-          <Label>Exclusões</Label>
-          <label className="flex items-center gap-2 cursor-pointer">
+          <Label>Exclusões Automáticas</Label>
+          <label className="flex items-center gap-2 cursor-pointer p-3 border border-slate-200 rounded-lg hover:bg-slate-50">
             <Checkbox
               checked={data.exclude_do_not_contact}
               onCheckedChange={(checked) => setData({ ...data, exclude_do_not_contact: checked })}
             />
-            <span className="text-sm text-slate-700">Excluir leads marcados como "Não Contatar"</span>
+            <span className="text-sm text-slate-700">Leads que pediram para não receber contato</span>
           </label>
-          <label className="flex items-center gap-2 cursor-pointer">
+          <label className="flex items-center gap-2 cursor-pointer p-3 border border-slate-200 rounded-lg hover:bg-slate-50">
             <Checkbox
               checked={data.exclude_open_tasks}
               onCheckedChange={(checked) => setData({ ...data, exclude_open_tasks: checked })}
             />
-            <span className="text-sm text-slate-700">Excluir leads com tarefas abertas</span>
+            <span className="text-sm text-slate-700">Leads que já possuem tarefa em andamento</span>
           </label>
+          <p className="text-xs text-slate-500">Isso evita contatos repetidos e melhora a experiência do paciente.</p>
         </div>
 
         <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
           <p className="text-sm text-blue-900">
-            <span className="font-medium">Aproximadamente: </span>
-            Esta campanha atingirá aproximadamente <strong>X leads</strong> baseado nos critérios acima.
+            📊 <span className="font-medium">Esta campanha atingirá aproximadamente X leads</span>
           </p>
         </div>
       </div>
 
       {/* SECTION 3: VOICE SCRIPT */}
       <div className="space-y-4 border-b pb-6">
-        <h3 className="font-semibold text-slate-900">Script de Voz</h3>
+        <h3 className="font-semibold text-slate-900">O Que a IA vai Falar</h3>
         
       <div className="space-y-2">
-        <Label>Texto do Script*</Label>
+        <Label>Mensagem da Ligação*</Label>
         <Textarea
           value={data.script_text}
           onChange={(e) => setData({ ...data, script_text: e.target.value })}
-          placeholder="Olá, tudo bem? Estou ligando da clínica..."
+          placeholder="Olá, tudo bem?
+Aqui é a assistente virtual da Royal Face Ji-Paraná.
+
+Você teve contato conosco recentemente e estou ligando para saber se posso te ajudar a agendar uma avaliação estética sem custo.
+
+Posso seguir?"
           className="min-h-32"
         />
-        <p className="text-xs text-slate-500">Use frases curtas e linguagem natural. Este texto será falado pela IA durante a chamada.</p>
+        <p className="text-xs text-slate-500">Use frases curtas e linguagem natural. Essa mensagem será falada pela IA durante a ligação.</p>
       </div>
       </div>
 
       {/* SECTION 4: ASSIGNMENT RULE */}
       <div className="space-y-4 border-b pb-6">
-        <h3 className="font-semibold text-slate-900">Regra de Atribuição</h3>
+        <h3 className="font-semibold text-slate-900">Destino do Interesse</h3>
+        <p className="text-sm text-slate-600 mb-3">Para quem a tarefa deve ser direcionada?</p>
         <div className="space-y-3">
           <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50" style={{ borderColor: data.assigned_to_type === 'specific' ? '#4f46e5' : '#e2e8f0' }}>
             <input 
@@ -205,8 +205,8 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
               className="w-4 h-4"
             />
             <div>
-              <p className="font-medium text-sm text-slate-900">Assistente Específico</p>
-              <p className="text-xs text-slate-500">Atribuir leads interessados a um membro da equipe</p>
+              <p className="font-medium text-sm text-slate-900">Assistente Específica</p>
+              <p className="text-xs text-slate-500">Atribuir aos leads interessados a um membro</p>
             </div>
           </label>
 
@@ -221,17 +221,17 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
             />
             <div>
               <p className="font-medium text-sm text-slate-900">Fila da Clínica</p>
-              <p className="text-xs text-slate-500">Tarefas visíveis para toda a equipe de atendimento</p>
+              <p className="text-xs text-slate-500">Tarefas visíveis para toda a equipe</p>
             </div>
           </label>
         </div>
 
         {data.assigned_to_type === 'specific' && (
           <div className="space-y-2 ml-7">
-            <Label>Selecionar Assistente</Label>
+            <Label>Selecione a Pessoa Responsável</Label>
             <Select value={data.assigned_to_user_id || ''} onValueChange={(val) => setData({ ...data, assigned_to_user_id: val })}>
               <SelectTrigger>
-                <SelectValue placeholder="Escolha um membro" />
+                <SelectValue placeholder="Escolha um assistente" />
               </SelectTrigger>
               <SelectContent>
                 {teamMembers.map(member => (
@@ -243,16 +243,17 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
             </Select>
           </div>
         )}
+        <p className="text-xs text-slate-500 mt-3">Isso ajuda a organizar o fluxo e evita perda de oportunidades.</p>
       </div>
 
-      {/* SECTION 5: ADVANCED COMPLIANCE */}
+      {/* SECTION 5: COMPLIANCE & SAFETY */}
       <div className="space-y-4 border rounded-lg p-4 bg-slate-50">
         <button
           type="button"
           onClick={() => setShowAdvanced(!showAdvanced)}
           className="flex items-center justify-between w-full"
         >
-          <h3 className="font-semibold text-slate-900">Horários e Segurança</h3>
+          <h3 className="font-semibold text-slate-900">Regras e Horários da Campanha</h3>
           <svg className={cn(
             "w-5 h-5 text-slate-600 transition-transform",
             showAdvanced && "rotate-180"
@@ -265,7 +266,7 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
           <div className="space-y-4 pt-4 border-t">
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Início do Horário</Label>
+                <Label>Das</Label>
                 <Input
                   type="time"
                   value={data.business_hours_start}
@@ -274,7 +275,7 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
               </div>
 
               <div className="space-y-2">
-                <Label>Fim do Horário</Label>
+                <Label>Até</Label>
                 <Input
                   type="time"
                   value={data.business_hours_end}
@@ -282,9 +283,10 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
                 />
               </div>
             </div>
+            <p className="text-xs text-slate-500">As ligações só serão realizadas dentro desse período.</p>
 
             <div className="space-y-3">
-              <Label>Dias para Ligar</Label>
+              <Label>Dias da Semana Permitidos</Label>
               <div className="grid grid-cols-4 gap-3">
                 {days.map(day => (
                   <label key={day} className="flex items-center gap-2 cursor-pointer">
@@ -308,10 +310,11 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
                   </label>
                 ))}
               </div>
+              <p className="text-xs text-slate-500">Respeitar os dias úteis melhora a taxa de resposta e evita incômodos.</p>
             </div>
 
             <div className="space-y-2">
-              <Label>Máximo de Tentativas por Lead</Label>
+              <Label>Tentativas por Lead</Label>
               <Select value={String(data.max_attempts_per_lead)} onValueChange={(val) => setData({ ...data, max_attempts_per_lead: parseInt(val) })}>
                 <SelectTrigger>
                   <SelectValue />
@@ -323,11 +326,7 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
                   <SelectItem value="5">5 tentativas</SelectItem>
                 </SelectContent>
               </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Se a Chamada Não Atender</Label>
-              <p className="text-sm text-slate-600">Não repetir (padrão recomendado)</p>
+              <p className="text-xs text-slate-500">Para o MVP, recomendamos apenas uma tentativa por lead.</p>
             </div>
           </div>
         )}
@@ -341,9 +340,13 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
           {saving ? 'Salvando...' : 'Salvar Campanha'}
         </Button>
         <Button onClick={() => handleSave(true)} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700">
-          {saving ? 'Ativando...' : 'Salvar e Ativar'}
+          {saving ? 'Ativando...' : 'Salvar e Ativar Campanha'}
         </Button>
       </div>
+      
+      <p className="text-xs text-slate-500 text-center pt-2">
+        Você pode pausar ou editar essa campanha a qualquer momento.
+      </p>
     </div>
   );
 }

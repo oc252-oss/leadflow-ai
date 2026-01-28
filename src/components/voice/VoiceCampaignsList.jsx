@@ -17,7 +17,7 @@ export default function VoiceCampaignsList({ campaigns, onEdit, onDelete, onDupl
   };
 
   const getCriteriaLabel = (campaign) => {
-    return `Leads inactive for ${campaign.inactivity_days} days`;
+    return `Leads sem interação há ${campaign.inactivity_days} dias`;
   };
 
   if (campaigns.length === 0) {
@@ -29,11 +29,11 @@ export default function VoiceCampaignsList({ campaigns, onEdit, onDelete, onDupl
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
             </svg>
           </div>
-          <h3 className="text-lg font-medium text-slate-900 mb-2">No voice campaigns yet</h3>
-          <p className="text-slate-500 mb-4">Create your first voice campaign to start reengaging with inactive leads</p>
+          <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhuma campanha de voz ainda</h3>
+          <p className="text-slate-500 mb-4">Crie sua primeira campanha de voz para recuperar leads e gerar mais avaliações automaticamente.</p>
           <Button onClick={onAddNew} className="bg-indigo-600 hover:bg-indigo-700">
             <Plus className="w-4 h-4 mr-2" />
-            Create Voice Campaign
+            Criar Campanha de Voz
           </Button>
         </CardContent>
       </Card>
@@ -42,16 +42,18 @@ export default function VoiceCampaignsList({ campaigns, onEdit, onDelete, onDupl
 
   return (
     <div className="space-y-4">
+      <p className="text-sm text-slate-600 mb-4">Aqui você configura campanhas de ligações automáticas feitas pela IA para entrar em contato com leads que ainda não responderam.</p>
+      
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
             <tr className="border-b border-slate-200">
-              <th className="text-left py-3 px-4 font-medium text-slate-700">Campaign Name</th>
-              <th className="text-left py-3 px-4 font-medium text-slate-700">Type</th>
-              <th className="text-left py-3 px-4 font-medium text-slate-700">Criteria</th>
-              <th className="text-left py-3 px-4 font-medium text-slate-700">Assigned To</th>
+              <th className="text-left py-3 px-4 font-medium text-slate-700">Nome da Campanha</th>
+              <th className="text-left py-3 px-4 font-medium text-slate-700">Tipo</th>
+              <th className="text-left py-3 px-4 font-medium text-slate-700">Critério</th>
+              <th className="text-left py-3 px-4 font-medium text-slate-700">Atribuído A</th>
               <th className="text-left py-3 px-4 font-medium text-slate-700">Status</th>
-              <th className="text-right py-3 px-4 font-medium text-slate-700">Actions</th>
+              <th className="text-right py-3 px-4 font-medium text-slate-700">Ações</th>
             </tr>
           </thead>
           <tbody>
@@ -64,7 +66,7 @@ export default function VoiceCampaignsList({ campaigns, onEdit, onDelete, onDupl
                   <p className="font-medium text-slate-900">{campaign.name}</p>
                 </td>
                 <td className="py-3 px-4">
-                  <Badge variant="secondary">Reengagement</Badge>
+                  <Badge variant="secondary">Reengajamento</Badge>
                 </td>
                 <td className="py-3 px-4">
                   <span className="text-slate-600">{getCriteriaLabel(campaign)}</span>
@@ -78,6 +80,9 @@ export default function VoiceCampaignsList({ campaigns, onEdit, onDelete, onDupl
                       "w-2 h-2 rounded-full",
                       campaign.is_active ? "bg-green-500" : "bg-slate-300"
                     )} />
+                    <span className="text-xs font-medium text-slate-600">
+                      {campaign.is_active ? 'Ativa' : 'Inativa'}
+                    </span>
                     <Switch
                       checked={campaign.is_active}
                       onCheckedChange={() => onToggle(campaign)}
@@ -91,7 +96,7 @@ export default function VoiceCampaignsList({ campaigns, onEdit, onDelete, onDupl
                       size="icon" 
                       className="h-8 w-8"
                       onClick={() => onEdit(campaign)}
-                      title="Edit"
+                      title="Editar"
                     >
                       <Edit2 className="w-4 h-4" />
                     </Button>
@@ -100,7 +105,7 @@ export default function VoiceCampaignsList({ campaigns, onEdit, onDelete, onDupl
                       size="icon" 
                       className="h-8 w-8"
                       onClick={() => onDuplicate(campaign)}
-                      title="Duplicate"
+                      title="Duplicar"
                     >
                       <Copy className="w-4 h-4" />
                     </Button>
@@ -109,7 +114,7 @@ export default function VoiceCampaignsList({ campaigns, onEdit, onDelete, onDupl
                       size="icon" 
                       className="h-8 w-8 text-red-600 hover:text-red-700 hover:bg-red-50"
                       onClick={() => onDelete(campaign.id)}
-                      title="Delete"
+                      title="Deletar"
                     >
                       <Trash2 className="w-4 h-4" />
                     </Button>

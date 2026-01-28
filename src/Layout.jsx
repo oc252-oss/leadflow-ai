@@ -24,6 +24,7 @@ import {
   Phone,
   Clock
 } from 'lucide-react';
+import PoweredBy from '@/components/branding/PoweredBy';
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -41,6 +42,7 @@ export default function Layout({ children, currentPageName }) {
   const [user, setUser] = useState(null);
   const [company, setCompany] = useState(null);
   const [teamMember, setTeamMember] = useState(null);
+  const [organization, setOrganization] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -60,6 +62,14 @@ export default function Layout({ children, currentPageName }) {
         const companies = await base44.entities.Company.filter({ id: teamMembers[0].company_id });
         if (companies.length > 0) {
           setCompany(companies[0]);
+        }
+
+        // Load organization for branding config
+        if (teamMembers[0].organization_id) {
+          const orgs = await base44.entities.Organization.filter({ id: teamMembers[0].organization_id });
+          if (orgs.length > 0) {
+            setOrganization(orgs[0]);
+          }
         }
       }
 
@@ -97,21 +107,22 @@ export default function Layout({ children, currentPageName }) {
   }
 
   const navigation = [
-    { name: 'Dashboard', label: t('dashboard'), href: createPageUrl('Dashboard'), icon: LayoutDashboard, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Dashboard', label: t('dashboard'), href: createPageUrl('Dashboard'), icon: LayoutDashboard, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
     { name: 'FranchiseDashboard', label: 'Dashboard Executivo', href: createPageUrl('FranchiseDashboard'), icon: Building2, roles: ['organization_admin', 'brand_manager'] },
-    { name: 'Leads', label: t('leads'), href: createPageUrl('Leads'), icon: Users, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'Pipeline', label: t('pipeline'), href: createPageUrl('Pipeline'), icon: GitBranch, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'Conversations', label: t('conversations'), href: createPageUrl('Conversations'), icon: MessageSquare, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'Campaigns', label: t('campaigns'), href: createPageUrl('Campaigns'), icon: Target, roles: ['company_admin', 'sales_manager'] },
-    { name: 'Reengagement', label: 'Reengajamento', href: createPageUrl('Reengagement'), icon: RefreshCw, roles: ['company_admin', 'sales_manager'] },
-    { name: 'Automations', label: t('automations'), href: createPageUrl('Automations'), icon: Zap, roles: ['company_admin'] },
-    { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['company_admin', 'sales_manager'] },
-    { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Bot, roles: ['company_admin'] },
-    { name: 'SimulationTraining', label: 'Simulação & Treinamento', href: createPageUrl('SimulationTraining'), icon: Bot, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'SalesFunnel', label: 'Funil de Vendas', href: createPageUrl('SalesFunnel'), icon: GitBranch, roles: ['company_admin'] },
-    { name: 'Tasks', label: 'Tarefas', href: createPageUrl('Tasks'), icon: Clock, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'CompanySettings', label: 'Configurações da Empresa', href: createPageUrl('CompanySettings'), icon: Building2, roles: ['company_admin'] },
-    { name: 'Settings', label: t('settings'), href: createPageUrl('Settings'), icon: Settings, roles: ['company_admin'] },
+    { name: 'OrganizationSettings', label: 'Configurações da Organização', href: createPageUrl('OrganizationSettings'), icon: Building2, roles: ['organization_admin'] },
+    { name: 'Leads', label: t('leads'), href: createPageUrl('Leads'), icon: Users, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Pipeline', label: t('pipeline'), href: createPageUrl('Pipeline'), icon: GitBranch, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Conversations', label: t('conversations'), href: createPageUrl('Conversations'), icon: MessageSquare, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Campaigns', label: t('campaigns'), href: createPageUrl('Campaigns'), icon: Target, roles: ['unit_admin', 'sales_manager'] },
+    { name: 'Reengagement', label: 'Reengajamento', href: createPageUrl('Reengagement'), icon: RefreshCw, roles: ['unit_admin', 'sales_manager'] },
+    { name: 'Automations', label: t('automations'), href: createPageUrl('Automations'), icon: Zap, roles: ['unit_admin'] },
+    { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['unit_admin', 'sales_manager'] },
+    { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Bot, roles: ['brand_manager', 'unit_admin'] },
+    { name: 'SimulationTraining', label: 'Simulação & Treinamento', href: createPageUrl('SimulationTraining'), icon: Bot, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'SalesFunnel', label: 'Funil de Vendas', href: createPageUrl('SalesFunnel'), icon: GitBranch, roles: ['brand_manager', 'unit_admin'] },
+    { name: 'Tasks', label: 'Tarefas', href: createPageUrl('Tasks'), icon: Clock, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'CompanySettings', label: 'Configurações da Empresa', href: createPageUrl('CompanySettings'), icon: Building2, roles: ['unit_admin'] },
+    { name: 'Settings', label: t('settings'), href: createPageUrl('Settings'), icon: Settings, roles: ['unit_admin'] },
   ];
 
   const filteredNav = navigation.filter(item => 
@@ -275,7 +286,7 @@ export default function Layout({ children, currentPageName }) {
         </header>
 
         {/* Page content */}
-        <main className="p-4 lg:p-8">
+        <main className="p-4 lg:p-8 pb-16">
           {loading ? (
             <div className="flex items-center justify-center min-h-[60vh]">
               <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
@@ -284,7 +295,16 @@ export default function Layout({ children, currentPageName }) {
             children
           )}
         </main>
-      </div>
-    </div>
-  );
-}
+
+        {/* Footer branding */}
+        {organization?.branding_config?.show_powered_by !== false && (
+          <footer className="fixed bottom-0 right-0 lg:left-72 left-0 bg-white/80 backdrop-blur-sm border-t border-slate-100 py-2 px-4 lg:px-8 z-20">
+            <div className="flex items-center justify-center">
+              <PoweredBy variant="dashboard" />
+            </div>
+          </footer>
+        )}
+        </div>
+        </div>
+        );
+        }

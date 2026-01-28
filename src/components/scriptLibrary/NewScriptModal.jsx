@@ -37,7 +37,7 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
   const loadAssistants = async () => {
     setLoadingAssistants(true);
     try {
-      const data = await base44.entities.Assistant.list('-updated_date', 100);
+      const data = await base44.entities.AIAssistant.list('-updated_date', 100);
       setAssistants(data);
     } catch (error) {
       console.error('Erro ao carregar assistentes:', error);

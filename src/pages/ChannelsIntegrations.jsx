@@ -144,11 +144,6 @@ export default function ChannelsIntegrations() {
   };
 
   const handleGenerateQR = async () => {
-    if (units.length === 0) {
-      toast.error('Cadastre uma unidade antes de conectar canais');
-      return;
-    }
-
     if (!qrFormData.unit_id) {
       toast.error('Selecione uma unidade');
       return;
@@ -157,9 +152,10 @@ export default function ChannelsIntegrations() {
     setGeneratingQR(true);
     try {
       const response = await base44.functions.invoke('generateWhatsAppQRWeb', {
-        company_id: teamMember.company_id,
         unit_id: qrFormData.unit_id,
         label: qrFormData.label || 'WhatsApp Web',
+        assigned_agent_email: qrFormData.assigned_agent_email || null,
+        assistant_id: qrFormData.assistant_id || null,
         default_flow_id: qrFormData.flow_id || null
       });
 
@@ -184,7 +180,6 @@ export default function ChannelsIntegrations() {
 
     try {
       await base44.entities.WhatsAppIntegration.create({
-        company_id: teamMember.company_id,
         unit_id: providerFormData.unit_id,
         integration_type: 'provider',
         provider: providerFormData.provider,
@@ -193,14 +188,17 @@ export default function ChannelsIntegrations() {
         api_key: providerFormData.api_key,
         api_token: providerFormData.api_token,
         default_flow_id: providerFormData.flow_id || null,
-        label: providerFormData.label || providerFormData.provider.toUpperCase(),
+        assigned_agent_email: providerFormData.assigned_agent_email || null,
+        assistant_id: providerFormData.assistant_id || null,
+        label: providerFormData.label || `${providerFormData.provider} - ${providerFormData.phone_number}`,
         is_active: true,
         status: 'connected'
       });
 
-      toast.success('Provider conectado com sucesso');
+      toast.success('WhatsApp Provider conectado com sucesso');
       setShowProviderDialog(false);
-      loadData();
+      setProviderFormData({ provider: 'zapi', unit_id: '', assigned_agent_email: '', assistant_id: '', flow_id: '', instance_id: '', api_key: '', api_token: '', phone_number: '', label: '' });
+      await loadData();
     } catch (error) {
       console.error('Erro ao conectar provider:', error);
       toast.error('Erro ao conectar provider');

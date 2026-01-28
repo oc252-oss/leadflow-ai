@@ -30,12 +30,17 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Assistente não selecionado' }, { status: 400 });
     }
 
-    // Gerar dados únicos para QR Code
-    const sessionId = `session_${integrationId}_${Date.now()}`;
-    const qrData = `whatsapp://integrate?session=${sessionId}&integration=${integrationId}`;
+    // Gerar dados únicos para QR Code com formato válido para WhatsApp Web
+    const sessionId = `${integrationId}_${Date.now()}`;
+    const random = Math.random().toString(36).substring(2, 15);
+    const qrData = `${sessionId},${random}`;
     
     // Gerar QR Code real
-    const qrCodeUrl = await QRCode.toDataURL(qrData);
+    const qrCodeUrl = await QRCode.toDataURL(qrData, {
+      width: 300,
+      margin: 2,
+      errorCorrectionLevel: 'H'
+    });
     
     // Atualizar integração com QR Code
     await base44.entities.WhatsAppIntegration.update(integrationId, {
@@ -46,7 +51,8 @@ Deno.serve(async (req) => {
 
     return Response.json({
       qr_code: qrCodeUrl,
-      session_id: sessionId
+      session_id: sessionId,
+      message: 'QR Code gerado com sucesso. Escaneie com o WhatsApp Web.'
     });
   } catch (error) {
     console.error('Erro:', error);

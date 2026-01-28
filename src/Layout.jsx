@@ -43,6 +43,7 @@ export default function Layout({ children, currentPageName }) {
   const [teamMember, setTeamMember] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadUserData();
@@ -69,6 +70,8 @@ export default function Layout({ children, currentPageName }) {
       setNotifications(notifs);
     } catch (error) {
       console.error('Error loading user data:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -89,47 +92,27 @@ export default function Layout({ children, currentPageName }) {
   };
 
   const publicPages = ['Login', 'Onboarding'];
-
-  const navigation = [
-    // Dashboards
-    { name: 'Dashboard', label: t('dashboard'), href: createPageUrl('Dashboard'), icon: LayoutDashboard, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'FranchiseDashboard', label: 'Dashboard Executivo', href: createPageUrl('FranchiseDashboard'), icon: Building2, roles: ['organization_admin', 'brand_manager'] },
-    
-    // Core Operations
-    { name: 'Leads', label: t('leads'), href: createPageUrl('Leads'), icon: Users, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'Pipeline', label: t('pipeline'), href: createPageUrl('Pipeline'), icon: GitBranch, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'Conversations', label: t('conversations'), href: createPageUrl('Conversations'), icon: MessageSquare, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'Tasks', label: 'Tarefas', href: createPageUrl('Tasks'), icon: Clock, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
-    
-    // Marketing & Campaigns
-    { name: 'Campaigns', label: t('campaigns'), href: createPageUrl('Campaigns'), icon: Target, roles: ['unit_admin', 'sales_manager'] },
-    { name: 'Reengagement', label: 'Reengajamento', href: createPageUrl('Reengagement'), icon: RefreshCw, roles: ['unit_admin', 'sales_manager'] },
-    
-    // AI & Assistants
-    { name: 'AssistentesIA', label: 'Assistentes IA', href: createPageUrl('AssistentesIA'), icon: Bot, roles: ['unit_admin', 'sales_manager'] },
-    { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Bot, roles: ['unit_admin'] },
-    { name: 'SimulationTraining', label: 'Simulação & Treinamento', href: createPageUrl('SimulationTraining'), icon: Zap, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
-    
-    // Voice Module
-    { name: 'VoiceCampaigns', label: 'Campanhas de Voz', href: createPageUrl('VoiceCampaigns'), icon: Phone, roles: ['unit_admin', 'sales_manager'] },
-    { name: 'VoiceFunnel', label: 'Funil de Voz', href: createPageUrl('VoiceFunnel'), icon: Phone, roles: ['unit_admin', 'sales_manager'] },
-    
-    // Analytics
-    { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['unit_admin', 'sales_manager'] },
-    { name: 'SalesFunnel', label: 'Funil de Vendas', href: createPageUrl('SalesFunnel'), icon: GitBranch, roles: ['unit_admin'] },
-    
-    // Settings
-    { name: 'Automations', label: t('automations'), href: createPageUrl('Automations'), icon: Zap, roles: ['unit_admin'] },
-    { name: 'Settings', label: t('settings'), href: createPageUrl('Settings'), icon: Settings, roles: ['unit_admin'] },
-    
-    // Organization/Brand Level
-    { name: 'WhiteLabel', label: 'Marca & White-label', href: createPageUrl('WhiteLabel'), icon: Building2, roles: ['organization_admin'] },
-  ];
-
-  // Public pages - no layout
   if (publicPages.includes(currentPageName)) {
     return <>{children}</>;
   }
+
+  const navigation = [
+    { name: 'Dashboard', label: t('dashboard'), href: createPageUrl('Dashboard'), icon: LayoutDashboard, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'FranchiseDashboard', label: 'Dashboard Executivo', href: createPageUrl('FranchiseDashboard'), icon: Building2, roles: ['organization_admin', 'brand_manager'] },
+    { name: 'Leads', label: t('leads'), href: createPageUrl('Leads'), icon: Users, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Pipeline', label: t('pipeline'), href: createPageUrl('Pipeline'), icon: GitBranch, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Conversations', label: t('conversations'), href: createPageUrl('Conversations'), icon: MessageSquare, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Campaigns', label: t('campaigns'), href: createPageUrl('Campaigns'), icon: Target, roles: ['company_admin', 'sales_manager'] },
+    { name: 'Reengagement', label: 'Reengajamento', href: createPageUrl('Reengagement'), icon: RefreshCw, roles: ['company_admin', 'sales_manager'] },
+    { name: 'Automations', label: t('automations'), href: createPageUrl('Automations'), icon: Zap, roles: ['company_admin'] },
+    { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['company_admin', 'sales_manager'] },
+    { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Bot, roles: ['company_admin'] },
+    { name: 'SimulationTraining', label: 'Simulação & Treinamento', href: createPageUrl('SimulationTraining'), icon: Bot, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'SalesFunnel', label: 'Funil de Vendas', href: createPageUrl('SalesFunnel'), icon: GitBranch, roles: ['company_admin'] },
+    { name: 'Tasks', label: 'Tarefas', href: createPageUrl('Tasks'), icon: Clock, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'CompanySettings', label: 'Configurações da Empresa', href: createPageUrl('CompanySettings'), icon: Building2, roles: ['company_admin'] },
+    { name: 'Settings', label: t('settings'), href: createPageUrl('Settings'), icon: Settings, roles: ['company_admin'] },
+  ];
 
   const filteredNav = navigation.filter(item => 
     item && item.label && (!teamMember?.role || item.roles.includes(teamMember.role)) && canAccessPage(item.name)
@@ -145,7 +128,7 @@ export default function Layout({ children, currentPageName }) {
         />
       )}
 
-      {/* Sidebar - ALWAYS VISIBLE */}
+      {/* Sidebar */}
       <aside className={cn(
         "fixed top-0 left-0 z-50 h-full w-72 bg-white border-r border-slate-200 transition-transform duration-300 lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -165,54 +148,42 @@ export default function Layout({ children, currentPageName }) {
           </div>
 
           {/* Company selector */}
-          <div className="px-4 py-3 border-b border-slate-100">
-            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-50">
-              <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-                <Building2 className="w-4 h-4 text-indigo-600" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-medium text-slate-900 truncate">
-                  {company?.name || 'Carregando...'}
-                </p>
-                <p className="text-xs text-slate-500 capitalize">
-                  {teamMember?.role?.replace('_', ' ') || 'Usuário'}
-                </p>
+          {company && (
+            <div className="px-4 py-3 border-b border-slate-100">
+              <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-50">
+                <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
+                  <Building2 className="w-4 h-4 text-indigo-600" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium text-slate-900 truncate">{company.name}</p>
+                  <p className="text-xs text-slate-500 capitalize">{teamMember?.role?.replace('_', ' ')}</p>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-            {filteredNav.length > 0 ? (
-              filteredNav.map((item) => {
-                if (!item || !item.label) return null;
-                const isActive = currentPageName === item.name;
-                return (
-                  <Link
-                    key={item.name}
-                    to={item.href}
-                    className={cn(
-                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                      isActive 
-                        ? "bg-indigo-50 text-indigo-700" 
-                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                    )}
-                    onClick={() => setSidebarOpen(false)}
-                  >
-                    <item.icon className={cn("w-5 h-5", isActive ? "text-indigo-600" : "text-slate-400")} />
-                    {item.label}
-                  </Link>
-                );
-              })
-            ) : (
-              // Show loading skeleton while navigation loads
-              Array.from({ length: 8 }).map((_, idx) => (
-                <div key={idx} className="flex items-center gap-3 px-3 py-2.5">
-                  <div className="w-5 h-5 bg-slate-200 rounded animate-pulse" />
-                  <div className="h-4 bg-slate-200 rounded animate-pulse flex-1" />
-                </div>
-              ))
-            )}
+            {filteredNav.map((item) => {
+              if (!item || !item.label) return null;
+              const isActive = currentPageName === item.name;
+              return (
+                <Link
+                  key={item.name}
+                  to={item.href}
+                  className={cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                    isActive 
+                      ? "bg-indigo-50 text-indigo-700" 
+                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                  )}
+                  onClick={() => setSidebarOpen(false)}
+                >
+                  <item.icon className={cn("w-5 h-5", isActive ? "text-indigo-600" : "text-slate-400")} />
+                  {item.label}
+                </Link>
+              );
+            })}
           </nav>
 
           {/* User section */}
@@ -224,12 +195,8 @@ export default function Layout({ children, currentPageName }) {
                     {user?.full_name?.charAt(0) || 'U'}
                   </div>
                   <div className="flex-1 text-left min-w-0">
-                    <p className="text-sm font-medium text-slate-900 truncate">
-                      {user?.full_name || 'Usuário'}
-                    </p>
-                    <p className="text-xs text-slate-500 truncate">
-                      {user?.email || 'Carregando...'}
-                    </p>
+                    <p className="text-sm font-medium text-slate-900 truncate">{user?.full_name}</p>
+                    <p className="text-xs text-slate-500 truncate">{user?.email}</p>
                   </div>
                   <ChevronDown className="w-4 h-4 text-slate-400" />
                 </button>
@@ -310,7 +277,13 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Page content */}
         <main className="p-4 lg:p-8">
-          {children}
+          {loading ? (
+            <div className="flex items-center justify-center min-h-[60vh]">
+              <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+            </div>
+          ) : (
+            children
+          )}
         </main>
       </div>
     </div>

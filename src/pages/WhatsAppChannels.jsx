@@ -69,35 +69,38 @@ export default function WhatsAppChannels() {
     setShowQRDialog(true);
 
     try {
-      // Chamar função uma única vez
-      const response = await base44.functions.invoke('generateWhatsAppQR', {
+      const response = await base44.functions.invoke('simulateWhatsAppQR', {
         channelId: channel.id
       });
 
       if (response.data?.qr_code) {
         setQrCode(response.data.qr_code);
         setQrLoading(false);
-
-        // Poll para verificar conexão
-        let attempts = 0;
-        const statusInterval = setInterval(async () => {
-          attempts++;
-          const updated = await base44.entities.WhatsAppChannel.filter({ id: channel.id });
-          if (updated[0]?.status === 'connected') {
-            clearInterval(statusInterval);
-            setShowQRDialog(false);
-            await loadData();
-          }
-          if (attempts >= 40) clearInterval(statusInterval); // 2 minutos máximo
-        }, 3000);
       } else {
         setQrLoading(false);
-        alert('Erro: Servidor WhatsApp indisponível ou não configurado');
+        toast.error('Erro ao gerar QR Code');
       }
     } catch (error) {
       console.error('Erro ao gerar QR Code:', error);
       setQrLoading(false);
-      alert('Erro ao gerar QR Code. Verifique a conexão com o servidor WhatsApp.');
+      toast.error('Erro ao gerar QR Code');
+    }
+  };
+
+  const handleSimulateConnection = async (channel) => {
+    try {
+      const response = await base44.functions.invoke('simulateWhatsAppConnection', {
+        channelId: channel.id
+      });
+
+      if (response.data?.success) {
+        toast.success('Canal conectado com sucesso!');
+        setShowQRDialog(false);
+        await loadData();
+      }
+    } catch (error) {
+      console.error('Erro ao conectar canal:', error);
+      toast.error('Erro ao conectar canal');
     }
   };
 

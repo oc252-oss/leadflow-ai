@@ -98,6 +98,8 @@ Deno.serve(async (req) => {
     const lead = leads[0];
 
     // Process intent-based actions and UPDATE CENTRAL FUNNEL
+    const isProspecting = campaign.type === 'active_prospecting';
+
     if (intent === 'yes') {
       // Update lead funnel stage
       const newStage = lead.funnel_stage === 'Novo Lead' || lead.funnel_stage === 'Atendimento Iniciado' 
@@ -111,12 +113,20 @@ Deno.serve(async (req) => {
         last_interaction_at: new Date().toISOString()
       });
 
-      // Create task
+      // Create task with context-aware description
+      const taskTitle = isProspecting 
+        ? '🎯 Lead reativado com interesse (Prospecção)'
+        : '🎙️ Lead demonstrou interesse (Reengajamento)';
+      
+      const taskDescription = isProspecting
+        ? `Lead ${lead.name} demonstrou interesse em retomar contato.\n\nCampanha: ${campaign.name}\nInteresse original: ${lead.interest_type || 'Não especificado'}\n\nTranscrição: "${transcript}"\n\nOferecer avaliação gratuita e agendar.`
+        : `Lead ${lead.name} demonstrou interesse durante ligação automática.\n\nCampanha: ${campaign.name}\n\nTranscrição: "${transcript}"\n\nSugerir avaliação e próximos passos.`;
+
       const taskData = {
         company_id: campaign.company_id,
         lead_id: lead.id,
-        title: '🎙️ Lead demonstrou interesse por ligação da IA',
-        description: `Lead ${lead.name} demonstrou interesse durante ligação automática.\n\nTranscrição: "${transcript}"\n\nSugerir avaliação e próximos passos.`,
+        title: taskTitle,
+        description: taskDescription,
         type: 'voice_campaign',
         priority: 'high',
         status: 'open',
@@ -137,22 +147,24 @@ Deno.serve(async (req) => {
       });
 
     } else if (intent === 'maybe') {
-      // Keep current funnel stage, create follow-up
+      // Keep current funnel stage, create follow-up with adjusted timeline
       await base44.asServiceRole.entities.Lead.update(lead.id, {
         last_interaction_at: new Date().toISOString()
       });
 
+      const followUpDays = isProspecting ? 10 : 5;
+
       await base44.asServiceRole.entities.Task.create({
         company_id: campaign.company_id,
         lead_id: lead.id,
-        title: 'Follow-up: Lead pediu contato posterior',
-        description: `Lead ${lead.name} pediu para entrar em contato mais tarde.\n\nTranscrição: "${transcript}"`,
+        title: `Follow-up: Lead pediu contato posterior${isProspecting ? ' (Prospecção)' : ''}`,
+        description: `Lead ${lead.name} pediu para entrar em contato mais tarde.\n\nCampanha: ${campaign.name}\nTranscrição: "${transcript}"`,
         type: 'call_back',
         priority: 'medium',
         status: 'open',
         source: 'voice_campaign',
         source_id: voiceCall.id,
-        due_date: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+        due_date: new Date(Date.now() + followUpDays * 24 * 60 * 60 * 1000).toISOString(),
         assigned_to_user_id: campaign.assigned_to_type === 'specific' ? campaign.assigned_to_user_id : null
       });
 
@@ -165,7 +177,7 @@ Deno.serve(async (req) => {
       await base44.asServiceRole.entities.Lead.update(lead.id, {
         funnel_stage: 'Venda Perdida',
         opt_out_voice: true,
-        notes: (lead.notes || '') + `\n[${new Date().toISOString()}] Lead optou por não receber ligações de voz.`,
+        notes: (lead.notes || '') + `\n[${new Date().toISOString()}] Lead optou por não receber ligações de voz (Campanha: ${campaign.name}).`,
         last_interaction_at: new Date().toISOString()
       });
 

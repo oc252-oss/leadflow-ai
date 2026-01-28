@@ -12,11 +12,11 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
     name: '',
     description: '',
     type: 'reengagement',
+    target_funnel_stages: ['Atendimento Iniciado', 'Qualificado'],
     days_inactive: 7,
     script: '',
     lead_sources: [],
-    exclude_do_not_contact: true,
-    exclude_open_tasks: false,
+    exclude_open_tasks: true,
     allowed_hours_start: '09:00',
     allowed_hours_end: '18:00',
     allowed_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
@@ -28,6 +28,8 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
 
   const [saving, setSaving] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  const isProspecting = data.type === 'active_prospecting';
 
   const handleSave = async (activate = false) => {
     if (!data.name || !data.script) {
@@ -117,7 +119,7 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
               <Checkbox
                 checked={data.target_funnel_stages?.includes('Atendimento Iniciado')}
                 onCheckedChange={(checked) => {
-                  const stages = data.target_funnel_stages || ['Atendimento Iniciado', 'Qualificado'];
+                  const stages = data.target_funnel_stages || [];
                   if (checked) {
                     setData({ ...data, target_funnel_stages: [...stages.filter(s => s !== 'Atendimento Iniciado'), 'Atendimento Iniciado'] });
                   } else {
@@ -131,7 +133,7 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
               <Checkbox
                 checked={data.target_funnel_stages?.includes('Qualificado')}
                 onCheckedChange={(checked) => {
-                  const stages = data.target_funnel_stages || ['Atendimento Iniciado', 'Qualificado'];
+                  const stages = data.target_funnel_stages || [];
                   if (checked) {
                     setData({ ...data, target_funnel_stages: [...stages.filter(s => s !== 'Qualificado'), 'Qualificado'] });
                   } else {
@@ -141,8 +143,28 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
               />
               <span className="text-sm font-medium text-slate-900">Qualificado</span>
             </label>
+            {isProspecting && (
+              <label className="flex items-center gap-2 cursor-pointer">
+                <Checkbox
+                  checked={data.target_funnel_stages?.includes('Avaliação Realizada')}
+                  onCheckedChange={(checked) => {
+                    const stages = data.target_funnel_stages || [];
+                    if (checked) {
+                      setData({ ...data, target_funnel_stages: [...stages.filter(s => s !== 'Avaliação Realizada'), 'Avaliação Realizada'] });
+                    } else {
+                      setData({ ...data, target_funnel_stages: stages.filter(s => s !== 'Avaliação Realizada') });
+                    }
+                  }}
+                />
+                <span className="text-sm font-medium text-slate-900">Avaliação Realizada (não fechou)</span>
+              </label>
+            )}
           </div>
-          <p className="text-xs text-slate-500">Selecione em quais etapas do funil os leads estão parados.</p>
+          <p className="text-xs text-slate-500">
+            {isProspecting 
+              ? 'Leads parados nessas etapas que não viraram venda.' 
+              : 'Selecione em quais etapas do funil os leads estão parados.'}
+          </p>
         </div>
 
         <div className="space-y-2">
@@ -152,11 +174,26 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7">7 dias</SelectItem>
-              <SelectItem value="30">30 dias</SelectItem>
+              {!isProspecting && (
+                <>
+                  <SelectItem value="7">7 dias</SelectItem>
+                  <SelectItem value="30">30 dias</SelectItem>
+                </>
+              )}
+              {isProspecting && (
+                <>
+                  <SelectItem value="60">60 dias (2 meses)</SelectItem>
+                  <SelectItem value="90">90 dias (3 meses)</SelectItem>
+                  <SelectItem value="180">180 dias (6 meses)</SelectItem>
+                </>
+              )}
             </SelectContent>
           </Select>
-          <p className="text-xs text-slate-500">A IA entrará em contato com leads que não responderam dentro desse período.</p>
+          <p className="text-xs text-slate-500">
+            {isProspecting 
+              ? 'Apenas leads com relacionamento prévio (conversa iniciada ou atendimento feito).' 
+              : 'A IA entrará em contato com leads que não responderam dentro desse período.'}
+          </p>
         </div>
 
         <div className="space-y-2">
@@ -212,15 +249,26 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
         <Textarea
           value={data.script}
           onChange={(e) => setData({ ...data, script: e.target.value })}
-          placeholder="Olá, tudo bem?
+          placeholder={isProspecting 
+            ? `Olá, tudo bem?
+Aqui é a assistente virtual da Royal Face Ji-Paraná.
+
+Você teve contato conosco há algum tempo e estou ligando para saber se ainda tem interesse em conhecer nossos tratamentos.
+
+Podemos agendar uma avaliação gratuita para você?`
+            : `Olá, tudo bem?
 Aqui é a assistente virtual da Royal Face Ji-Paraná.
 
 Você teve contato conosco recentemente e estou ligando para saber se posso te ajudar a agendar uma avaliação estética sem custo.
 
-Posso seguir?"
+Posso seguir?`}
           className="min-h-32"
         />
-        <p className="text-xs text-slate-500">Use frases curtas e linguagem natural. Essa mensagem será falada pela IA durante a ligação.</p>
+        <p className="text-xs text-slate-500">
+          {isProspecting 
+            ? '🎯 Use tom consultivo e natural. Foco em retomar conversa, não em vender diretamente.' 
+            : 'Use frases curtas e linguagem natural. Essa mensagem será falada pela IA durante a ligação.'}
+        </p>
       </div>
       </div>
 

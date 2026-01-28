@@ -54,7 +54,8 @@ Deno.serve(async (req) => {
     const inactivityDate = new Date();
     inactivityDate.setDate(inactivityDate.getDate() - campaign.days_inactive);
 
-    // Get eligible leads based on funnel stage and filters
+    // Get eligible leads based on campaign type and funnel stage
+    const isProspecting = campaign.type === 'active_prospecting';
     const targetStages = campaign.target_funnel_stages || ['Atendimento Iniciado', 'Qualificado'];
     
     const allLeads = await base44.asServiceRole.entities.Lead.filter({
@@ -67,6 +68,17 @@ Deno.serve(async (req) => {
     for (const lead of allLeads) {
       // Check funnel stage (CENTRAL FUNNEL)
       if (!targetStages.includes(lead.funnel_stage)) continue;
+
+      // Active Prospecting: Require previous relationship
+      if (isProspecting) {
+        // Must have had previous interaction OR reached Contact Initiated stage
+        const hasRelationship = lead.last_interaction_at || 
+                               lead.funnel_stage === 'Atendimento Iniciado' ||
+                               lead.funnel_stage === 'Qualificado' ||
+                               lead.funnel_stage === 'Avaliação Realizada';
+        
+        if (!hasRelationship) continue;
+      }
 
       // Check last interaction
       if (!lead.last_interaction_at) continue;

@@ -5,11 +5,14 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Loader2, Play, RotateCcw, CheckCircle2, Trash2 } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Play, RotateCcw, CheckCircle2, MessageSquare, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import SimulationChat from '@/components/simulation/SimulationChat';
 import AdjustmentsPanel from '@/components/simulation/AdjustmentsPanel';
+import VoiceSimulationSetup from '@/components/simulation/VoiceSimulationSetup';
+import VoiceSimulationCall from '@/components/simulation/VoiceSimulationCall';
+import VoiceScriptEditor from '@/components/simulation/VoiceScriptEditor';
 
 export default function SimulationTraining() {
   const [assistants, setAssistants] = useState([]);
@@ -24,7 +27,9 @@ export default function SimulationTraining() {
   const [simulationHistory, setSimulationHistory] = useState([]);
   const [assistant, setAssistant] = useState(null);
   const [loading, setLoading] = useState(false);
-  const [showDialog, setShowDialog] = useState(false);
+  const [voiceSimulation, setVoiceSimulation] = useState(null);
+  const [voiceScript, setVoiceScript] = useState([]);
+  const [voiceSettings, setVoiceSettings] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -130,13 +135,38 @@ export default function SimulationTraining() {
     }
   };
 
+  const handleStartVoiceSimulation = async (config) => {
+    setLoading(true);
+    try {
+      const response = await base44.functions.invoke('generateVoiceSimulation', config);
+      
+      if (response.data?.success) {
+        setVoiceScript(response.data.script);
+        setVoiceSettings(config.voiceSettings);
+        setVoiceSimulation(config);
+        toast.success('Script de voz gerado com sucesso!');
+      }
+    } catch (error) {
+      console.error('Erro:', error);
+      toast.error('Erro ao gerar script de voz');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleRestartVoiceSimulation = () => {
+    setVoiceSimulation(null);
+    setVoiceScript([]);
+    setVoiceSettings(null);
+  };
+
   if (activeConversation) {
     return (
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Simulação em Andamento</h1>
+            <h1 className="text-3xl font-bold text-slate-900">Simulação de Chat em Andamento</h1>
             <p className="text-slate-600 mt-2">
               Assistente: <Badge>{assistant?.name}</Badge>
               {selectedFlow && <Badge className="ml-2">{flows.find(f => f.id === selectedFlow)?.name}</Badge>}
@@ -210,19 +240,87 @@ export default function SimulationTraining() {
     );
   }
 
+  if (voiceSimulation) {
+    return (
+      <div className="space-y-6">
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">Simulação de Voz em Andamento</h1>
+            <p className="text-slate-600 mt-2">
+              Assistente: <Badge>{assistants.find(a => a.id === voiceSimulation.assistantId)?.name}</Badge>
+            </p>
+          </div>
+          <Button
+            onClick={handleRestartVoiceSimulation}
+            variant="outline"
+            className="gap-2"
+          >
+            <RotateCcw className="w-4 h-4" />
+            Reiniciar
+          </Button>
+        </div>
+
+        <Tabs defaultValue="call" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="call" className="gap-2">
+              <Phone className="w-4 h-4" />
+              Simulação
+            </TabsTrigger>
+            <TabsTrigger value="script" className="gap-2">
+              <MessageSquare className="w-4 h-4" />
+              Editar Script
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="call" className="mt-6">
+            <VoiceSimulationCall
+              script={voiceScript}
+              assistantId={voiceSimulation.assistantId}
+              callType={voiceSimulation.callType}
+              leadName={voiceSimulation.leadName}
+              voiceSettings={voiceSettings}
+            />
+          </TabsContent>
+
+          <TabsContent value="script" className="mt-6">
+            <VoiceScriptEditor
+              script={voiceScript}
+              assistantId={voiceSimulation.assistantId}
+              callType={voiceSimulation.callType}
+            />
+          </TabsContent>
+        </Tabs>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Simulação & Treinamento de IA</h1>
         <p className="text-slate-600 mt-2">
-          Teste e ajuste seus assistentes antes de ativar em produção
+          Teste, treine e ajuste seus assistentes antes de ativar em produção
         </p>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>Iniciar Simulação</CardTitle>
-        </CardHeader>
+      <Tabs defaultValue="chat" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="chat" className="gap-2">
+            <MessageSquare className="w-4 h-4" />
+            Chat
+          </TabsTrigger>
+          <TabsTrigger value="voice" className="gap-2">
+            <Phone className="w-4 h-4" />
+            Voz (CLINIQ Voice)
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="chat" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Iniciar Simulação de Chat</CardTitle>
+            </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {/* Assistente */}
@@ -306,6 +404,16 @@ export default function SimulationTraining() {
           </Button>
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="voice" className="mt-6">
+          <VoiceSimulationSetup
+            assistants={assistants}
+            onStartSimulation={handleStartVoiceSimulation}
+            isLoading={loading}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

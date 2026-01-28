@@ -42,14 +42,14 @@ export default function WhatsAppChannels() {
   };
 
   const handleCreateChannel = async () => {
-    if (!formData.script_id) {
-      toast.error('Selecione um script aprovado');
+    if (!formData.label || !formData.script_id) {
+      toast.error('Nome e Script são obrigatórios');
       return;
     }
 
     try {
       await base44.entities.WhatsAppChannel.create({
-        label: formData.label || 'WhatsApp Channel',
+        label: formData.label,
         script_id: formData.script_id,
         phone_number: '',
         status: 'disconnected'
@@ -58,10 +58,10 @@ export default function WhatsAppChannels() {
       setFormData({ label: '', script_id: '' });
       setShowCreateDialog(false);
       await loadData();
-      toast.success('Canal criado com sucesso!');
+      toast.success('Conexão criada com sucesso!');
     } catch (error) {
-      console.error('Erro ao criar canal:', error);
-      toast.error('Erro ao criar canal');
+      console.error('Erro ao criar conexão:', error);
+      toast.error('Erro ao criar conexão: ' + error.message);
     }
   };
 
@@ -108,14 +108,15 @@ export default function WhatsAppChannels() {
   };
 
   const handleDeleteChannel = async (channelId) => {
-    if (!confirm('Tem certeza que deseja deletar este canal?')) return;
+    if (!confirm('Tem certeza que deseja deletar esta conexão?')) return;
 
     try {
       await base44.entities.WhatsAppChannel.delete(channelId);
+      toast.success('Conexão deletada');
       await loadData();
     } catch (error) {
-      console.error('Erro ao deletar canal:', error);
-      alert('Erro ao deletar canal');
+      console.error('Erro ao deletar conexão:', error);
+      toast.error('Erro ao deletar conexão');
     }
   };
 
@@ -136,7 +137,8 @@ export default function WhatsAppChannels() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Canais WhatsApp</h1>
+        <h1 className="text-3xl font-bold">Conexões</h1>
+        <p className="text-sm text-slate-600">Gerencie suas conexões de WhatsApp com Scripts aprovados</p>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
             <Button className="bg-indigo-600 hover:bg-indigo-700">
@@ -145,7 +147,7 @@ export default function WhatsAppChannels() {
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Criar Novo Canal WhatsApp</DialogTitle>
+              <DialogTitle>Nova Conexão WhatsApp</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {scripts.length === 0 ? (
@@ -159,7 +161,7 @@ export default function WhatsAppChannels() {
               ) : (
                 <>
                   <div>
-                    <label className="text-sm font-medium">Rótulo (Opcional)</label>
+                    <label className="text-sm font-medium">Nome da Conexão *</label>
                     <Input
                       placeholder="Ex: WhatsApp Comercial"
                       value={formData.label}
@@ -196,19 +198,28 @@ export default function WhatsAppChannels() {
       </div>
 
       {loading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-        </div>
+      <div className="flex items-center justify-center py-12">
+      <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+      </div>
       ) : channels.length === 0 ? (
-        <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <MessageSquare className="w-12 h-12 text-slate-300 mb-4" />
-            <p className="text-slate-600 mb-4">Nenhum canal criado ainda</p>
-            <Button onClick={() => setShowCreateDialog(true)} variant="outline">
-              <Plus className="w-4 h-4 mr-2" /> Criar Primeiro Canal
-            </Button>
-          </CardContent>
-        </Card>
+      <Card className="border-dashed">
+      <CardContent className="flex flex-col items-center justify-center py-12">
+       <MessageSquare className="w-12 h-12 text-slate-300 mb-4" />
+       <p className="text-slate-600 mb-4">Nenhuma conexão criada ainda</p>
+       {scripts.length === 0 ? (
+         <div className="text-center">
+           <p className="text-sm text-slate-500 mb-4">Crie um script aprovado em Biblioteca de Scripts primeiro</p>
+           <Button onClick={() => setShowCreateDialog(true)} variant="outline" disabled>
+             <Plus className="w-4 h-4 mr-2" /> Criar Conexão
+           </Button>
+         </div>
+       ) : (
+         <Button onClick={() => setShowCreateDialog(true)} variant="outline">
+           <Plus className="w-4 h-4 mr-2" /> Criar Primeira Conexão
+         </Button>
+       )}
+      </CardContent>
+      </Card>
       ) : (
         <div className="grid gap-4">
           {channels.map(channel => (

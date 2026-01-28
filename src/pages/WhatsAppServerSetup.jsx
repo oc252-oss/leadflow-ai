@@ -102,12 +102,13 @@ export default function WhatsAppServerSetup() {
             <div className="flex items-start gap-2">
               <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
               <div className="text-sm text-yellow-800">
-                <p className="font-semibold">Como configurar:</p>
+                <p className="font-semibold">Como configurar (no Dashboard Base44):</p>
                 <ol className="list-decimal list-inside mt-2 space-y-1">
-                  <li>Vá para Configurações da Aplicação → Variáveis de Ambiente</li>
-                  <li>Defina <code className="bg-white px-2 py-1 rounded text-xs">WHATSAPP_SERVER_URL</code></li>
-                  <li>Informe a URL do servidor (ex: <code className="bg-white px-2 py-1 rounded text-xs">http://localhost:3001</code> ou <code className="bg-white px-2 py-1 rounded text-xs">https://whatsapp.seudominio.com</code>)</li>
-                  <li>Salve as alterações</li>
+                  <li>Acesse o <strong>Dashboard Base44</strong> (painel administrativo)</li>
+                  <li>Vá para <strong>Settings → Environment Variables</strong></li>
+                  <li>Crie/edite a variável <code className="bg-white px-2 py-1 rounded text-xs">WHATSAPP_SERVER_URL</code></li>
+                  <li>Defina o valor: <code className="bg-white px-2 py-1 rounded text-xs">http://localhost:3001</code> ou <code className="bg-white px-2 py-1 rounded text-xs">https://whatsapp.seudominio.com</code></li>
+                  <li>Salve e a aplicação relê automaticamente</li>
                 </ol>
               </div>
             </div>

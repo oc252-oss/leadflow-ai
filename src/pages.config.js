@@ -23,6 +23,7 @@ import VoiceFunnel from './pages/VoiceFunnel';
 import VoiceSimulator from './pages/VoiceSimulator';
 import Units from './pages/Units';
 import Settings from './pages/Settings';
+import AssistantCentral from './pages/AssistantCentral';
 import __Layout from './Layout.jsx';
 
 
@@ -52,6 +53,7 @@ export const PAGES = {
     "VoiceSimulator": VoiceSimulator,
     "Units": Units,
     "Settings": Settings,
+    "AssistantCentral": AssistantCentral,
 }
 
 export const pagesConfig = {

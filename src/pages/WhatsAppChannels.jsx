@@ -69,50 +69,35 @@ export default function WhatsAppChannels() {
     setShowQRDialog(true);
 
     try {
-      let qrPollingAttempts = 0;
-      const maxQRAttempts = 15; // 30 segundos para gerar QR
+      // Chamar função uma única vez
+      const response = await base44.functions.invoke('generateWhatsAppQR', {
+        channelId: channel.id
+      });
 
-      // Poll para gerar QR Code
-      const qrInterval = setInterval(async () => {
-        qrPollingAttempts++;
-        try {
-          const response = await base44.functions.invoke('generateWhatsAppQR', {
-            channelId: channel.id
-          });
+      if (response.data?.qr_code) {
+        setQrCode(response.data.qr_code);
+        setQrLoading(false);
 
-          if (response.data?.qr_code) {
-            setQrCode(response.data.qr_code);
-            clearInterval(qrInterval);
-            setQrLoading(false);
-
-            // Começar polling de conexão após QR gerado
-            let statusAttempts = 0;
-            const maxStatusAttempts = 40; // 2 minutos
-            const statusInterval = setInterval(async () => {
-              statusAttempts++;
-              const updated = await base44.entities.WhatsAppChannel.filter({ id: channel.id });
-              if (updated[0]?.status === 'connected') {
-                clearInterval(statusInterval);
-                setShowQRDialog(false);
-                await loadData();
-              }
-              if (statusAttempts >= maxStatusAttempts) {
-                clearInterval(statusInterval);
-              }
-            }, 3000);
+        // Poll para verificar conexão
+        let attempts = 0;
+        const statusInterval = setInterval(async () => {
+          attempts++;
+          const updated = await base44.entities.WhatsAppChannel.filter({ id: channel.id });
+          if (updated[0]?.status === 'connected') {
+            clearInterval(statusInterval);
+            setShowQRDialog(false);
+            await loadData();
           }
-
-          if (qrPollingAttempts >= maxQRAttempts) {
-            clearInterval(qrInterval);
-            setQrLoading(false);
-          }
-        } catch (error) {
-          console.error('Erro polling QR:', error);
-        }
-      }, 2000);
+          if (attempts >= 40) clearInterval(statusInterval); // 2 minutos máximo
+        }, 3000);
+      } else {
+        setQrLoading(false);
+        alert('Erro: Servidor WhatsApp indisponível ou não configurado');
+      }
     } catch (error) {
       console.error('Erro ao gerar QR Code:', error);
       setQrLoading(false);
+      alert('Erro ao gerar QR Code. Verifique a conexão com o servidor WhatsApp.');
     }
   };
 

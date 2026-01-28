@@ -29,8 +29,11 @@ import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
 
 export default function ChannelsIntegrations() {
-  const [integrations, setIntegrations] = useState([]);
+  const [whatsappIntegrations, setWhatsappIntegrations] = useState([]);
+  const [instagramIntegrations, setInstagramIntegrations] = useState([]);
+  const [facebookIntegrations, setFacebookIntegrations] = useState([]);
   const [units, setUnits] = useState([]);
+  const [teamMembers, setTeamMembers] = useState([]);
   const [assistants, setAssistants] = useState([]);
   const [flows, setFlows] = useState([]);
   const [teamMember, setTeamMember] = useState(null);
@@ -43,6 +46,7 @@ export default function ChannelsIntegrations() {
   const [generatingQR, setGeneratingQR] = useState(false);
   const [qrFormData, setQrFormData] = useState({
     unit_id: '',
+    assigned_agent_email: '',
     assistant_id: '',
     flow_id: '',
     label: ''
@@ -53,6 +57,7 @@ export default function ChannelsIntegrations() {
   const [providerFormData, setProviderFormData] = useState({
     provider: 'zapi',
     unit_id: '',
+    assigned_agent_email: '',
     assistant_id: '',
     flow_id: '',
     instance_id: '',
@@ -63,15 +68,31 @@ export default function ChannelsIntegrations() {
   });
 
   // Instagram
-  const [instagramConfig, setInstagramConfig] = useState({
+  const [showInstagramDialog, setShowInstagramDialog] = useState(false);
+  const [instagramFormData, setInstagramFormData] = useState({
+    unit_id: '',
+    account_name: '',
+    page_id: '',
+    access_token: '',
     direct_messages: true,
-    comments: false
+    comments: false,
+    assistant_id: '',
+    flow_id: '',
+    label: ''
   });
 
   // Facebook
-  const [facebookConfig, setFacebookConfig] = useState({
+  const [showFacebookDialog, setShowFacebookDialog] = useState(false);
+  const [facebookFormData, setFacebookFormData] = useState({
+    unit_id: '',
+    page_name: '',
+    page_id: '',
+    access_token: '',
     messenger: true,
-    ad_comments: false
+    ad_comments: false,
+    assistant_id: '',
+    flow_id: '',
+    label: ''
   });
 
   // Webchat
@@ -89,18 +110,23 @@ export default function ChannelsIntegrations() {
       
       if (members.length > 0) {
         setTeamMember(members[0]);
-        const companyId = members[0].company_id;
         const unitId = members[0].unit_id;
 
-        const [integrationsData, unitsData, assistantsData, flowsData] = await Promise.all([
-          base44.entities.WhatsAppIntegration.filter({ company_id: companyId }),
+        const [whatsappData, instagramData, facebookData, unitsData, allTeamMembers, assistantsData, flowsData] = await Promise.all([
+          base44.entities.WhatsAppIntegration.filter({ unit_id: unitId || members[0].organization_id }),
+          base44.entities.FacebookIntegration ? base44.entities.FacebookIntegration.filter({ unit_id: unitId || members[0].organization_id }).catch(() => []) : Promise.resolve([]),
+          base44.entities.FacebookIntegration ? base44.entities.FacebookIntegration.filter({ unit_id: unitId || members[0].organization_id }).catch(() => []) : Promise.resolve([]),
           unitId ? base44.entities.Unit.filter({ id: unitId }) : base44.entities.Unit.filter({ organization_id: members[0].organization_id }),
+          base44.entities.TeamMember.filter({ organization_id: members[0].organization_id }),
           base44.entities.Assistant.filter({ organization_id: members[0].organization_id }),
           base44.entities.AIConversationFlow.filter({ organization_id: members[0].organization_id })
         ]);
 
-        setIntegrations(integrationsData);
+        setWhatsappIntegrations(whatsappData);
+        setInstagramIntegrations(instagramData);
+        setFacebookIntegrations(facebookData);
         setUnits(unitsData);
+        setTeamMembers(allTeamMembers);
         setAssistants(assistantsData);
         setFlows(flowsData);
         
@@ -235,13 +261,25 @@ export default function ChannelsIntegrations() {
   }
 
   // Filter data by active unit
-  const filteredIntegrations = activeUnitId 
-    ? integrations.filter(i => i.unit_id === activeUnitId)
-    : integrations;
+  const filteredWhatsapp = activeUnitId 
+    ? whatsappIntegrations.filter(i => i.unit_id === activeUnitId)
+    : whatsappIntegrations;
+
+  const filteredInstagram = activeUnitId
+    ? instagramIntegrations.filter(i => i.unit_id === activeUnitId)
+    : instagramIntegrations;
+
+  const filteredFacebook = activeUnitId
+    ? facebookIntegrations.filter(i => i.unit_id === activeUnitId)
+    : facebookIntegrations;
   
   const filteredAssistants = activeUnitId 
     ? assistants.filter(a => a.unit_id === activeUnitId)
     : assistants;
+
+  const filteredTeamMembers = activeUnitId
+    ? teamMembers.filter(tm => tm.unit_id === activeUnitId)
+    : teamMembers;
 
   const hasAssistants = filteredAssistants.length > 0;
 

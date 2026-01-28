@@ -918,6 +918,248 @@ export default function ChannelsIntegrations() {
         </DialogContent>
       </Dialog>
 
+      {/* Instagram Dialog */}
+      <Dialog open={showInstagramDialog} onOpenChange={setShowInstagramDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Conectar Conta Instagram</DialogTitle>
+            <DialogDescription>
+              Configure uma nova conta Instagram para atendimento
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Unidade *</Label>
+                <Select
+                  value={instagramFormData.unit_id}
+                  onValueChange={(value) => setInstagramFormData({ ...instagramFormData, unit_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {units.map(unit => (
+                      <SelectItem key={unit.id} value={unit.id}>{unit.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Nome da Conta *</Label>
+                <Input
+                  value={instagramFormData.account_name}
+                  onChange={(e) => setInstagramFormData({ ...instagramFormData, account_name: e.target.value })}
+                  placeholder="@sua_conta"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Page ID</Label>
+              <Input
+                value={instagramFormData.page_id}
+                onChange={(e) => setInstagramFormData({ ...instagramFormData, page_id: e.target.value })}
+                placeholder="ID da página"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Access Token</Label>
+              <Input
+                value={instagramFormData.access_token}
+                onChange={(e) => setInstagramFormData({ ...instagramFormData, access_token: e.target.value })}
+                placeholder="Token de acesso"
+                type="password"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Assistente IA</Label>
+              <Select
+                value={instagramFormData.assistant_id}
+                onValueChange={(value) => setInstagramFormData({ ...instagramFormData, assistant_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>Nenhum</SelectItem>
+                  {filteredAssistants.map(assistant => (
+                    <SelectItem key={assistant.id} value={assistant.id}>{assistant.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Habilitar em:</Label>
+              <div className="flex items-center justify-between p-3 border rounded">
+                <Label htmlFor="ig-dm">Direct Messages</Label>
+                <Switch
+                  id="ig-dm"
+                  checked={instagramFormData.direct_messages}
+                  onCheckedChange={(checked) => 
+                    setInstagramFormData({ ...instagramFormData, direct_messages: checked })
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between p-3 border rounded">
+                <Label htmlFor="ig-comments">Comentários</Label>
+                <Switch
+                  id="ig-comments"
+                  checked={instagramFormData.comments}
+                  onCheckedChange={(checked) => 
+                    setInstagramFormData({ ...instagramFormData, comments: checked })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Label (opcional)</Label>
+              <Input
+                value={instagramFormData.label}
+                onChange={(e) => setInstagramFormData({ ...instagramFormData, label: e.target.value })}
+                placeholder="Identificação"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowInstagramDialog(false)}>
+              Cancelar
+            </Button>
+            <Button className="bg-pink-600 hover:bg-pink-700">
+              Conectar Instagram
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Facebook Dialog */}
+      <Dialog open={showFacebookDialog} onOpenChange={setShowFacebookDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Conectar Página Facebook</DialogTitle>
+            <DialogDescription>
+              Configure uma nova página Facebook para atendimento
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Unidade *</Label>
+                <Select
+                  value={facebookFormData.unit_id}
+                  onValueChange={(value) => setFacebookFormData({ ...facebookFormData, unit_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {units.map(unit => (
+                      <SelectItem key={unit.id} value={unit.id}>{unit.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Nome da Página *</Label>
+                <Input
+                  value={facebookFormData.page_name}
+                  onChange={(e) => setFacebookFormData({ ...facebookFormData, page_name: e.target.value })}
+                  placeholder="Nome da página"
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Page ID</Label>
+              <Input
+                value={facebookFormData.page_id}
+                onChange={(e) => setFacebookFormData({ ...facebookFormData, page_id: e.target.value })}
+                placeholder="ID da página"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Access Token</Label>
+              <Input
+                value={facebookFormData.access_token}
+                onChange={(e) => setFacebookFormData({ ...facebookFormData, access_token: e.target.value })}
+                placeholder="Token de acesso"
+                type="password"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label>Assistente IA</Label>
+              <Select
+                value={facebookFormData.assistant_id}
+                onValueChange={(value) => setFacebookFormData({ ...facebookFormData, assistant_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>Nenhum</SelectItem>
+                  {filteredAssistants.map(assistant => (
+                    <SelectItem key={assistant.id} value={assistant.id}>{assistant.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-3">
+              <Label>Habilitar em:</Label>
+              <div className="flex items-center justify-between p-3 border rounded">
+                <Label htmlFor="fb-messenger">Messenger</Label>
+                <Switch
+                  id="fb-messenger"
+                  checked={facebookFormData.messenger}
+                  onCheckedChange={(checked) => 
+                    setFacebookFormData({ ...facebookFormData, messenger: checked })
+                  }
+                />
+              </div>
+              <div className="flex items-center justify-between p-3 border rounded">
+                <Label htmlFor="fb-ads">Comentários de Anúncios</Label>
+                <Switch
+                  id="fb-ads"
+                  checked={facebookFormData.ad_comments}
+                  onCheckedChange={(checked) => 
+                    setFacebookFormData({ ...facebookFormData, ad_comments: checked })
+                  }
+                />
+              </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Label (opcional)</Label>
+              <Input
+                value={facebookFormData.label}
+                onChange={(e) => setFacebookFormData({ ...facebookFormData, label: e.target.value })}
+                placeholder="Identificação"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowFacebookDialog(false)}>
+              Cancelar
+            </Button>
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              Conectar Facebook
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       {/* Webchat Script Dialog */}
       <Dialog open={showWebchatDialog} onOpenChange={setShowWebchatDialog}>
         <DialogContent className="sm:max-w-[600px]">

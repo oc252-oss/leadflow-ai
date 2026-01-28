@@ -349,13 +349,9 @@ export default function AIAssistantsSimple() {
                     <SelectValue placeholder="Selecione um fluxo" />
                   </SelectTrigger>
                   <SelectContent>
-                    {flows.length === 0 ? (
-                      <SelectItem disabled value="">Nenhum fluxo disponível</SelectItem>
-                    ) : (
-                      flows.map(flow => (
-                        <SelectItem key={flow.id} value={flow.id}>{flow.name}</SelectItem>
-                      ))
-                    )}
+                    {flows.map(flow => (
+                      <SelectItem key={flow.id} value={flow.id}>{flow.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>

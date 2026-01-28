@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, ArrowRight, Lock } from 'lucide-react';
-import { PLAN_LABELS, getRequiredPlan } from '@/utils/featureGates';
+import { PLAN_LABELS, getRequiredPlan } from '@/components/featureGates';
 
 export default function UpgradeCTA({ feature, message, inline = false, currentPlan }) {
   const requiredPlan = getRequiredPlan(feature);

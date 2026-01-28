@@ -75,6 +75,18 @@ export default function Layout({ children, currentPageName }) {
     }
   };
 
+  const canAccessPage = (pageName) => {
+    if (!company?.plan) return true;
+    
+    const plan = company.plan;
+    const pageFeatureMap = {
+      'VoiceSimulator': plan === 'pro' || plan === 'premium',
+      'Reengagement': plan === 'pro' || plan === 'premium'
+    };
+    
+    return pageFeatureMap[pageName] !== false;
+  };
+
   const handleLogout = () => {
     base44.auth.logout();
   };
@@ -103,7 +115,7 @@ export default function Layout({ children, currentPageName }) {
   ];
 
   const filteredNav = navigation.filter(item => 
-    !teamMember?.role || item.roles.includes(teamMember.role)
+    (!teamMember?.role || item.roles.includes(teamMember.role)) && canAccessPage(item.name)
   );
 
   return (

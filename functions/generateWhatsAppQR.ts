@@ -49,24 +49,25 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const { channelId } = payload;
+    const { channelId, integrationId } = payload;
+    const id = channelId || integrationId;
 
-    if (!channelId) {
+    if (!id) {
       return Response.json({ error: 'channelId é obrigatório' }, { status: 400 });
     }
 
-    const channels = await base44.entities.WhatsAppChannel.filter({ id: channelId });
+    const channels = await base44.entities.WhatsAppChannel.filter({ id: id });
     if (!channels || channels.length === 0) {
       return Response.json({ error: 'Canal não encontrado' }, { status: 404 });
     }
 
-    if (!activeSessions.has(channelId)) {
-      await startWhatsAppSession(channelId, base44);
+    if (!activeSessions.has(id)) {
+      await startWhatsAppSession(id, base44);
     }
 
-    await new Promise(resolve => setTimeout(resolve, 1500));
+    await new Promise(resolve => setTimeout(resolve, 2000));
 
-    const channelData = await base44.entities.WhatsAppChannel.filter({ id: channelId });
+    const channelData = await base44.entities.WhatsAppChannel.filter({ id: id });
     const qrCode = channelData[0]?.qr_code;
 
     return Response.json({

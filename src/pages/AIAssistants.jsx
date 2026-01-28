@@ -4,7 +4,10 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Switch } from "@/components/ui/switch";
 import { Plus, Edit2, Trash2, Loader } from 'lucide-react';
 
 export default function AIAssistants() {
@@ -15,11 +18,22 @@ export default function AIAssistants() {
   const [editingAssistant, setEditingAssistant] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
+    description: '',
     channel: 'whatsapp',
+    assistant_type: 'qualificacao',
     tone: 'elegante',
-    ai_flow_id: '',
+    default_flow_id: '',
     greeting_message: '',
-    system_prompt: ''
+    system_prompt: '',
+    is_active: true,
+    can_use_voice: false,
+    behavior_rules: {
+      elegant_tone: true,
+      prioritize_evaluation: true,
+      no_pricing: false,
+      feminine_language: false,
+      respect_hours: true
+    }
   });
   const [isSaving, setIsSaving] = useState(false);
 
@@ -46,28 +60,50 @@ export default function AIAssistants() {
     if (assistant) {
       setEditingAssistant(assistant);
       setFormData({
-        name: assistant.name,
-        channel: assistant.channel,
-        tone: assistant.tone,
-        ai_flow_id: assistant.ai_flow_id,
+        name: assistant.name || '',
+        description: assistant.description || '',
+        channel: assistant.channel || 'whatsapp',
+        assistant_type: assistant.assistant_type || 'qualificacao',
+        tone: assistant.tone || 'elegante',
+        default_flow_id: assistant.default_flow_id || '',
         greeting_message: assistant.greeting_message || '',
-        system_prompt: assistant.system_prompt || ''
+        system_prompt: assistant.system_prompt || '',
+        is_active: assistant.is_active !== false,
+        can_use_voice: assistant.can_use_voice || false,
+        behavior_rules: assistant.behavior_rules || {
+          elegant_tone: true,
+          prioritize_evaluation: true,
+          no_pricing: false,
+          feminine_language: false,
+          respect_hours: true
+        }
       });
     } else {
       setEditingAssistant(null);
       setFormData({
         name: '',
+        description: '',
         channel: 'whatsapp',
+        assistant_type: 'qualificacao',
         tone: 'elegante',
-        ai_flow_id: '',
+        default_flow_id: '',
         greeting_message: '',
-        system_prompt: ''
+        system_prompt: '',
+        is_active: true,
+        can_use_voice: false,
+        behavior_rules: {
+          elegant_tone: true,
+          prioritize_evaluation: true,
+          no_pricing: false,
+          feminine_language: false,
+          respect_hours: true
+        }
       });
     }
     setShowDialog(true);
   };
 
-  const isFormValid = formData.name.trim() && formData.channel && formData.ai_flow_id;
+  const isFormValid = formData.name.trim() && formData.channel && formData.assistant_type && formData.default_flow_id;
 
   const handleSave = async () => {
     if (!isFormValid) return;
@@ -193,92 +229,175 @@ export default function AIAssistants() {
       </div>
 
       <Dialog open={showDialog} onOpenChange={setShowDialog}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>{editingAssistant ? 'Editar Assistente' : 'Novo Assistente de IA'}</DialogTitle>
-          </DialogHeader>
-          <div className="space-y-4">
-            <div>
-              <label className="text-sm font-medium text-slate-700">Nome *</label>
-              <Input 
-                value={formData.name}
-                onChange={(e) => setFormData({...formData, name: e.target.value})}
-                placeholder="Nome do assistente"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700">Canal *</label>
-              <select 
-                value={formData.channel}
-                onChange={(e) => setFormData({...formData, channel: e.target.value})}
-                className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
-              >
-                <option value="whatsapp">WhatsApp</option>
-                <option value="voice">Voz</option>
-                <option value="instagram">Instagram</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700">Fluxo de IA *</label>
-              <select 
-                value={formData.ai_flow_id}
-                onChange={(e) => setFormData({...formData, ai_flow_id: e.target.value})}
-                className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
-              >
-                <option value="">Selecione um fluxo</option>
-                {flows.map(flow => (
-                  <option key={flow.id} value={flow.id}>{flow.name}</option>
-                ))}
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700">Tom de Voz</label>
-              <select 
-                value={formData.tone}
-                onChange={(e) => setFormData({...formData, tone: e.target.value})}
-                className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
-              >
-                <option value="neutro">Neutro</option>
-                <option value="comercial">Comercial</option>
-                <option value="elegante">Elegante</option>
-                <option value="humanizado">Humanizado</option>
-              </select>
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700">Mensagem de Saudação</label>
-              <Input 
-                value={formData.greeting_message}
-                onChange={(e) => setFormData({...formData, greeting_message: e.target.value})}
-                placeholder="Ex: Olá! Como posso ajudar?"
-                className="mt-1"
-              />
-            </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700">Instrução do Sistema</label>
-              <textarea 
-                value={formData.system_prompt}
-                onChange={(e) => setFormData({...formData, system_prompt: e.target.value})}
-                placeholder="Instruções para o comportamento do assistente"
-                className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm h-24"
-              />
-            </div>
-            <div className="flex gap-2 justify-end pt-4">
-              <Button variant="outline" onClick={() => setShowDialog(false)}>
-                Cancelar
-              </Button>
-              <Button 
-                onClick={handleSave}
-                disabled={!isFormValid || isSaving}
-                className="gap-2"
-              >
-                {isSaving && <Loader className="w-4 h-4 animate-spin" />}
-                {editingAssistant ? 'Atualizar' : 'Criar'}
-              </Button>
-            </div>
-          </div>
-        </DialogContent>
-      </Dialog>
+         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+           <DialogHeader>
+             <DialogTitle>{editingAssistant ? 'Editar Assistente' : 'Novo Assistente'}</DialogTitle>
+           </DialogHeader>
+
+           <Tabs defaultValue="geral" className="w-full">
+             <TabsList className="grid w-full grid-cols-4">
+               <TabsTrigger value="geral">Geral</TabsTrigger>
+               <TabsTrigger value="comportamento">Comportamento</TabsTrigger>
+               <TabsTrigger value="mensagens">Mensagens</TabsTrigger>
+               <TabsTrigger value="integracao">Integração</TabsTrigger>
+             </TabsList>
+
+             {/* Geral */}
+             <TabsContent value="geral" className="space-y-4 mt-4">
+               <div>
+                 <label className="text-sm font-medium text-slate-700">Nome *</label>
+                 <Input 
+                   value={formData.name}
+                   onChange={(e) => setFormData({...formData, name: e.target.value})}
+                   placeholder="Ex: WhatsApp Royal"
+                   className="mt-1"
+                 />
+               </div>
+               <div>
+                 <label className="text-sm font-medium text-slate-700">Descrição</label>
+                 <Textarea
+                   value={formData.description}
+                   onChange={(e) => setFormData({...formData, description: e.target.value})}
+                   placeholder="Descrição do assistente"
+                   className="mt-1 h-20"
+                 />
+               </div>
+               <div>
+                 <label className="text-sm font-medium text-slate-700">Canal *</label>
+                 <select 
+                   value={formData.channel}
+                   onChange={(e) => setFormData({...formData, channel: e.target.value})}
+                   className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
+                 >
+                   <option value="whatsapp">WhatsApp</option>
+                   <option value="webchat">WebChat</option>
+                   <option value="messenger">Messenger</option>
+                   <option value="instagram">Instagram</option>
+                   <option value="voice">Voz</option>
+                 </select>
+               </div>
+               <div>
+                 <label className="text-sm font-medium text-slate-700">Tipo de Uso *</label>
+                 <select 
+                   value={formData.assistant_type}
+                   onChange={(e) => setFormData({...formData, assistant_type: e.target.value})}
+                   className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
+                 >
+                   <option value="qualificacao">Qualificação</option>
+                   <option value="reengajamento_7d">Reengajamento 7d</option>
+                   <option value="reengajamento_30d">Reengajamento 30d</option>
+                   <option value="reengajamento_90d">Reengajamento 90d</option>
+                   <option value="prospeccao_ativa">Prospecção Ativa</option>
+                   <option value="voz_reativacao">Voz - Reativação</option>
+                   <option value="voz_qualificacao">Voz - Qualificação</option>
+                 </select>
+               </div>
+               <div>
+                 <label className="text-sm font-medium text-slate-700">Tom de Comunicação</label>
+                 <select 
+                   value={formData.tone}
+                   onChange={(e) => setFormData({...formData, tone: e.target.value})}
+                   className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
+                 >
+                   <option value="neutro">Neutro</option>
+                   <option value="comercial">Comercial</option>
+                   <option value="elegante">Elegante</option>
+                   <option value="humanizado">Humanizado</option>
+                 </select>
+               </div>
+               <div>
+                 <label className="text-sm font-medium text-slate-700">Fluxo de IA Padrão *</label>
+                 <select 
+                   value={formData.default_flow_id}
+                   onChange={(e) => setFormData({...formData, default_flow_id: e.target.value})}
+                   className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
+                 >
+                   <option value="">Selecione um fluxo</option>
+                   {flows.map(flow => (
+                     <option key={flow.id} value={flow.id}>{flow.name}</option>
+                   ))}
+                 </select>
+               </div>
+               <div className="flex items-center justify-between p-3 rounded-lg border">
+                 <span className="text-sm font-medium text-slate-700">Ativa a assistente em produção</span>
+                 <Switch 
+                   checked={formData.is_active}
+                   onCheckedChange={(checked) => setFormData({...formData, is_active: checked})}
+                 />
+               </div>
+             </TabsContent>
+
+             {/* Comportamento */}
+             <TabsContent value="comportamento" className="space-y-3 mt-4">
+               {Object.entries(formData.behavior_rules).map(([key, value]) => (
+                 <div key={key} className="flex items-center justify-between p-3 rounded-lg border">
+                   <span className="text-sm font-medium text-slate-700 capitalize">
+                     {key.replace(/_/g, ' ')}
+                   </span>
+                   <Switch 
+                     checked={value}
+                     onCheckedChange={(checked) => setFormData({
+                       ...formData,
+                       behavior_rules: {
+                         ...formData.behavior_rules,
+                         [key]: checked
+                       }
+                     })}
+                   />
+                 </div>
+               ))}
+               <div className="flex items-center justify-between p-3 rounded-lg border">
+                 <span className="text-sm font-medium text-slate-700">Suporta Voz</span>
+                 <Switch 
+                   checked={formData.can_use_voice}
+                   onCheckedChange={(checked) => setFormData({...formData, can_use_voice: checked})}
+                 />
+               </div>
+             </TabsContent>
+
+             {/* Mensagens */}
+             <TabsContent value="mensagens" className="space-y-4 mt-4">
+               <div>
+                 <label className="text-sm font-medium text-slate-700">Mensagem de Saudação</label>
+                 <Textarea
+                   value={formData.greeting_message}
+                   onChange={(e) => setFormData({...formData, greeting_message: e.target.value})}
+                   placeholder="Ex: Olá! Como posso ajudar?"
+                   className="mt-1 h-20"
+                 />
+               </div>
+               <div>
+                 <label className="text-sm font-medium text-slate-700">Instrução do Sistema</label>
+                 <Textarea
+                   value={formData.system_prompt}
+                   onChange={(e) => setFormData({...formData, system_prompt: e.target.value})}
+                   placeholder="Instruções para o comportamento do assistente"
+                   className="mt-1 h-24"
+                 />
+               </div>
+             </TabsContent>
+
+             {/* Integração */}
+             <TabsContent value="integracao" className="mt-4">
+               <p className="text-sm text-slate-600">Configurações de integração (em desenvolvimento)</p>
+             </TabsContent>
+           </Tabs>
+
+           <div className="flex gap-2 justify-end pt-4 border-t">
+             <Button variant="outline" onClick={() => setShowDialog(false)}>
+               Cancelar
+             </Button>
+             <Button 
+               onClick={handleSave}
+               disabled={!isFormValid || isSaving}
+               className="gap-2 bg-indigo-600 hover:bg-indigo-700"
+             >
+               {isSaving && <Loader className="w-4 h-4 animate-spin" />}
+               {editingAssistant ? 'Atualizar' : 'Criar'}
+             </Button>
+           </div>
+         </DialogContent>
+       </Dialog>
     </div>
   );
 }

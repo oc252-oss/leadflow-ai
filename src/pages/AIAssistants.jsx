@@ -354,7 +354,7 @@ export default function AIAssistants() {
                {flows.length === 0 && (
                  <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 flex gap-2">
                    <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                   <p className="text-sm text-amber-700">Nenhum fluxo de IA disponível. Crie um fluxo primeiro.</p>
+                   <p className="text-sm text-amber-700">Nenhum fluxo de IA disponível. Crie um fluxo primeiro em AIFlows.</p>
                  </div>
                )}
                <div>
@@ -363,8 +363,11 @@ export default function AIAssistants() {
                    value={formData.default_flow_id}
                    onChange={(e) => setFormData({...formData, default_flow_id: e.target.value})}
                    className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
+                   disabled={flows.length === 0}
                  >
-                   <option value="">Selecione um fluxo</option>
+                   <option value="">
+                     {flows.length === 0 ? 'Nenhum fluxo disponível' : 'Selecione um fluxo'}
+                   </option>
                    {flows.map(flow => (
                      <option key={flow.id} value={flow.id}>
                        {flow.name} {flow.is_default ? '(padrão)' : ''}
@@ -375,9 +378,14 @@ export default function AIAssistants() {
                {formData.default_flow_id && flows.find(f => f.id === formData.default_flow_id) && (
                  <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-200">
                    <p className="text-xs text-indigo-600 font-medium">Fluxo Selecionado:</p>
-                   <p className="text-sm text-indigo-900 mt-1">
-                     {flows.find(f => f.id === formData.default_flow_id)?.description || 'Sem descrição'}
+                   <p className="text-sm text-indigo-900 font-medium mt-1">
+                     {flows.find(f => f.id === formData.default_flow_id)?.name}
                    </p>
+                   {flows.find(f => f.id === formData.default_flow_id)?.description && (
+                     <p className="text-sm text-indigo-700 mt-2">
+                       {flows.find(f => f.id === formData.default_flow_id)?.description}
+                     </p>
+                   )}
                  </div>
                )}
              </TabsContent>

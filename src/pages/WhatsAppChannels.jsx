@@ -19,7 +19,7 @@ export default function WhatsAppChannels() {
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [qrCode, setQrCode] = useState(null);
   const [qrLoading, setQrLoading] = useState(false);
-  const [formData, setFormData] = useState({ label: '', script_id: '' });
+  const [formData, setFormData] = useState({ label: '' });
 
   useEffect(() => {
     loadData();
@@ -28,12 +28,8 @@ export default function WhatsAppChannels() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [channelsData, scriptsData] = await Promise.all([
-        base44.entities.WhatsAppChannel.list(),
-        base44.entities.AIScript.filter({ is_approved: true, channel: 'whatsapp' })
-      ]);
+      const channelsData = await base44.entities.WhatsAppChannel.list();
       setChannels(channelsData || []);
-      setScripts(scriptsData || []);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
@@ -42,20 +38,19 @@ export default function WhatsAppChannels() {
   };
 
   const handleCreateChannel = async () => {
-    if (!formData.label || !formData.script_id) {
-      toast.error('Nome e Script são obrigatórios');
+    if (!formData.label.trim()) {
+      toast.error('Nome da conexão é obrigatório');
       return;
     }
 
     try {
       await base44.entities.WhatsAppChannel.create({
         label: formData.label,
-        script_id: formData.script_id,
         phone_number: '',
         status: 'disconnected'
       });
 
-      setFormData({ label: '', script_id: '' });
+      setFormData({ label: '' });
       setShowCreateDialog(false);
       await loadData();
       toast.success('Conexão criada com sucesso!');
@@ -120,10 +115,7 @@ export default function WhatsAppChannels() {
     }
   };
 
-  const getScriptName = (scriptId) => {
-    const script = scripts.find(s => s.id === scriptId);
-    return script?.name || 'Script não encontrado';
-  };
+
 
   const getStatusColor = (status) => {
     const colors = {
@@ -139,7 +131,7 @@ export default function WhatsAppChannels() {
       <div className="flex justify-between items-center mb-6">
         <div>
           <h1 className="text-3xl font-bold">Conexões</h1>
-          <p className="text-sm text-slate-600 mt-1">Gerencie suas conexões de WhatsApp com Scripts aprovados</p>
+          <p className="text-sm text-slate-600 mt-1">Gerencie suas conexões de WhatsApp</p>
         </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
@@ -152,45 +144,18 @@ export default function WhatsAppChannels() {
               <DialogTitle>Nova Conexão WhatsApp</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              {scripts.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-6 text-center">
-                  <AlertCircle className="w-8 h-8 text-amber-600 mb-2" />
-                  <p className="text-sm font-medium text-slate-900">Nenhum script aprovado</p>
-                  <p className="text-xs text-slate-600 mt-1">
-                    Crie e aprove um script em Biblioteca de Scripts primeiro
-                  </p>
-                </div>
-              ) : (
-                <>
-                  <div>
-                    <label className="text-sm font-medium">Nome da Conexão *</label>
-                    <Input
-                      placeholder="Ex: WhatsApp Comercial"
-                      value={formData.label}
-                      onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                    />
-                  </div>
-                  <div>
-                    <label className="text-sm font-medium">Script Aprovado *</label>
-                    <Select value={formData.script_id} onValueChange={(value) => setFormData({ ...formData, script_id: value })}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um script" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {scripts.map(script => (
-                          <SelectItem key={script.id} value={script.id}>
-                            {script.name} ({script.version})
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </>
-              )}
+              <div>
+                <label className="text-sm font-medium">Nome da Conexão *</label>
+                <Input
+                  placeholder="Ex: WhatsApp Comercial"
+                  value={formData.label}
+                  onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+                />
+              </div>
               <Button 
                 onClick={handleCreateChannel} 
                 className="w-full bg-indigo-600 hover:bg-indigo-700"
-                disabled={!formData.label || !formData.script_id}
+                disabled={!formData.label.trim()}
               >
                 Criar Conexão
               </Button>
@@ -208,18 +173,9 @@ export default function WhatsAppChannels() {
       <CardContent className="flex flex-col items-center justify-center py-12">
        <MessageSquare className="w-12 h-12 text-slate-300 mb-4" />
        <p className="text-slate-600 mb-4">Nenhuma conexão criada ainda</p>
-       {scripts.length === 0 ? (
-         <div className="text-center">
-           <p className="text-sm text-slate-500 mb-4">Crie um script aprovado em Biblioteca de Scripts primeiro</p>
-           <Button onClick={() => setShowCreateDialog(true)} variant="outline" disabled>
-             <Plus className="w-4 h-4 mr-2" /> Criar Conexão
-           </Button>
-         </div>
-       ) : (
-         <Button onClick={() => setShowCreateDialog(true)} variant="outline">
-           <Plus className="w-4 h-4 mr-2" /> Criar Primeira Conexão
-         </Button>
-       )}
+       <Button onClick={() => setShowCreateDialog(true)} variant="outline">
+         <Plus className="w-4 h-4 mr-2" /> Criar Primeira Conexão
+       </Button>
       </CardContent>
       </Card>
       ) : (
@@ -238,7 +194,6 @@ export default function WhatsAppChannels() {
                     </div>
                     <div className="text-sm text-slate-600 space-y-1">
                        <p>Número: <span className="font-mono">{channel.phone_number || 'Desconectado'}</span></p>
-                       <p>Script: <span className="font-medium">{getScriptName(channel.script_id)}</span></p>
                      </div>
                   </div>
                   <div className="flex gap-2">

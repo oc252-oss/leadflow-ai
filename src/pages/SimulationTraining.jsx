@@ -3,10 +3,14 @@ import { base44 } from '@/api/base44Client';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Loader } from 'lucide-react';
 import VoiceSimulationSetup from '../components/simulation/VoiceSimulationSetup';
+import ChatSimulationSetup from '../components/simulation/ChatSimulationSetup';
+import ChatSimulationInterface from '../components/simulation/ChatSimulationInterface';
 
 export default function SimulationTraining() {
   const [loading, setLoading] = useState(true);
   const [assistants, setAssistants] = useState([]);
+  const [flows, setFlows] = useState([]);
+  const [chatSimulation, setChatSimulation] = useState(null);
 
   useEffect(() => {
     loadData();
@@ -14,13 +18,25 @@ export default function SimulationTraining() {
 
   const loadData = async () => {
     try {
-      const assistantsData = await base44.entities.Assistant.list('-updated_date', 100);
-      setAssistants(assistantsData.filter(a => a.can_use_voice));
+      const [assistantsData, flowsData] = await Promise.all([
+        base44.entities.Assistant.list('-updated_date', 100),
+        base44.entities.AIConversationFlow.list('-updated_date', 100)
+      ]);
+      setAssistants(assistantsData);
+      setFlows(flowsData);
     } catch (error) {
-      console.error('Erro ao carregar assistentes:', error);
+      console.error('Erro ao carregar dados:', error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleChatStart = (config) => {
+    setChatSimulation(config);
+  };
+
+  const handleChatRestart = () => {
+    setChatSimulation(null);
   };
 
   if (loading) {
@@ -47,9 +63,18 @@ export default function SimulationTraining() {
         </TabsContent>
 
         <TabsContent value="chat" className="mt-6">
-          <div className="text-center text-slate-500 py-12">
-            Simulação de Chat em desenvolvimento
-          </div>
+          {chatSimulation ? (
+            <ChatSimulationInterface
+              {...chatSimulation}
+              onRestart={handleChatRestart}
+            />
+          ) : (
+            <ChatSimulationSetup
+              assistants={assistants}
+              flows={flows}
+              onStart={handleChatStart}
+            />
+          )}
         </TabsContent>
 
         <TabsContent value="treinamento" className="mt-6">

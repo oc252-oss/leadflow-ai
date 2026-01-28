@@ -45,7 +45,7 @@ export default function AIAssistants() {
     try {
       const [assistantsData, flowsData] = await Promise.all([
         base44.asServiceRole.entities.Assistant.list('-updated_date', 100),
-        base44.asServiceRole.entities.AIConversationFlow.filter({ is_active: true }, '-updated_date', 100)
+        base44.asServiceRole.entities.AIFlow.list('-updated_date', 100)
       ]);
       setAssistants(assistantsData);
       setFlows(flowsData);

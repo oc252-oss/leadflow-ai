@@ -25,16 +25,14 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
   const [voiceSpeed, setVoiceSpeed] = useState([1.0]);
   const [saving, setSaving] = useState(false);
 
-  const isFormValid = !!(
-    formData.name?.trim() &&
-    formData.usage_type &&
-    formData.channel &&
-    formData.system_prompt?.trim()
-  );
-
   const handleSave = async () => {
-    if (!isFormValid) {
-      toast.error('Preencha os campos obrigatórios');
+    const hasName = formData.name && formData.name.trim().length > 0;
+    const hasUsageType = formData.usage_type && formData.usage_type.length > 0;
+    const hasChannel = formData.channel && formData.channel.length > 0;
+    const hasPrompt = formData.system_prompt && formData.system_prompt.trim().length > 0;
+
+    if (!hasName || !hasUsageType || !hasChannel || !hasPrompt) {
+      toast.error('Preencha os campos obrigatórios: Nome, Canal, Tipo e Prompt');
       return;
     }
 

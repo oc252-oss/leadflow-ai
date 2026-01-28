@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { useSearchParams, useNavigate } from 'react-router-dom';
+import { getDefaultOrganization, getDefaultUnit, isSingleCompanyMode } from '@/components/singleCompanyMode';
 import { Button } from "@/components/ui/button";
 import { 
   Plus, 
@@ -20,7 +21,8 @@ export default function Leads() {
   const navigate = useNavigate();
   const [leads, setLeads] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
-  const [teamMember, setTeamMember] = useState(null);
+  const [organization, setOrganization] = useState(null);
+  const [unit, setUnit] = useState(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState('grid');
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -39,16 +41,16 @@ export default function Leads() {
 
   const loadData = async () => {
     try {
-      const user = await base44.auth.me();
-      const members = await base44.entities.TeamMember.filter({ user_email: user.email });
+      const org = await getDefaultOrganization();
+      const unitData = org ? await getDefaultUnit(org.id) : null;
       
-      if (members.length > 0) {
-        setTeamMember(members[0]);
-        const companyId = members[0].company_id;
+      setOrganization(org);
+      setUnit(unitData);
 
+      if (org) {
         const [leadsData, campaignsData] = await Promise.all([
-          base44.entities.Lead.filter({ company_id: companyId }, '-created_date'),
-          base44.entities.Campaign.filter({ company_id: companyId })
+          base44.entities.Lead.filter({ organization_id: org.id }, '-created_date').catch(() => []),
+          base44.entities.Campaign.filter({ organization_id: org.id }).catch(() => [])
         ]);
 
         setLeads(leadsData);
@@ -65,14 +67,15 @@ export default function Leads() {
     const user = await base44.auth.me();
     const newLead = await base44.entities.Lead.create({
       ...leadData,
-      company_id: teamMember.company_id,
+      organization_id: organization.id,
+      unit_id: unit?.id || null,
       funnel_stage: 'Novo Lead',
       temperature: 'cold',
       score: 20
     });
 
     await base44.entities.ActivityLog.create({
-      company_id: teamMember.company_id,
+      organization_id: organization.id,
       lead_id: newLead.id,
       user_email: user.email,
       action: 'lead_created',
@@ -89,8 +92,8 @@ export default function Leads() {
       // Call backend to create or get conversation
       const response = await base44.functions.invoke('createOrGetConversation', {
         lead_id: lead.id,
-        company_id: teamMember.company_id,
-        unit_id: teamMember.unit_id
+        organization_id: organization.id,
+        unit_id: unit?.id || null
       });
 
       if (response.data?.conversation) {

@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { getDefaultOrganization, isSingleCompanyMode } from '@/components/singleCompanyMode';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -83,23 +84,20 @@ function Campaigns() {
 
   const loadData = async () => {
     try {
-      const user = await base44.auth.me();
-      const members = await base44.entities.TeamMember.filter({ user_email: user.email });
-      
-      if (members.length > 0) {
-        setTeamMember(members[0]);
-        const companyId = members[0].company_id;
+      const org = await getDefaultOrganization();
+      setOrganization(org);
 
+      if (org) {
         const [campaignsData, leadsData] = await Promise.all([
-          base44.entities.Campaign.filter({ company_id: companyId }, '-created_date'),
-          base44.entities.Lead.filter({ company_id: companyId })
+          base44.entities.Campaign.filter({ organization_id: org.id }, '-created_date').catch(() => []),
+          base44.entities.Lead.filter({ organization_id: org.id }).catch(() => [])
         ]);
 
         // Calculate leads per campaign
         const campaignsWithStats = campaignsData.map(campaign => ({
           ...campaign,
           leads_count: leadsData.filter(l => l.campaign_id === campaign.id).length,
-          conversions_count: leadsData.filter(l => l.campaign_id === campaign.id && l.funnel_stage === 'closed_won').length
+          conversions_count: leadsData.filter(l => l.campaign_id === campaign.id && l.funnel_stage === 'Venda Ganha').length
         }));
 
         setCampaigns(campaignsWithStats);
@@ -125,7 +123,7 @@ function Campaigns() {
       } else {
         const newCampaign = await base44.entities.Campaign.create({
           ...formData,
-          company_id: teamMember.company_id
+          organization_id: organization.id
         });
         setCampaigns([{ ...newCampaign, leads_count: 0, conversions_count: 0 }, ...campaigns]);
       }

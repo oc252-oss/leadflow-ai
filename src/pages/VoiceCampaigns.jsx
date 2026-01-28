@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { getDefaultOrganization, getDefaultUnit, isSingleCompanyMode } from '@/components/singleCompanyMode';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -13,7 +14,8 @@ import VoiceCampaignStats from '../components/voice/VoiceCampaignStats';
 
 export default function VoiceCampaigns() {
   const [campaigns, setCampaigns] = useState([]);
-  const [company, setCompany] = useState(null);
+  const [organization, setOrganization] = useState(null);
+  const [unit, setUnit] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState(null);
@@ -26,16 +28,16 @@ export default function VoiceCampaigns() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const user = await base44.auth.me();
-      const teamMembers = await base44.entities.TeamMember.filter({ user_email: user.email });
+      const org = await getDefaultOrganization();
+      const unitData = org ? await getDefaultUnit(org.id) : null;
       
-      if (teamMembers.length > 0) {
-        const companies = await base44.entities.Company.filter({ id: teamMembers[0].company_id });
-        setCompany(companies[0]);
+      setOrganization(org);
+      setUnit(unitData);
 
+      if (org) {
         const campaignsData = await base44.entities.VoiceCampaign.filter({
-          company_id: teamMembers[0].company_id
-        }, '-created_date');
+          organization_id: org.id
+        }, '-created_date').catch(() => []);
         setCampaigns(campaignsData);
       }
     } catch (error) {
@@ -54,7 +56,8 @@ export default function VoiceCampaigns() {
       } else {
         await base44.entities.VoiceCampaign.create({
           ...data,
-          company_id: company.id
+          organization_id: organization.id,
+          unit_id: unit?.id || null
         });
         toast.success('Campanha criada');
       }

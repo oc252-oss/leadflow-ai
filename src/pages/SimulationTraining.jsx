@@ -71,8 +71,8 @@ export default function SimulationTraining() {
       });
 
       // Carregar assistente
-      const assistantData = await base44.entities.Assistant.filter({ id: selectedAssistant });
-      setAssistant(assistantData[0]);
+       const assistantData = await base44.entities.AIAssistant.filter({ id: selectedAssistant });
+       setAssistant(assistantData[0]);
 
       // Enviar mensagem de saudação
       if (assistantData[0]?.greeting_message) {

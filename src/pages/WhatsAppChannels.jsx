@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { MessageSquare, QrCode, Trash2, RefreshCw, Plus, CheckCircle2, Loader2 } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
+import WhatsAppTestPanel from '@/components/WhatsAppTestPanel';
 
 export default function WhatsAppChannels() {
   const [channels, setChannels] = useState([]);

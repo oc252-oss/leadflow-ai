@@ -97,21 +97,39 @@ export default function Layout({ children, currentPageName }) {
   }
 
   const navigation = [
-    { name: 'Dashboard', label: t('dashboard'), href: createPageUrl('Dashboard'), icon: LayoutDashboard, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
+    // Dashboards
+    { name: 'Dashboard', label: t('dashboard'), href: createPageUrl('Dashboard'), icon: LayoutDashboard, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
     { name: 'FranchiseDashboard', label: 'Dashboard Executivo', href: createPageUrl('FranchiseDashboard'), icon: Building2, roles: ['organization_admin', 'brand_manager'] },
-    { name: 'Leads', label: t('leads'), href: createPageUrl('Leads'), icon: Users, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'Pipeline', label: t('pipeline'), href: createPageUrl('Pipeline'), icon: GitBranch, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'Conversations', label: t('conversations'), href: createPageUrl('Conversations'), icon: MessageSquare, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'Campaigns', label: t('campaigns'), href: createPageUrl('Campaigns'), icon: Target, roles: ['company_admin', 'sales_manager'] },
-    { name: 'Reengagement', label: 'Reengajamento', href: createPageUrl('Reengagement'), icon: RefreshCw, roles: ['company_admin', 'sales_manager'] },
-    { name: 'Automations', label: t('automations'), href: createPageUrl('Automations'), icon: Zap, roles: ['company_admin'] },
-    { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['company_admin', 'sales_manager'] },
-    { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Bot, roles: ['company_admin'] },
-    { name: 'SimulationTraining', label: 'Simulação & Treinamento', href: createPageUrl('SimulationTraining'), icon: Bot, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'SalesFunnel', label: 'Funil de Vendas', href: createPageUrl('SalesFunnel'), icon: GitBranch, roles: ['company_admin'] },
-    { name: 'Tasks', label: 'Tarefas', href: createPageUrl('Tasks'), icon: Clock, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
-    { name: 'CompanySettings', label: 'Configurações da Empresa', href: createPageUrl('CompanySettings'), icon: Building2, roles: ['company_admin'] },
-    { name: 'Settings', label: t('settings'), href: createPageUrl('Settings'), icon: Settings, roles: ['company_admin'] },
+    
+    // Core Operations
+    { name: 'Leads', label: t('leads'), href: createPageUrl('Leads'), icon: Users, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Pipeline', label: t('pipeline'), href: createPageUrl('Pipeline'), icon: GitBranch, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Conversations', label: t('conversations'), href: createPageUrl('Conversations'), icon: MessageSquare, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'Tasks', label: 'Tarefas', href: createPageUrl('Tasks'), icon: Clock, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
+    
+    // Marketing & Campaigns
+    { name: 'Campaigns', label: t('campaigns'), href: createPageUrl('Campaigns'), icon: Target, roles: ['unit_admin', 'sales_manager'] },
+    { name: 'Reengagement', label: 'Reengajamento', href: createPageUrl('Reengagement'), icon: RefreshCw, roles: ['unit_admin', 'sales_manager'] },
+    
+    // AI & Assistants
+    { name: 'AssistentesIA', label: 'Assistentes IA', href: createPageUrl('AssistentesIA'), icon: Bot, roles: ['unit_admin', 'sales_manager'] },
+    { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Bot, roles: ['unit_admin'] },
+    { name: 'SimulationTraining', label: 'Simulação & Treinamento', href: createPageUrl('SimulationTraining'), icon: Zap, roles: ['unit_admin', 'sales_manager', 'sales_agent'] },
+    
+    // Voice Module
+    { name: 'VoiceCampaigns', label: 'Campanhas de Voz', href: createPageUrl('VoiceCampaigns'), icon: Phone, roles: ['unit_admin', 'sales_manager'] },
+    { name: 'VoiceFunnel', label: 'Funil de Voz', href: createPageUrl('VoiceFunnel'), icon: Phone, roles: ['unit_admin', 'sales_manager'] },
+    
+    // Analytics
+    { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['unit_admin', 'sales_manager'] },
+    { name: 'SalesFunnel', label: 'Funil de Vendas', href: createPageUrl('SalesFunnel'), icon: GitBranch, roles: ['unit_admin'] },
+    
+    // Settings
+    { name: 'Automations', label: t('automations'), href: createPageUrl('Automations'), icon: Zap, roles: ['unit_admin'] },
+    { name: 'Settings', label: t('settings'), href: createPageUrl('Settings'), icon: Settings, roles: ['unit_admin'] },
+    
+    // Organization/Brand Level
+    { name: 'WhiteLabel', label: 'Marca & White-label', href: createPageUrl('WhiteLabel'), icon: Building2, roles: ['organization_admin'] },
   ];
 
   const filteredNav = navigation.filter(item => 

@@ -126,7 +126,7 @@ export default function SimulationTraining() {
   const handleMarkReadyForProduction = async () => {
     if (!selectedAssistant) return;
     try {
-      await base44.asServiceRole.entities.Assistant.update(selectedAssistant, {
+      await base44.asServiceRole.entities.AIAssistant.update(selectedAssistant, {
         is_active: true
       });
       toast.success('Assistente marcado como pronto para produção!');

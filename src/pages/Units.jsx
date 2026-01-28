@@ -67,8 +67,8 @@ export default function Units() {
   };
 
   const handleSave = async () => {
-    if (!formData.name || !formData.brand_id) {
-      toast.error('Nome e marca são obrigatórios');
+    if (!formData.name) {
+      toast.error('Nome é obrigatório');
       return;
     }
 
@@ -309,22 +309,25 @@ export default function Units() {
             </div>
 
             <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Marca *</Label>
-                <Select
-                  value={formData.brand_id}
-                  onValueChange={(value) => setFormData({ ...formData, brand_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione a marca" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {brands.map(brand => (
-                      <SelectItem key={brand.id} value={brand.id}>{brand.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+              {brands.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Marca (opcional)</Label>
+                  <Select
+                    value={formData.brand_id}
+                    onValueChange={(value) => setFormData({ ...formData, brand_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sem marca específica" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={null}>Nenhuma</SelectItem>
+                      {brands.map(brand => (
+                        <SelectItem key={brand.id} value={brand.id}>{brand.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
               <div className="space-y-2">
                 <Label>Tipo</Label>
                 <Select

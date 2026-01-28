@@ -2,30 +2,16 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Zap, Link2, Clock, Copy, GitBranch, CheckCircle2, AlertCircle } from 'lucide-react';
+import { Eye, Zap, Link2, Clock } from 'lucide-react';
 import { format } from 'date-fns';
 import { ptBR } from 'date-fns/locale';
 
-export default function ScriptCard({ script, onView, onApprove, onAssign, onClone, onVersion, onSubmit, onReject }) {
+export default function ScriptCard({ script, onView, onApprove, onAssign }) {
   const statusColors = {
     draft: 'bg-slate-100 text-slate-800',
-    testing: 'bg-yellow-100 text-yellow-800',
+    testing: 'bg-blue-100 text-blue-800',
     approved: 'bg-green-100 text-green-800',
     deprecated: 'bg-red-100 text-red-800'
-  };
-
-  const statusIcons = {
-    draft: null,
-    testing: <AlertCircle className="w-3 h-3" />,
-    approved: <CheckCircle2 className="w-3 h-3" />,
-    deprecated: null
-  };
-
-  const statusLabels = {
-    draft: 'Rascunho',
-    testing: 'Em Revisão',
-    approved: 'Aprovado',
-    deprecated: 'Descontinuado'
   };
 
   const channelColors = {
@@ -44,9 +30,8 @@ export default function ScriptCard({ script, onView, onApprove, onAssign, onClon
             <CardTitle className="text-base line-clamp-1">{script.name}</CardTitle>
             <p className="text-xs text-slate-600 mt-1">{script.usage_type}</p>
           </div>
-          <Badge className={`whitespace-nowrap flex gap-1 items-center ${statusColors[script.status]}`}>
-            {statusIcons[script.status]}
-            {statusLabels[script.status]}
+          <Badge className={`whitespace-nowrap ${statusColors[script.status]}`}>
+            {script.status}
           </Badge>
         </div>
       </CardHeader>
@@ -87,7 +72,7 @@ export default function ScriptCard({ script, onView, onApprove, onAssign, onClon
         </div>
 
         {/* Actions */}
-        <div className="flex gap-2 pt-2 flex-wrap text-xs">
+        <div className="flex gap-2 pt-2 flex-wrap">
           <Button
             size="sm"
             variant="outline"
@@ -95,60 +80,28 @@ export default function ScriptCard({ script, onView, onApprove, onAssign, onClon
             className="gap-1 flex-1"
           >
             <Eye className="w-3 h-3" />
-            Ver
+            Ver Detalhes
           </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onClone?.(script)}
-            className="gap-1 flex-1 text-slate-600 hover:bg-slate-100"
-            title="Clonar como novo script"
-          >
-            <Copy className="w-3 h-3" />
-            Clonar
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => onVersion?.(script)}
-            className="gap-1 flex-1 text-slate-600 hover:bg-slate-100"
-            title="Criar nova versão"
-          >
-            <GitBranch className="w-3 h-3" />
-            Versão
-          </Button>
-          {script.status === 'draft' && (
+          {!script.is_approved && (
             <Button
               size="sm"
               variant="outline"
-              onClick={() => onSubmit?.(script)}
-              className="gap-1 flex-1 text-yellow-600 hover:bg-yellow-50"
-              title="Enviar para revisão"
+              onClick={() => onApprove(script)}
+              className="gap-1 flex-1 text-green-600 hover:bg-green-50"
             >
-              Revisar
+              <Zap className="w-3 h-3" />
+              Aprovar
             </Button>
           )}
-          {script.status === 'testing' && (
-            <>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onApprove?.(script)}
-                className="gap-1 flex-1 text-green-600 hover:bg-green-50"
-              >
-                <CheckCircle2 className="w-3 h-3" />
-                Aprovar
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                onClick={() => onReject?.(script)}
-                className="gap-1 flex-1 text-red-600 hover:bg-red-50"
-              >
-                Rejeitar
-              </Button>
-            </>
-          )}
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => onAssign(script)}
+            className="gap-1 flex-1 text-indigo-600 hover:bg-indigo-50"
+          >
+            <Link2 className="w-3 h-3" />
+            Vincular
+          </Button>
         </div>
       </CardContent>
     </Card>

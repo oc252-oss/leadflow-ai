@@ -37,7 +37,7 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
   const loadAssistants = async () => {
     setLoadingAssistants(true);
     try {
-      const data = await base44.entities.AIAssistant.list('-updated_date', 100);
+      const data = await base44.entities.Assistant.list('-updated_date', 100);
       setAssistants(data);
     } catch (error) {
       console.error('Erro ao carregar assistentes:', error);
@@ -53,7 +53,7 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
     const hasPrompt = formData.system_prompt && formData.system_prompt.trim().length > 0;
 
     if (!hasName || !hasUsageType || !hasChannel || !hasPrompt) {
-      toast.error('Preencha os campos obrigatórios: Nome, Canal, Tipo e Instrução do Sistema');
+      toast.error('Preencha os campos obrigatórios: Nome, Canal, Tipo e Prompt');
       return;
     }
 
@@ -147,13 +147,12 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
 
           {/* Assistente IA */}
            <div>
-             <Label className="text-sm font-medium mb-2 block">Assistente IA (opcional)</Label>
-             <Select value={formData.assistant_id || ''} onValueChange={(value) => setFormData({...formData, assistant_id: value || ''})}>
+             <Label className="text-sm font-medium mb-2 block">Assistente IA *</Label>
+             <Select value={formData.assistant_id} onValueChange={(value) => setFormData({...formData, assistant_id: value})}>
                <SelectTrigger disabled={loadingAssistants}>
                  <SelectValue placeholder={loadingAssistants ? 'Carregando...' : 'Selecione um assistente'} />
                </SelectTrigger>
                <SelectContent>
-                 <SelectItem value={null}>Nenhum</SelectItem>
                  {assistants.map(assistant => (
                    <SelectItem key={assistant.id} value={assistant.id}>
                      {assistant.name}
@@ -161,7 +160,6 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
                  ))}
                </SelectContent>
              </Select>
-             <p className="text-xs text-slate-500 mt-1">O script funciona independentemente. Assistente é apenas para contexto.</p>
            </div>
 
            {/* Descrição */}

@@ -72,6 +72,9 @@ export default function WhatsAppIntegration() {
     setQrCode(null);
     setShowQRDialog(true);
 
+    let pollInterval = null;
+    let statusCheckInterval = null;
+
     try {
       // Iniciar função no servidor
       await base44.functions.invoke('generateWhatsAppQR', {
@@ -79,7 +82,7 @@ export default function WhatsAppIntegration() {
       });
 
       // Polling para obter QR Code
-      const pollInterval = setInterval(async () => {
+      pollInterval = setInterval(async () => {
         try {
           const response = await base44.functions.invoke('generateWhatsAppQR', {
             integrationId: integration.id
@@ -89,19 +92,40 @@ export default function WhatsAppIntegration() {
             setQrCode(response.data.qr_code);
             clearInterval(pollInterval);
             setQrLoading(false);
+
+            // Começar a verificar status da conexão
+            statusCheckInterval = setInterval(async () => {
+              const statusResponse = await base44.functions.invoke('checkWhatsAppQRStatus', {
+                integrationId: integration.id
+              });
+
+              if (statusResponse.data.connected) {
+                clearInterval(statusCheckInterval);
+                setShowQRDialog(false);
+                await loadData();
+                alert('✅ WhatsApp conectado com sucesso!');
+              }
+            }, 3000);
+
+            // Timeout de 2 minutos para verificação de status
+            setTimeout(() => {
+              clearInterval(statusCheckInterval);
+            }, 120000);
           }
         } catch (error) {
           console.error('Erro ao buscar QR Code:', error);
         }
       }, 2000);
 
-      // Timeout de 30 segundos
+      // Timeout de 30 segundos para gerar QR
       setTimeout(() => {
-        clearInterval(pollInterval);
+        if (pollInterval) clearInterval(pollInterval);
         setQrLoading(false);
       }, 30000);
     } catch (error) {
       console.error('Erro ao gerar QR Code:', error);
+      if (pollInterval) clearInterval(pollInterval);
+      if (statusCheckInterval) clearInterval(statusCheckInterval);
       setShowQRDialog(false);
       setQrLoading(false);
       alert('Erro ao gerar QR Code');

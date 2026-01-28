@@ -1,4 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,11 +11,12 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { MessageCircle, Loader, RefreshCw, Copy, CheckCircle2, AlertCircle } from 'lucide-react';
+import { MessageCircle, Loader, RefreshCw, Copy, CheckCircle2, AlertCircle, Settings } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
 export default function WhatsAppConnect({ connection, onRefresh }) {
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [showQRModal, setShowQRModal] = useState(false);
   const [qrCode, setQrCode] = useState(null);
@@ -246,13 +249,21 @@ export default function WhatsAppConnect({ connection, onRefresh }) {
                 {loading ? 'Gerando QR...' : 'Conectar WhatsApp'}
               </Button>
             ) : (
-              <Button
-                onClick={handleDisconnect}
-                variant="outline"
-                className="flex-1"
-              >
-                Desconectar
-              </Button>
+              <>
+                <Button
+                  onClick={() => navigate(createPageUrl('WhatsAppConfiguration'))}
+                  className="flex-1 gap-2 bg-indigo-600 hover:bg-indigo-700"
+                >
+                  <Settings className="w-4 h-4" />
+                  Configurar
+                </Button>
+                <Button
+                  onClick={handleDisconnect}
+                  variant="outline"
+                >
+                  Desconectar
+                </Button>
+              </>
             )}
           </div>
 

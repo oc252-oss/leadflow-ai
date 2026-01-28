@@ -1,65 +1,40 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Building2, Users, Zap, Clock, Globe, Save, Plus, Trash2, Loader2 } from 'lucide-react';
+import { Building2, Plus, Pencil, Trash2, MapPin, Clock, Phone, Mail, User } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
 
 export default function Settings() {
-  const [loading, setLoading] = useState(true);
-  const [saving, setSaving] = useState(false);
-  const [company, setCompany] = useState(null);
-  const [teamMembers, setTeamMembers] = useState([]);
+  const [companies, setCompanies] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [teamMember, setTeamMember] = useState(null);
-  const [showInviteDialog, setShowInviteDialog] = useState(false);
-
-  const [companyForm, setCompanyForm] = useState({
+  const [loading, setLoading] = useState(true);
+  const [showDialog, setShowDialog] = useState(false);
+  const [editingCompany, setEditingCompany] = useState(null);
+  const [formData, setFormData] = useState({
+    brand_id: '',
     name: '',
-    logo: '',
-    industry: 'healthcare',
-    timezone: 'America/Sao_Paulo',
+    code: '',
+    type: 'clinic',
+    address: '',
+    city: '',
+    state: '',
+    postal_code: '',
+    phone: '',
+    email: '',
+    manager_name: '',
     business_hours_start: '09:00',
     business_hours_end: '18:00',
-    working_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-    ai_enabled: true,
+    timezone: 'America/Sao_Paulo',
     status: 'active'
   });
-
-  const [inviteForm, setInviteForm] = useState({ email: '', role: 'sales_agent' });
-
-  const industries = [
-    { value: 'healthcare', label: 'Saúde' },
-    { value: 'aesthetics', label: 'Estética' },
-    { value: 'dental', label: 'Odontologia' },
-    { value: 'franchises', label: 'Franquias' },
-    { value: 'services', label: 'Serviços' },
-    { value: 'retail', label: 'Varejo' },
-    { value: 'other', label: 'Outro' }
-  ];
-
-  const timezones = [
-    { value: 'America/Sao_Paulo', label: 'Brasília (GMT-3)' },
-    { value: 'America/Manaus', label: 'Manaus (GMT-4)' },
-    { value: 'America/Rio_Branco', label: 'Acre (GMT-5)' }
-  ];
-
-  const weekDays = [
-    { value: 'monday', label: 'Seg' },
-    { value: 'tuesday', label: 'Ter' },
-    { value: 'wednesday', label: 'Qua' },
-    { value: 'thursday', label: 'Qui' },
-    { value: 'friday', label: 'Sex' },
-    { value: 'saturday', label: 'Sáb' },
-    { value: 'sunday', label: 'Dom' }
-  ];
 
   useEffect(() => {
     loadData();
@@ -67,121 +42,143 @@ export default function Settings() {
 
   const loadData = async () => {
     try {
-      setLoading(true);
       const user = await base44.auth.me();
       const members = await base44.entities.TeamMember.filter({ user_email: user.email });
       
-      if (members.length === 0) {
-        toast.error('Você não está associado a nenhuma empresa');
-        return;
+      if (members.length > 0) {
+        setTeamMember(members[0]);
+        const orgId = members[0].organization_id;
+
+        const [companiesData, brandsData] = await Promise.all([
+          base44.entities.Unit.filter({ organization_id: orgId }),
+          base44.entities.Brand.filter({ organization_id: orgId })
+        ]);
+
+        setCompanies(companiesData);
+        setBrands(brandsData);
       }
-
-      setTeamMember(members[0]);
-      const companyId = members[0].company_id;
-
-      const [companyData, teamData] = await Promise.all([
-        base44.entities.Company.filter({ id: companyId }),
-        base44.entities.TeamMember.filter({ company_id: companyId })
-      ]);
-
-      if (companyData.length > 0) {
-        const comp = companyData[0];
-        setCompany(comp);
-        setCompanyForm({
-          name: comp.name || '',
-          logo: comp.logo || '',
-          industry: comp.industry || 'healthcare',
-          timezone: comp.timezone || 'America/Sao_Paulo',
-          business_hours_start: comp.business_hours_start || '09:00',
-          business_hours_end: comp.business_hours_end || '18:00',
-          working_days: comp.working_days || ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-          ai_enabled: comp.ai_enabled !== false,
-          status: comp.status || 'active'
-        });
-      }
-
-      setTeamMembers(teamData);
     } catch (error) {
-      console.error('Erro ao carregar dados:', error);
-      toast.error('Erro ao carregar configurações');
+      console.error('Erro ao carregar empresas:', error);
+      toast.error('Erro ao carregar dados');
     } finally {
       setLoading(false);
     }
   };
 
   const handleSave = async () => {
-    if (!company) return;
-
-    if (!companyForm.name) {
-      toast.error('Nome da empresa é obrigatório');
+    if (!formData.name) {
+      toast.error('Nome é obrigatório');
       return;
     }
 
-    setSaving(true);
     try {
-      await base44.entities.Company.update(company.id, companyForm);
-      toast.success('Configurações salvas com sucesso');
+      const dataToSave = {
+        name: formData.name,
+        organization_id: teamMember.organization_id,
+        code: formData.code,
+        type: formData.type,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        postal_code: formData.postal_code,
+        phone: formData.phone,
+        email: formData.email,
+        manager_name: formData.manager_name,
+        business_hours_start: formData.business_hours_start,
+        business_hours_end: formData.business_hours_end,
+        timezone: formData.timezone,
+        status: formData.status
+      };
+
+      if (formData.brand_id && formData.brand_id !== '') {
+        dataToSave.brand_id = formData.brand_id;
+      }
+
+      if (editingCompany) {
+        await base44.entities.Unit.update(editingCompany.id, dataToSave);
+        toast.success('Empresa atualizada com sucesso');
+      } else {
+        await base44.entities.Unit.create(dataToSave);
+        toast.success('Empresa criada com sucesso');
+      }
+
+      await loadData();
+      handleCloseDialog();
+    } catch (error) {
+      console.error('Erro ao salvar empresa:', error);
+      toast.error(`Erro ao salvar: ${error.message || 'Tente novamente'}`);
+    }
+  };
+
+  const handleEdit = (company) => {
+    setEditingCompany(company);
+    setFormData({
+      brand_id: company.brand_id || '',
+      name: company.name || '',
+      code: company.code || '',
+      type: company.type || 'clinic',
+      address: company.address || '',
+      city: company.city || '',
+      state: company.state || '',
+      postal_code: company.postal_code || '',
+      phone: company.phone || '',
+      email: company.email || '',
+      manager_name: company.manager_name || '',
+      business_hours_start: company.business_hours_start || '09:00',
+      business_hours_end: company.business_hours_end || '18:00',
+      timezone: company.timezone || 'America/Sao_Paulo',
+      status: company.status || 'active'
+    });
+    setShowDialog(true);
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Tem certeza que deseja excluir esta empresa?')) return;
+    
+    try {
+      await base44.entities.Unit.delete(id);
+      toast.success('Empresa excluída com sucesso');
       await loadData();
     } catch (error) {
-      console.error('Erro ao salvar:', error);
-      toast.error('Erro ao salvar configurações');
-    } finally {
-      setSaving(false);
+      console.error('Erro ao excluir empresa:', error);
+      toast.error('Erro ao excluir empresa');
     }
   };
 
-  const handleInviteMember = async () => {
-    if (!inviteForm.email || !company) return;
-    
-    setSaving(true);
-    try {
-      await base44.users.inviteUser(inviteForm.email, inviteForm.role);
-      
-      const newMember = await base44.entities.TeamMember.create({
-        company_id: company.id,
-        organization_id: teamMember.organization_id,
-        user_email: inviteForm.email,
-        role: inviteForm.role,
-        status: 'active'
-      });
-      
-      setTeamMembers([...teamMembers, newMember]);
-      setShowInviteDialog(false);
-      setInviteForm({ email: '', role: 'sales_agent' });
-      toast.success('Convite enviado com sucesso');
-    } catch (error) {
-      console.error('Erro ao convidar:', error);
-      toast.error('Erro ao enviar convite');
-    } finally {
-      setSaving(false);
-    }
+  const handleCloseDialog = () => {
+    setShowDialog(false);
+    setEditingCompany(null);
+    setFormData({
+      brand_id: '',
+      name: '',
+      code: '',
+      type: 'clinic',
+      address: '',
+      city: '',
+      state: '',
+      postal_code: '',
+      phone: '',
+      email: '',
+      manager_name: '',
+      business_hours_start: '09:00',
+      business_hours_end: '18:00',
+      timezone: 'America/Sao_Paulo',
+      status: 'active'
+    });
   };
 
-  const handleRemoveMember = async (memberId) => {
-    if (!confirm('Tem certeza que deseja remover este membro?')) return;
-    
-    try {
-      await base44.entities.TeamMember.delete(memberId);
-      setTeamMembers(teamMembers.filter(m => m.id !== memberId));
-      toast.success('Membro removido com sucesso');
-    } catch (error) {
-      console.error('Erro ao remover membro:', error);
-      toast.error('Erro ao remover membro');
-    }
+  const getBrandName = (brandId) => {
+    const brand = brands.find(b => b.id === brandId);
+    return brand?.name || '-';
   };
 
-  const toggleWorkingDay = (day) => {
-    if (companyForm.working_days.includes(day)) {
-      setCompanyForm({
-        ...companyForm,
-        working_days: companyForm.working_days.filter(d => d !== day)
-      });
-    } else {
-      setCompanyForm({
-        ...companyForm,
-        working_days: [...companyForm.working_days, day]
-      });
-    }
+  const getTypeLabel = (type) => {
+    const labels = {
+      clinic: 'Clínica',
+      franchise: 'Franquia',
+      headquarters: 'Matriz'
+    };
+    return labels[type] || type;
   };
 
   if (loading) {
@@ -193,258 +190,309 @@ export default function Settings() {
   }
 
   return (
-    <div className="space-y-6 max-w-5xl">
+    <div className="space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-slate-900">Configurações</h1>
-          <p className="text-slate-500 mt-1">Gerencie empresa, equipe e preferências</p>
+          <p className="text-slate-500 mt-1">Gerencie suas empresas e unidades</p>
         </div>
-        <Button onClick={handleSave} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700">
-          {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-          Salvar
+        <Button onClick={() => setShowDialog(true)} className="bg-indigo-600 hover:bg-indigo-700">
+          <Plus className="w-4 h-4 mr-2" />
+          Nova Empresa
         </Button>
       </div>
 
-      {/* Company Info */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Building2 className="w-5 h-5 text-indigo-600" />
-            Informações da Empresa
-          </CardTitle>
-          <CardDescription>Dados básicos e configurações gerais</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Nome da Empresa *</Label>
-              <Input
-                value={companyForm.name}
-                onChange={(e) => setCompanyForm({ ...companyForm, name: e.target.value })}
-                placeholder="Nome da empresa"
-              />
+      {/* Empty State */}
+      {companies.length === 0 ? (
+        <Card>
+          <CardContent className="flex flex-col items-center justify-center py-16">
+            <div className="w-16 h-16 bg-indigo-100 rounded-full flex items-center justify-center mb-4">
+              <Building2 className="w-8 h-8 text-indigo-600" />
             </div>
-            <div className="space-y-2">
-              <Label>Segmento</Label>
-              <Select value={companyForm.industry} onValueChange={(value) => setCompanyForm({ ...companyForm, industry: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {industries.map(ind => (
-                    <SelectItem key={ind.value} value={ind.value}>{ind.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+            <h3 className="text-lg font-semibold text-slate-900 mb-2">Nenhuma empresa cadastrada</h3>
+            <p className="text-slate-500 text-center mb-6 max-w-md">
+              Cadastre sua primeira empresa para começar a usar o sistema.
+            </p>
+            <Button onClick={() => setShowDialog(true)} className="bg-indigo-600 hover:bg-indigo-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Cadastrar Primeira Empresa
+            </Button>
+          </CardContent>
+        </Card>
+      ) : (
+        /* Companies Grid */
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {companies.map((company) => (
+            <Card key={company.id} className="hover:shadow-lg transition-shadow">
+              <CardHeader>
+                <div className="flex items-start justify-between">
+                  <div className="flex items-center gap-2">
+                    <Building2 className="w-5 h-5 text-indigo-600" />
+                    <div>
+                      <CardTitle className="text-base">{company.name}</CardTitle>
+                      {company.code && (
+                        <p className="text-xs text-slate-500 mt-1">Código: {company.code}</p>
+                      )}
+                    </div>
+                  </div>
+                  <Badge variant={company.status === 'active' ? 'default' : 'secondary'}>
+                    {company.status === 'active' ? 'Ativa' : 'Inativa'}
+                  </Badge>
+                </div>
+              </CardHeader>
+              <CardContent className="space-y-3">
+                <div className="flex items-center gap-2 text-sm">
+                  <Badge variant="outline">{getTypeLabel(company.type)}</Badge>
+                  {company.brand_id && (
+                    <span className="text-slate-500">{getBrandName(company.brand_id)}</span>
+                  )}
+                </div>
 
-          <div className="space-y-2">
-            <Label>Logo URL</Label>
-            <Input
-              value={companyForm.logo}
-              onChange={(e) => setCompanyForm({ ...companyForm, logo: e.target.value })}
-              placeholder="https://exemplo.com/logo.png"
-            />
-            {companyForm.logo && (
-              <img src={companyForm.logo} alt="Logo" className="h-12 object-contain mt-2" />
-            )}
-          </div>
-        </CardContent>
-      </Card>
+                {company.city && company.state && (
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <MapPin className="w-4 h-4 text-slate-400" />
+                    <span>{company.city} - {company.state}</span>
+                  </div>
+                )}
 
-      {/* Business Hours */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-indigo-600" />
-            Horário de Funcionamento
-          </CardTitle>
-          <CardDescription>Configure horários e fuso horário</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Abertura</Label>
-              <Input
-                type="time"
-                value={companyForm.business_hours_start}
-                onChange={(e) => setCompanyForm({ ...companyForm, business_hours_start: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label>Fechamento</Label>
-              <Input
-                type="time"
-                value={companyForm.business_hours_end}
-                onChange={(e) => setCompanyForm({ ...companyForm, business_hours_end: e.target.value })}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label className="flex items-center gap-1">
-                <Globe className="w-4 h-4" />
-                Fuso Horário
-              </Label>
-              <Select value={companyForm.timezone} onValueChange={(value) => setCompanyForm({ ...companyForm, timezone: value })}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {timezones.map(tz => (
-                    <SelectItem key={tz.value} value={tz.value}>{tz.label}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
+                {company.phone && (
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <Phone className="w-4 h-4 text-slate-400" />
+                    <span>{company.phone}</span>
+                  </div>
+                )}
 
-          <div className="space-y-2">
-            <Label>Dias de Funcionamento</Label>
-            <div className="flex gap-2">
-              {weekDays.map(day => (
-                <Button
-                  key={day.value}
-                  type="button"
-                  variant={companyForm.working_days.includes(day.value) ? 'default' : 'outline'}
-                  size="sm"
-                  onClick={() => toggleWorkingDay(day.value)}
-                  className={companyForm.working_days.includes(day.value) ? 'bg-indigo-600' : ''}
-                >
-                  {day.label}
-                </Button>
-              ))}
-            </div>
-          </div>
-        </CardContent>
-      </Card>
+                {company.manager_name && (
+                  <div className="flex items-center gap-2 text-sm text-slate-600">
+                    <User className="w-4 h-4 text-slate-400" />
+                    <span>{company.manager_name}</span>
+                  </div>
+                )}
 
-      {/* AI Config */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Zap className="w-5 h-5 text-indigo-600" />
-            Inteligência Artificial
-          </CardTitle>
-          <CardDescription>Ative ou desative IA no sistema</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <div className="flex items-center justify-between p-4 border rounded-lg">
-            <div>
-              <Label className="text-base">Atendimento por IA</Label>
-              <p className="text-sm text-slate-500 mt-1">
-                Habilita assistentes virtuais e automações inteligentes
-              </p>
-            </div>
-            <Switch
-              checked={companyForm.ai_enabled}
-              onCheckedChange={(checked) => setCompanyForm({ ...companyForm, ai_enabled: checked })}
-            />
-          </div>
-        </CardContent>
-      </Card>
+                <div className="flex items-center gap-2 text-sm text-slate-600">
+                  <Clock className="w-4 h-4 text-slate-400" />
+                  <span>{company.business_hours_start} - {company.business_hours_end}</span>
+                </div>
 
-      {/* Team */}
-      <Card>
-        <CardHeader className="flex flex-row items-center justify-between">
-          <div>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5 text-indigo-600" />
-              Equipe
-            </CardTitle>
-            <CardDescription>Gerencie membros e permissões</CardDescription>
-          </div>
-          <Button onClick={() => setShowInviteDialog(true)} size="sm" className="bg-indigo-600 hover:bg-indigo-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Convidar
-          </Button>
-        </CardHeader>
-        <CardContent>
-          <Table>
-            <TableHeader>
-              <TableRow>
-                <TableHead>Email</TableHead>
-                <TableHead>Perfil</TableHead>
-                <TableHead>Status</TableHead>
-                <TableHead className="w-12"></TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {teamMembers.map((member) => (
-                <TableRow key={member.id}>
-                  <TableCell className="font-medium">{member.user_email}</TableCell>
-                  <TableCell>
-                    <Badge variant="secondary" className="capitalize">
-                      {member.role?.replace('_', ' ')}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Badge className={cn(
-                      member.status === 'active' ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-700"
-                    )}>
-                      {member.status === 'active' ? 'Ativo' : 'Inativo'}
-                    </Badge>
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      onClick={() => handleRemoveMember(member.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-              ))}
-            </TableBody>
-          </Table>
-        </CardContent>
-      </Card>
+                <div className="flex gap-2 pt-3 border-t">
+                  <Button variant="outline" size="sm" onClick={() => handleEdit(company)} className="flex-1">
+                    <Pencil className="w-3 h-3 mr-1" />
+                    Editar
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    onClick={() => handleDelete(company.id)}
+                    className="text-red-600 hover:text-red-700"
+                  >
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      )}
 
-      {/* Invite Dialog */}
-      <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
-        <DialogContent>
+      {/* Dialog */}
+      <Dialog open={showDialog} onOpenChange={setShowDialog}>
+        <DialogContent className="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Convidar Membro</DialogTitle>
-            <DialogDescription>Envie um convite para participar da equipe</DialogDescription>
+            <DialogTitle>{editingCompany ? 'Editar Empresa' : 'Nova Empresa'}</DialogTitle>
+            <DialogDescription>
+              {editingCompany ? 'Atualize as informações da empresa' : 'Cadastre uma nova empresa'}
+            </DialogDescription>
           </DialogHeader>
+
           <div className="space-y-4 py-4">
+            {/* Basic Info */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Nome da Empresa *</Label>
+                <Input
+                  value={formData.name}
+                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                  placeholder="Clínica Exemplo"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Código</Label>
+                <Input
+                  value={formData.code}
+                  onChange={(e) => setFormData({ ...formData, code: e.target.value })}
+                  placeholder="EMP001"
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {brands.length > 0 && (
+                <div className="space-y-2">
+                  <Label>Marca (opcional)</Label>
+                  <Select
+                    value={formData.brand_id}
+                    onValueChange={(value) => setFormData({ ...formData, brand_id: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Sem marca" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value={null}>Nenhuma</SelectItem>
+                      {brands.map(brand => (
+                        <SelectItem key={brand.id} value={brand.id}>{brand.name}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Tipo</Label>
+                <Select
+                  value={formData.type}
+                  onValueChange={(value) => setFormData({ ...formData, type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="clinic">Clínica</SelectItem>
+                    <SelectItem value="franchise">Franquia</SelectItem>
+                    <SelectItem value="headquarters">Matriz</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            {/* Address */}
             <div className="space-y-2">
-              <Label>Email</Label>
+              <Label>Endereço</Label>
               <Input
-                type="email"
-                value={inviteForm.email}
-                onChange={(e) => setInviteForm({ ...inviteForm, email: e.target.value })}
-                placeholder="email@empresa.com"
+                value={formData.address}
+                onChange={(e) => setFormData({ ...formData, address: e.target.value })}
+                placeholder="Rua, número, complemento"
               />
             </div>
+
+            <div className="grid grid-cols-3 gap-4">
+              <div className="space-y-2">
+                <Label>Cidade</Label>
+                <Input
+                  value={formData.city}
+                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
+                  placeholder="São Paulo"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Estado</Label>
+                <Input
+                  value={formData.state}
+                  onChange={(e) => setFormData({ ...formData, state: e.target.value })}
+                  placeholder="SP"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>CEP</Label>
+                <Input
+                  value={formData.postal_code}
+                  onChange={(e) => setFormData({ ...formData, postal_code: e.target.value })}
+                  placeholder="01234-567"
+                />
+              </div>
+            </div>
+
+            {/* Contact */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Telefone</Label>
+                <Input
+                  value={formData.phone}
+                  onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+                  placeholder="(11) 99999-9999"
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  placeholder="contato@empresa.com"
+                />
+              </div>
+            </div>
+
             <div className="space-y-2">
-              <Label>Perfil</Label>
-              <Select
-                value={inviteForm.role}
-                onValueChange={(value) => setInviteForm({ ...inviteForm, role: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="company_admin">Administrador</SelectItem>
-                  <SelectItem value="sales_manager">Gerente de Vendas</SelectItem>
-                  <SelectItem value="sales_agent">Agente de Vendas</SelectItem>
-                </SelectContent>
-              </Select>
+              <Label>Responsável</Label>
+              <Input
+                value={formData.manager_name}
+                onChange={(e) => setFormData({ ...formData, manager_name: e.target.value })}
+                placeholder="Nome do responsável"
+              />
+            </div>
+
+            {/* Business Hours */}
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Horário Abertura</Label>
+                <Input
+                  type="time"
+                  value={formData.business_hours_start}
+                  onChange={(e) => setFormData({ ...formData, business_hours_start: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label>Horário Fechamento</Label>
+                <Input
+                  type="time"
+                  value={formData.business_hours_end}
+                  onChange={(e) => setFormData({ ...formData, business_hours_end: e.target.value })}
+                />
+              </div>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Fuso Horário</Label>
+                <Select
+                  value={formData.timezone}
+                  onValueChange={(value) => setFormData({ ...formData, timezone: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="America/Sao_Paulo">Brasília (GMT-3)</SelectItem>
+                    <SelectItem value="America/Manaus">Manaus (GMT-4)</SelectItem>
+                    <SelectItem value="America/Rio_Branco">Acre (GMT-5)</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="active">Ativa</SelectItem>
+                    <SelectItem value="inactive">Inativa</SelectItem>
+                    <SelectItem value="onboarding">Em Implantação</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
+
           <DialogFooter>
-            <Button variant="outline" onClick={() => setShowInviteDialog(false)}>Cancelar</Button>
-            <Button 
-              onClick={handleInviteMember}
-              disabled={!inviteForm.email || saving}
-              className="bg-indigo-600 hover:bg-indigo-700"
-            >
-              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              Enviar Convite
+            <Button variant="outline" onClick={handleCloseDialog}>
+              Cancelar
+            </Button>
+            <Button onClick={handleSave} className="bg-indigo-600 hover:bg-indigo-700">
+              {editingCompany ? 'Atualizar' : 'Criar Empresa'}
             </Button>
           </DialogFooter>
         </DialogContent>

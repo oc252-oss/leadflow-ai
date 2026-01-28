@@ -9,7 +9,6 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import UnitSelector from "@/components/UnitSelector";
 import { 
   MessageSquare, 
   Instagram, 
@@ -28,25 +27,25 @@ import {
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
+import { getDefaultOrganization, getDefaultUnit, isSingleCompanyMode } from '@/components/singleCompanyMode';
 
 export default function ChannelsIntegrations() {
   const [whatsappIntegrations, setWhatsappIntegrations] = useState([]);
   const [instagramIntegrations, setInstagramIntegrations] = useState([]);
   const [facebookIntegrations, setFacebookIntegrations] = useState([]);
-  const [units, setUnits] = useState([]);
   const [teamMembers, setTeamMembers] = useState([]);
   const [assistants, setAssistants] = useState([]);
   const [flows, setFlows] = useState([]);
-  const [teamMember, setTeamMember] = useState(null);
+  const [organization, setOrganization] = useState(null);
+  const [unit, setUnit] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [activeUnitId, setActiveUnitId] = useState('');
+  const singleCompanyMode = isSingleCompanyMode();
   
   // WhatsApp QR Code
   const [showQRDialog, setShowQRDialog] = useState(false);
   const [qrCode, setQrCode] = useState('');
   const [generatingQR, setGeneratingQR] = useState(false);
   const [qrFormData, setQrFormData] = useState({
-    unit_id: '',
     assigned_agent_email: '',
     assistant_id: '',
     flow_id: '',
@@ -57,7 +56,6 @@ export default function ChannelsIntegrations() {
   const [showProviderDialog, setShowProviderDialog] = useState(false);
   const [providerFormData, setProviderFormData] = useState({
     provider: 'zapi',
-    unit_id: '',
     assigned_agent_email: '',
     assistant_id: '',
     flow_id: '',
@@ -71,28 +69,24 @@ export default function ChannelsIntegrations() {
   // Instagram
   const [showInstagramDialog, setShowInstagramDialog] = useState(false);
   const [instagramFormData, setInstagramFormData] = useState({
-    unit_id: '',
     account_name: '',
     page_id: '',
     access_token: '',
     direct_messages: true,
     comments: false,
     assistant_id: '',
-    flow_id: '',
     label: ''
   });
 
   // Facebook
   const [showFacebookDialog, setShowFacebookDialog] = useState(false);
   const [facebookFormData, setFacebookFormData] = useState({
-    unit_id: '',
     page_name: '',
     page_id: '',
     access_token: '',
     messenger: true,
     ad_comments: false,
     assistant_id: '',
-    flow_id: '',
     label: ''
   });
 
@@ -106,35 +100,29 @@ export default function ChannelsIntegrations() {
 
   const loadData = async () => {
     try {
-      const user = await base44.auth.me();
-      const members = await base44.entities.TeamMember.filter({ user_email: user.email });
+      // Load default organization and unit for single company mode
+      const org = await getDefaultOrganization();
+      const unitData = org ? await getDefaultUnit(org.id) : null;
       
-      if (members.length > 0) {
-        setTeamMember(members[0]);
-        const unitId = members[0].unit_id;
+      setOrganization(org);
+      setUnit(unitData);
 
-        const [whatsappData, instagramData, facebookData, unitsData, allTeamMembers, assistantsData, flowsData] = await Promise.all([
-          base44.entities.WhatsAppIntegration.filter({ unit_id: unitId || members[0].organization_id }),
-          base44.entities.FacebookIntegration ? base44.entities.FacebookIntegration.filter({ unit_id: unitId || members[0].organization_id }).catch(() => []) : Promise.resolve([]),
-          base44.entities.FacebookIntegration ? base44.entities.FacebookIntegration.filter({ unit_id: unitId || members[0].organization_id }).catch(() => []) : Promise.resolve([]),
-          unitId ? base44.entities.Unit.filter({ id: unitId }) : base44.entities.Unit.filter({ organization_id: members[0].organization_id }),
-          base44.entities.TeamMember.filter({ organization_id: members[0].organization_id }),
-          base44.entities.Assistant.filter({ organization_id: members[0].organization_id }),
-          base44.entities.AIConversationFlow.filter({ organization_id: members[0].organization_id })
+      if (org && unitData) {
+        const [whatsappData, instagramData, facebookData, allTeamMembers, assistantsData, flowsData] = await Promise.all([
+          base44.entities.WhatsAppIntegration.filter({ unit_id: unitData.id }),
+          base44.entities.FacebookIntegration ? base44.entities.FacebookIntegration.filter({ unit_id: unitData.id }).catch(() => []) : Promise.resolve([]),
+          base44.entities.FacebookIntegration ? base44.entities.FacebookIntegration.filter({ unit_id: unitData.id }).catch(() => []) : Promise.resolve([]),
+          base44.entities.TeamMember.filter({ organization_id: org.id }),
+          base44.entities.Assistant.filter({ organization_id: org.id, unit_id: unitData.id }),
+          base44.entities.AIConversationFlow.filter({ organization_id: org.id, unit_id: unitData.id })
         ]);
 
         setWhatsappIntegrations(whatsappData);
         setInstagramIntegrations(instagramData);
         setFacebookIntegrations(facebookData);
-        setUnits(unitsData);
         setTeamMembers(allTeamMembers);
         setAssistants(assistantsData);
         setFlows(flowsData);
-        
-        // Auto-select first unit if available
-        if (unitsData.length > 0 && !activeUnitId) {
-          setActiveUnitId(unitsData[0].id);
-        }
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -145,15 +133,15 @@ export default function ChannelsIntegrations() {
   };
 
   const handleGenerateQR = async () => {
-    if (!qrFormData.unit_id) {
-      toast.error('Selecione uma unidade');
+    if (!unit) {
+      toast.error('Unidade padrão não configurada');
       return;
     }
 
     setGeneratingQR(true);
     try {
       const response = await base44.functions.invoke('generateWhatsAppQRWeb', {
-        unit_id: qrFormData.unit_id,
+        unit_id: unit.id,
         label: qrFormData.label || 'WhatsApp Web',
         assigned_agent_email: qrFormData.assigned_agent_email || null,
         assistant_id: qrFormData.assistant_id || null,
@@ -174,14 +162,14 @@ export default function ChannelsIntegrations() {
   };
 
   const handleConnectProvider = async () => {
-    if (!providerFormData.unit_id || !providerFormData.instance_id || !providerFormData.api_key) {
+    if (!unit || !providerFormData.instance_id || !providerFormData.api_key) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
     try {
       await base44.entities.WhatsAppIntegration.create({
-        unit_id: providerFormData.unit_id,
+        unit_id: unit.id,
         integration_type: 'provider',
         provider: providerFormData.provider,
         phone_number: providerFormData.phone_number,
@@ -198,7 +186,7 @@ export default function ChannelsIntegrations() {
 
       toast.success('WhatsApp Provider conectado com sucesso');
       setShowProviderDialog(false);
-      setProviderFormData({ provider: 'zapi', unit_id: '', assigned_agent_email: '', assistant_id: '', flow_id: '', instance_id: '', api_key: '', api_token: '', phone_number: '', label: '' });
+      setProviderFormData({ provider: 'zapi', assigned_agent_email: '', assistant_id: '', flow_id: '', instance_id: '', api_key: '', api_token: '', phone_number: '', label: '' });
       await loadData();
     } catch (error) {
       console.error('Erro ao conectar provider:', error);
@@ -215,8 +203,8 @@ export default function ChannelsIntegrations() {
     script.async = true;
     script.onload = function() {
       CliniqChat.init({
-        companyId: '${teamMember?.company_id || 'YOUR_COMPANY_ID'}',
-        unitId: '${teamMember?.unit_id || 'YOUR_UNIT_ID'}',
+        organizationId: '${organization?.id || 'YOUR_ORG_ID'}',
+        unitId: '${unit?.id || 'YOUR_UNIT_ID'}',
         position: 'bottom-right',
         theme: 'light'
       });
@@ -259,71 +247,16 @@ export default function ChannelsIntegrations() {
     );
   }
 
-  // Filter data by active unit
-  const filteredWhatsapp = activeUnitId 
-    ? whatsappIntegrations.filter(i => i.unit_id === activeUnitId)
-    : whatsappIntegrations;
-
-  const filteredInstagram = activeUnitId
-    ? instagramIntegrations.filter(i => i.unit_id === activeUnitId)
-    : instagramIntegrations;
-
-  const filteredFacebook = activeUnitId
-    ? facebookIntegrations.filter(i => i.unit_id === activeUnitId)
-    : facebookIntegrations;
-  
-  const filteredAssistants = activeUnitId 
-    ? assistants.filter(a => a.unit_id === activeUnitId)
-    : assistants;
-
-  const filteredTeamMembers = activeUnitId
-    ? teamMembers.filter(tm => tm.unit_id === activeUnitId)
-    : teamMembers;
-
-  const hasAssistants = filteredAssistants.length > 0;
+  // In single company mode, all data is from the default unit
+  const filteredTeamMembers = teamMembers;
 
   return (
     <div className="space-y-8">
-      {/* Header with Unit Selector */}
-      <div className="flex items-start justify-between">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-900">Canais & Integrações</h1>
-          <p className="text-slate-500 mt-1">Conecte e gerencie todos os canais de atendimento</p>
-        </div>
-        {units.length > 0 && (
-          <UnitSelector 
-            value={activeUnitId} 
-            onChange={setActiveUnitId}
-            teamMember={teamMember}
-          />
-        )}
+      {/* Header */}
+      <div>
+        <h1 className="text-3xl font-bold text-slate-900">Canais & Integrações</h1>
+        <p className="text-slate-500 mt-1">Conecte e gerencie todos os canais de atendimento</p>
       </div>
-
-      {/* Alert if no units */}
-      {units.length === 0 && (
-        <Card className="border-amber-200 bg-amber-50">
-          <CardContent className="py-6">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-amber-900">Nenhuma unidade cadastrada</h3>
-                <p className="text-sm text-amber-700 mt-1">
-                  Para conectar canais de atendimento, você precisa cadastrar ao menos uma unidade.
-                </p>
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="mt-3 border-amber-600 text-amber-700 hover:bg-amber-100"
-                  onClick={() => window.location.href = '/Units'}
-                >
-                  <Building2 className="w-4 h-4 mr-2" />
-                  Cadastrar Unidade
-                </Button>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
 
       {/* WhatsApp Section */}
       <div className="space-y-4">
@@ -348,29 +281,18 @@ export default function ChannelsIntegrations() {
                   ⚠️ Experimental – indicado para testes
                 </p>
               </div>
-              {units.length === 0 ? (
-                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
-                  <p className="text-xs text-slate-600 text-center">
-                    Cadastre uma unidade antes
-                  </p>
-                </div>
-              ) : (
-                <Button 
-                  onClick={() => {
-                    setQrFormData({ ...qrFormData, unit_id: activeUnitId });
-                    setShowQRDialog(true);
-                  }} 
-                  variant="outline" 
-                  className="w-full"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Novo QR Code
-                </Button>
-              )}
-              {filteredWhatsapp.length > 0 && (
+              <Button 
+                onClick={() => setShowQRDialog(true)}
+                variant="outline" 
+                className="w-full"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Novo QR Code
+              </Button>
+              {whatsappIntegrations.length > 0 && (
                 <div className="mt-3 space-y-2">
                   <p className="text-xs font-medium text-slate-600">QR Codes conectados:</p>
-                  {filteredWhatsapp.filter(w => w.integration_type === 'web').map(wa => (
+                  {whatsappIntegrations.filter(w => w.integration_type === 'web').map(wa => (
                     <Badge key={wa.id} variant="outline" className="block w-full text-left p-2">
                       {wa.label || 'WhatsApp Web'} - {wa.status}
                     </Badge>
@@ -405,27 +327,17 @@ export default function ChannelsIntegrations() {
               <CardDescription>Z-API, Gupshup, 360Dialog</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
-              {units.length === 0 ? (
-                <Button disabled className="w-full" variant="outline">
-                  <MessageSquare className="w-4 h-4 mr-2" />
-                  Cadastre unidade
-                </Button>
-              ) : (
-                <Button 
-                  onClick={() => {
-                    setProviderFormData({ ...providerFormData, unit_id: activeUnitId });
-                    setShowProviderDialog(true);
-                  }}
-                  className="w-full bg-green-600 hover:bg-green-700"
-                >
-                  <Plus className="w-4 h-4 mr-2" />
-                  Conectar Provider
-                </Button>
-              )}
-              {filteredWhatsapp.length > 0 && (
+              <Button 
+                onClick={() => setShowProviderDialog(true)}
+                className="w-full bg-green-600 hover:bg-green-700"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Conectar Provider
+              </Button>
+              {whatsappIntegrations.length > 0 && (
                 <div className="mt-3 space-y-2">
                   <p className="text-xs font-medium text-slate-600">Providers conectados:</p>
-                  {filteredWhatsapp.filter(w => w.integration_type === 'provider').map(wa => (
+                  {whatsappIntegrations.filter(w => w.integration_type === 'provider').map(wa => (
                     <Badge key={wa.id} variant="secondary" className="block w-full text-left p-2 text-xs">
                       <span className="font-medium">{wa.provider?.toUpperCase()}</span> - {wa.phone_number}
                     </Badge>

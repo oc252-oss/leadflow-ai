@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
-import { MessageCircle, Loader, RefreshCw } from 'lucide-react';
+import { MessageCircle, Loader, RefreshCw, Copy, CheckCircle2, AlertCircle } from 'lucide-react';
 import { base44 } from '@/api/base44Client';
 import { toast } from 'sonner';
 
@@ -150,43 +150,100 @@ export default function WhatsAppConnect({ connection, onRefresh }) {
 
   return (
     <>
-      <Card className="bg-white">
-        <CardHeader className="pb-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <MessageCircle className="w-6 h-6 text-green-600" />
+      <Card className="bg-gradient-to-br from-slate-50 to-white border-slate-200 overflow-hidden">
+        <div className="h-1 bg-gradient-to-r from-green-500 to-emerald-500" />
+        
+        <CardHeader className="pb-4">
+          <div className="flex items-start justify-between">
+            <div className="flex items-start gap-3">
+              <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-green-100 to-emerald-100 flex items-center justify-center">
+                <MessageCircle className="w-6 h-6 text-green-600" />
+              </div>
               <div>
                 <CardTitle className="text-lg">WhatsApp</CardTitle>
-                <p className="text-xs text-slate-500">Web - Baileys Real</p>
+                <p className="text-xs text-slate-500 mt-1">Instância Web • Baileys Real</p>
               </div>
             </div>
-            <Badge className={getStatusColor(connection?.status || 'disconnected')}>
+            <Badge className={`${getStatusColor(connection?.status || 'disconnected')} capitalize`}>
               {getStatusLabel(connection?.status || 'disconnected')}
             </Badge>
           </div>
         </CardHeader>
 
         <CardContent className="space-y-4">
+          {/* Connected Status */}
           {connection?.status === 'connected' && connection?.phone_number && (
-            <div className="bg-green-50 p-3 rounded-lg border border-green-200">
-              <p className="text-xs text-slate-600 font-medium">Número Conectado</p>
-              <p className="text-sm font-medium text-green-900 mt-1">{connection.phone_number}</p>
+            <>
+              <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-4 rounded-lg border border-green-200">
+                <div className="flex items-start gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-green-600 flex-shrink-0 mt-0.5" />
+                  <div className="flex-1">
+                    <p className="text-xs font-semibold text-green-900">Conectado com sucesso</p>
+                    <p className="text-sm font-bold text-green-700 mt-1.5">{connection.phone_number}</p>
+                    <p className="text-xs text-green-600 mt-2">Pronto para receber e enviar mensagens</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <p className="text-xs font-semibold text-slate-600">URL do Webhook</p>
+                <div className="flex gap-2 items-center bg-slate-100 px-3 py-2 rounded border border-slate-300">
+                  <input
+                    type="text"
+                    value={`${serverUrl}/webhook/${connection.id}`}
+                    readOnly
+                    className="text-xs text-slate-700 bg-transparent outline-none flex-1"
+                  />
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(`${serverUrl}/webhook/${connection.id}`);
+                      toast.success('URL copiada');
+                    }}
+                    className="p-1 hover:bg-slate-200 rounded"
+                  >
+                    <Copy className="w-4 h-4 text-slate-600" />
+                  </button>
+                </div>
+              </div>
+            </>
+          )}
+
+          {/* Waiting QR */}
+          {connection?.status === 'waiting_qr' && (
+            <div className="bg-blue-50 p-4 rounded-lg border border-blue-200 flex items-start gap-2">
+              <Loader className="w-5 h-5 text-blue-600 flex-shrink-0 mt-0.5 animate-spin" />
+              <div>
+                <p className="text-xs font-semibold text-blue-900">Aguardando escaneamento</p>
+                <p className="text-xs text-blue-700 mt-1">Abra o QR Code e escaneie com seu WhatsApp</p>
+              </div>
             </div>
           )}
 
-          <div className="flex gap-2">
+          {/* Disconnected */}
+          {connection?.status === 'disconnected' && (
+            <div className="bg-slate-100 p-4 rounded-lg border border-slate-300 flex items-start gap-2">
+              <AlertCircle className="w-5 h-5 text-slate-600 flex-shrink-0 mt-0.5" />
+              <div>
+                <p className="text-xs font-semibold text-slate-900">Não conectado</p>
+                <p className="text-xs text-slate-600 mt-1">Clique abaixo para conectar uma instância WhatsApp</p>
+              </div>
+            </div>
+          )}
+
+          {/* Action Buttons */}
+          <div className="flex gap-2 pt-2">
             {connection?.status !== 'connected' ? (
               <Button
                 onClick={handleGenerateQR}
                 disabled={loading}
-                className="flex-1 gap-2 bg-green-600 hover:bg-green-700"
+                className="flex-1 gap-2 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700"
               >
                 {loading ? (
                   <Loader className="w-4 h-4 animate-spin" />
                 ) : (
-                  '▢'
+                  <MessageCircle className="w-4 h-4" />
                 )}
-                Conectar WhatsApp
+                {loading ? 'Gerando QR...' : 'Conectar WhatsApp'}
               </Button>
             ) : (
               <Button
@@ -197,6 +254,11 @@ export default function WhatsAppConnect({ connection, onRefresh }) {
                 Desconectar
               </Button>
             )}
+          </div>
+
+          {/* Info Text */}
+          <div className="bg-slate-50 p-3 rounded border border-slate-200 text-xs text-slate-600">
+            <p><strong>💡 Dica:</strong> Use um número dedicado para o negócio. Isso evita misturar mensagens pessoais com atendimento ao cliente.</p>
           </div>
         </CardContent>
       </Card>

@@ -24,6 +24,8 @@ import Units from './pages/Units';
 import VoiceCampaigns from './pages/VoiceCampaigns';
 import VoiceFunnel from './pages/VoiceFunnel';
 import VoiceSimulator from './pages/VoiceSimulator';
+import AIFlowsSimple from './pages/AIFlowsSimple';
+import AIAssistantsSimple from './pages/AIAssistantsSimple';
 import __Layout from './Layout.jsx';
 
 
@@ -54,6 +56,8 @@ export const PAGES = {
     "VoiceCampaigns": VoiceCampaigns,
     "VoiceFunnel": VoiceFunnel,
     "VoiceSimulator": VoiceSimulator,
+    "AIFlowsSimple": AIFlowsSimple,
+    "AIAssistantsSimple": AIAssistantsSimple,
 }
 
 export const pagesConfig = {

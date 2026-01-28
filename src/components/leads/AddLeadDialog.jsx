@@ -57,30 +57,30 @@ export default function AddLeadDialog({ open, onOpenChange, onSave, campaigns = 
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Lead</DialogTitle>
+          <DialogTitle>Adicionar Novo Lead</DialogTitle>
           <DialogDescription>
-            Manually add a new lead to your pipeline
+            Adicione manualmente um novo lead ao seu pipeline
           </DialogDescription>
         </DialogHeader>
 
         <div className="grid gap-4 py-4">
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">Nome *</Label>
               <Input
                 id="name"
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                placeholder="John Doe"
+                placeholder="João Silva"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
+              <Label htmlFor="phone">Telefone</Label>
               <Input
                 id="phone"
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                placeholder="+1 (555) 000-0000"
+                placeholder="+55 (11) 99999-9999"
               />
             </div>
           </div>
@@ -92,13 +92,13 @@ export default function AddLeadDialog({ open, onOpenChange, onSave, campaigns = 
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              placeholder="john@example.com"
+              placeholder="joao@exemplo.com"
             />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="source">Source</Label>
+              <Label htmlFor="source">Origem</Label>
               <Select
                 value={formData.source}
                 onValueChange={(value) => setFormData({ ...formData, source: value })}
@@ -107,26 +107,26 @@ export default function AddLeadDialog({ open, onOpenChange, onSave, campaigns = 
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="manual">Manual Entry</SelectItem>
+                  <SelectItem value="manual">Entrada Manual</SelectItem>
                   <SelectItem value="facebook_lead_ad">Facebook Lead Ad</SelectItem>
                   <SelectItem value="messenger">Messenger</SelectItem>
                   <SelectItem value="whatsapp">WhatsApp</SelectItem>
                   <SelectItem value="instagram">Instagram</SelectItem>
-                  <SelectItem value="referral">Referral</SelectItem>
+                  <SelectItem value="referral">Indicação</SelectItem>
                   <SelectItem value="webchat">Webchat</SelectItem>
-                  <SelectItem value="import">Import</SelectItem>
+                  <SelectItem value="import">Importação</SelectItem>
                 </SelectContent>
               </Select>
             </div>
             {campaigns.length > 0 && (
               <div className="space-y-2">
-                <Label htmlFor="campaign">Campaign</Label>
+                <Label htmlFor="campaign">Campanha</Label>
                 <Select
                   value={formData.campaign_id}
                   onValueChange={(value) => setFormData({ ...formData, campaign_id: value })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Select campaign" />
+                    <SelectValue placeholder="Selecione uma campanha" />
                   </SelectTrigger>
                   <SelectContent>
                     {campaigns.map((campaign) => (
@@ -141,22 +141,22 @@ export default function AddLeadDialog({ open, onOpenChange, onSave, campaigns = 
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="interest">Interest Type</Label>
+            <Label htmlFor="interest">Tipo de Interesse</Label>
             <Input
               id="interest"
               value={formData.interest_type}
               onChange={(e) => setFormData({ ...formData, interest_type: e.target.value })}
-              placeholder="e.g., Product Demo, Consultation"
+              placeholder="Ex: Botox, Harmonização, Preenchimento"
             />
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="notes">Notes</Label>
+            <Label htmlFor="notes">Observações</Label>
             <Textarea
               id="notes"
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Any additional information..."
+              placeholder="Informações adicionais..."
               rows={3}
             />
           </div>
@@ -164,7 +164,7 @@ export default function AddLeadDialog({ open, onOpenChange, onSave, campaigns = 
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)}>
-            Cancel
+            Cancelar
           </Button>
           <Button 
             onClick={handleSave} 
@@ -172,7 +172,7 @@ export default function AddLeadDialog({ open, onOpenChange, onSave, campaigns = 
             className="bg-indigo-600 hover:bg-indigo-700"
           >
             {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-            Add Lead
+            Adicionar Lead
           </Button>
         </DialogFooter>
       </DialogContent>

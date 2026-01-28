@@ -10,10 +10,10 @@ import { formatDistanceToNow } from 'date-fns';
 import { cn } from "@/lib/utils";
 
 const statusConfig = {
-  bot_active: { label: 'AI Active', color: 'bg-violet-100 text-violet-700', icon: Bot },
-  human_active: { label: 'Agent', color: 'bg-indigo-100 text-indigo-700', icon: User },
-  waiting_response: { label: 'Waiting', color: 'bg-amber-100 text-amber-700', icon: Clock },
-  closed: { label: 'Closed', color: 'bg-slate-100 text-slate-700', icon: MessageSquare }
+  bot_active: { label: 'IA Ativa', color: 'bg-violet-100 text-violet-700', icon: Bot },
+  human_active: { label: 'Agente', color: 'bg-indigo-100 text-indigo-700', icon: User },
+  waiting_response: { label: 'Aguardando', color: 'bg-amber-100 text-amber-700', icon: Clock },
+  closed: { label: 'Encerrada', color: 'bg-slate-100 text-slate-700', icon: MessageSquare }
 };
 
 export default function ConversationList({ conversations, leads, selectedId, onSelect }) {
@@ -26,7 +26,7 @@ export default function ConversationList({ conversations, leads, selectedId, onS
       {conversations.length === 0 ? (
         <div className="p-8 text-center text-slate-500">
           <MessageSquare className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-          <p>No conversations yet</p>
+          <p>Nenhuma conversa ainda</p>
         </div>
       ) : (
         conversations.map((conv) => {
@@ -55,7 +55,7 @@ export default function ConversationList({ conversations, leads, selectedId, onS
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between mb-1">
                     <p className="font-medium text-slate-900 truncate">
-                      {lead?.name || 'Unknown Lead'}
+                      {lead?.name || 'Lead Desconhecido'}
                     </p>
                     {conv.unread_count > 0 && (
                       <span className="w-5 h-5 rounded-full bg-indigo-600 text-white text-xs flex items-center justify-center">
@@ -64,7 +64,7 @@ export default function ConversationList({ conversations, leads, selectedId, onS
                     )}
                   </div>
                   <p className="text-sm text-slate-500 truncate mb-2">
-                    {conv.last_message_preview || 'No messages'}
+                    {conv.last_message_preview || 'Sem mensagens'}
                   </p>
                   <div className="flex items-center justify-between">
                     <Badge className={cn("text-xs", config.color)}>

@@ -29,9 +29,9 @@ const sourceIcons = {
 };
 
 const temperatureConfig = {
-  hot: { icon: Flame, color: 'bg-red-100 text-red-600 border-red-200', label: 'Hot' },
-  warm: { icon: Sun, color: 'bg-amber-100 text-amber-600 border-amber-200', label: 'Warm' },
-  cold: { icon: Snowflake, color: 'bg-blue-100 text-blue-600 border-blue-200', label: 'Cold' }
+  hot: { icon: Flame, color: 'bg-red-100 text-red-600 border-red-200', label: 'Quente' },
+  warm: { icon: Sun, color: 'bg-amber-100 text-amber-600 border-amber-200', label: 'Morno' },
+  cold: { icon: Snowflake, color: 'bg-blue-100 text-blue-600 border-blue-200', label: 'Frio' }
 };
 
 const stageColors = {
@@ -93,7 +93,7 @@ export default function LeadCard({ lead, compact = false, onOpenChat }) {
             </Badge>
             <Button size="sm" variant="outline" onClick={handleOpenChat} className="gap-1">
               <MessageSquare className="w-3 h-3" />
-              Chat
+              Conversa
             </Button>
           </div>
         </div>
@@ -162,7 +162,7 @@ export default function LeadCard({ lead, compact = false, onOpenChat }) {
         className="w-full mt-4 gap-2 bg-indigo-600 hover:bg-indigo-700"
       >
         <MessageSquare className="w-4 h-4" />
-        Open Chat
+        Abrir Conversa
       </Button>
     </Card>
   );

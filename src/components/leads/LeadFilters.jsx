@@ -32,7 +32,7 @@ export default function LeadFilters({ filters, setFilters, campaigns = [] }) {
         <div className="relative flex-1">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
-            placeholder="Search leads by name, email or phone..."
+            placeholder="Buscar por nome, email ou telefone..."
             value={filters.search}
             onChange={(e) => setFilters({ ...filters, search: e.target.value })}
             className="pl-10 bg-slate-50 border-slate-200"
@@ -45,13 +45,13 @@ export default function LeadFilters({ filters, setFilters, campaigns = [] }) {
           onValueChange={(value) => setFilters({ ...filters, temperature: value })}
         >
           <SelectTrigger className="w-full lg:w-40 bg-slate-50">
-            <SelectValue placeholder="Temperature" />
+            <SelectValue placeholder="Temperatura" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Temps</SelectItem>
-            <SelectItem value="hot">🔥 Hot</SelectItem>
-            <SelectItem value="warm">☀️ Warm</SelectItem>
-            <SelectItem value="cold">❄️ Cold</SelectItem>
+            <SelectItem value="all">Todas</SelectItem>
+            <SelectItem value="hot">🔥 Quente</SelectItem>
+            <SelectItem value="warm">☀️ Morno</SelectItem>
+            <SelectItem value="cold">❄️ Frio</SelectItem>
           </SelectContent>
         </Select>
 
@@ -61,17 +61,17 @@ export default function LeadFilters({ filters, setFilters, campaigns = [] }) {
           onValueChange={(value) => setFilters({ ...filters, stage: value })}
         >
           <SelectTrigger className="w-full lg:w-40 bg-slate-50">
-            <SelectValue placeholder="Stage" />
+            <SelectValue placeholder="Etapa" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Stages</SelectItem>
-            <SelectItem value="new">New</SelectItem>
-            <SelectItem value="contacted">Contacted</SelectItem>
-            <SelectItem value="qualified">Qualified</SelectItem>
-            <SelectItem value="scheduled">Scheduled</SelectItem>
-            <SelectItem value="proposal">Proposal</SelectItem>
-            <SelectItem value="closed_won">Closed Won</SelectItem>
-            <SelectItem value="closed_lost">Closed Lost</SelectItem>
+            <SelectItem value="all">Todas Etapas</SelectItem>
+            <SelectItem value="new">Novo</SelectItem>
+            <SelectItem value="contacted">Contatado</SelectItem>
+            <SelectItem value="qualified">Qualificado</SelectItem>
+            <SelectItem value="scheduled">Agendado</SelectItem>
+            <SelectItem value="proposal">Proposta</SelectItem>
+            <SelectItem value="closed_won">Venda Ganha</SelectItem>
+            <SelectItem value="closed_lost">Venda Perdida</SelectItem>
           </SelectContent>
         </Select>
 
@@ -81,10 +81,10 @@ export default function LeadFilters({ filters, setFilters, campaigns = [] }) {
           onValueChange={(value) => setFilters({ ...filters, source: value })}
         >
           <SelectTrigger className="w-full lg:w-40 bg-slate-50">
-            <SelectValue placeholder="Source" />
+            <SelectValue placeholder="Origem" />
           </SelectTrigger>
           <SelectContent>
-            <SelectItem value="all">All Sources</SelectItem>
+            <SelectItem value="all">Todas Origens</SelectItem>
             <SelectItem value="facebook_lead_ad">Facebook Ads</SelectItem>
             <SelectItem value="messenger">Messenger</SelectItem>
             <SelectItem value="webchat">Webchat</SelectItem>
@@ -99,10 +99,10 @@ export default function LeadFilters({ filters, setFilters, campaigns = [] }) {
             onValueChange={(value) => setFilters({ ...filters, campaign: value })}
           >
             <SelectTrigger className="w-full lg:w-48 bg-slate-50">
-              <SelectValue placeholder="Campaign" />
+              <SelectValue placeholder="Campanha" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Campaigns</SelectItem>
+              <SelectItem value="all">Todas Campanhas</SelectItem>
               {campaigns.map((campaign) => (
                 <SelectItem key={campaign.id} value={campaign.id}>
                   {campaign.campaign_name}
@@ -117,11 +117,11 @@ export default function LeadFilters({ filters, setFilters, campaigns = [] }) {
       {hasActiveFilters && (
         <div className="flex items-center gap-2 flex-wrap">
           <Filter className="w-4 h-4 text-slate-400" />
-          <span className="text-sm text-slate-500">Active filters:</span>
+          <span className="text-sm text-slate-500">Filtros ativos:</span>
           
           {filters.search && (
             <Badge variant="secondary" className="gap-1">
-              Search: {filters.search}
+              Busca: {filters.search}
               <X 
                 className="w-3 h-3 cursor-pointer" 
                 onClick={() => setFilters({ ...filters, search: '' })}
@@ -160,7 +160,7 @@ export default function LeadFilters({ filters, setFilters, campaigns = [] }) {
           )}
 
           <Button variant="ghost" size="sm" onClick={clearFilters} className="text-slate-500 h-7">
-            Clear all
+            Limpar tudo
           </Button>
         </div>
       )}

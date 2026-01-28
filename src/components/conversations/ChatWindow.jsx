@@ -186,8 +186,8 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
             <Bot className="w-8 h-8 text-slate-400" />
           </div>
-          <h3 className="text-lg font-medium text-slate-900 mb-2">Select a conversation</h3>
-          <p className="text-slate-500">Choose a conversation from the list to start chatting</p>
+          <h3 className="text-lg font-medium text-slate-900 mb-2">Selecione uma conversa</h3>
+          <p className="text-slate-500">Escolha uma conversa da lista para começar</p>
         </div>
       </div>
     );
@@ -207,7 +207,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
             {lead?.name?.charAt(0) || '?'}
           </div>
           <div>
-            <h3 className="font-semibold text-slate-900">{lead?.name || 'Unknown'}</h3>
+            <h3 className="font-semibold text-slate-900">{lead?.name || 'Desconhecido'}</h3>
             <div className="flex items-center gap-2 text-sm text-slate-500">
               {lead?.email && <span>{lead.email}</span>}
               {lead?.phone && <span>• {lead.phone}</span>}
@@ -233,13 +233,13 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
           {conversation.status === 'bot_active' && (
             <Button variant="outline" size="sm" onClick={handleTakeOver}>
               <User className="w-4 h-4 mr-2" />
-              Take Over
+              Assumir Atendimento
             </Button>
           )}
           <Link to={createPageUrl('LeadDetail') + `?id=${lead?.id}`}>
             <Button variant="outline" size="sm">
               <ExternalLink className="w-4 h-4 mr-2" />
-              View Lead
+              Ver Lead
             </Button>
           </Link>
           <DropdownMenu>
@@ -252,13 +252,13 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
               {lead?.phone && (
                 <DropdownMenuItem>
                   <Phone className="w-4 h-4 mr-2" />
-                  Call Lead
+                  Ligar para Lead
                 </DropdownMenuItem>
               )}
               {lead?.email && (
                 <DropdownMenuItem>
                   <Mail className="w-4 h-4 mr-2" />
-                  Send Email
+                  Enviar Email
                 </DropdownMenuItem>
               )}
             </DropdownMenuContent>
@@ -270,7 +270,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
       <div className="flex-1 overflow-y-auto p-6 space-y-4 bg-slate-50">
         {messages.length === 0 ? (
           <div className="text-center py-8 text-slate-500">
-            <p>No messages in this conversation yet</p>
+            <p>Nenhuma mensagem nesta conversa ainda</p>
           </div>
         ) : (
           messages.map((msg) => (
@@ -295,7 +295,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
                     msg.sender_type === 'bot' ? "text-violet-600" : "text-indigo-200"
                   )}>
                     {msg.sender_type === 'bot' ? <Bot className="w-3 h-3" /> : <User className="w-3 h-3" />}
-                    {msg.sender_type === 'bot' ? 'AI Assistant' : 'You'}
+                    {msg.sender_type === 'bot' ? 'Assistente IA' : 'Você'}
                   </div>
                 )}
                 <p className="text-sm whitespace-pre-wrap">{msg.content}</p>
@@ -318,7 +318,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
         <div className="flex items-center gap-3">
           <Input
             ref={inputRef}
-            placeholder="Type your message..."
+            placeholder="Digite sua mensagem..."
             value={newMessage}
             onChange={(e) => setNewMessage(e.target.value)}
             onKeyPress={handleKeyPress}

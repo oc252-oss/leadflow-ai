@@ -548,56 +548,85 @@ export default function ChannelsIntegrations() {
 
       {/* Status Geral */}
       <div className="space-y-4">
-        <h2 className="text-xl font-semibold text-slate-900">Status Geral</h2>
-        
+        <h2 className="text-xl font-semibold text-slate-900">Todas as Integrações</h2>
+
         <Card>
           <Table>
             <TableHeader>
               <TableRow>
                 <TableHead>Canal</TableHead>
+                <TableHead>Label/Conta</TableHead>
+                <TableHead>Agente Responsável</TableHead>
                 <TableHead>Status</TableHead>
-                <TableHead>Conta/Número</TableHead>
-                <TableHead>Unidade</TableHead>
-                <TableHead>Assistente IA</TableHead>
-                <TableHead>Fluxo IA</TableHead>
+                <TableHead>Assistente</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {filteredIntegrations.length === 0 ? (
+              {(filteredWhatsapp.length + filteredInstagram.length + filteredFacebook.length) === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={6} className="text-center py-12 text-slate-500">
-                    {units.length === 0 
-                      ? 'Cadastre uma unidade para começar'
-                      : 'Nenhum canal conectado nesta unidade'}
+                  <TableCell colSpan={5} className="text-center py-12 text-slate-500">
+                    Nenhum canal conectado
                   </TableCell>
                 </TableRow>
               ) : (
-                filteredIntegrations.map((integration) => {
-                  const unit = units.find(u => u.id === integration.unit_id);
-                  const assistant = assistants.find(a => a.id === integration.assistant_id);
-                  const flow = flows.find(f => f.id === integration.default_flow_id);
+                <>
+                  {filteredWhatsapp.map((integration) => {
+                    const assistant = assistants.find(a => a.id === integration.assistant_id);
+                    const agent = teamMembers.find(tm => tm.user_email === integration.assigned_agent_email);
 
-                  return (
-                    <TableRow key={integration.id}>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <MessageSquare className="w-4 h-4 text-green-600" />
-                          <span className="font-medium">WhatsApp</span>
-                          {integration.label && (
-                            <Badge variant="secondary" className="text-xs">
-                              {integration.label}
-                            </Badge>
-                          )}
-                        </div>
-                      </TableCell>
-                      <TableCell>{getStatusBadge(integration.status)}</TableCell>
-                      <TableCell>{integration.phone_number || '-'}</TableCell>
-                      <TableCell>{unit?.name || '-'}</TableCell>
-                      <TableCell>{assistant?.name || '-'}</TableCell>
-                      <TableCell>{flow?.name || '-'}</TableCell>
-                    </TableRow>
-                  );
-                })
+                    return (
+                      <TableRow key={integration.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <MessageSquare className="w-4 h-4 text-green-600" />
+                            <span className="font-medium">WhatsApp</span>
+                            <Badge variant="secondary" className="text-xs">{integration.integration_type}</Badge>
+                          </div>
+                        </TableCell>
+                        <TableCell>{integration.label || integration.phone_number || '-'}</TableCell>
+                        <TableCell>{agent?.user_email?.split('@')[0] || '-'}</TableCell>
+                        <TableCell>{getStatusBadge(integration.status)}</TableCell>
+                        <TableCell>{assistant?.name || '-'}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {filteredInstagram.map((integration) => {
+                    const assistant = assistants.find(a => a.id === integration.assistant_id);
+
+                    return (
+                      <TableRow key={integration.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Instagram className="w-4 h-4 text-pink-600" />
+                            <span className="font-medium">Instagram</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{integration.account_name || integration.label || '-'}</TableCell>
+                        <TableCell>-</TableCell>
+                        <TableCell>{getStatusBadge(integration.status)}</TableCell>
+                        <TableCell>{assistant?.name || '-'}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                  {filteredFacebook.map((integration) => {
+                    const assistant = assistants.find(a => a.id === integration.assistant_id);
+
+                    return (
+                      <TableRow key={integration.id}>
+                        <TableCell>
+                          <div className="flex items-center gap-2">
+                            <Facebook className="w-4 h-4 text-blue-600" />
+                            <span className="font-medium">Facebook</span>
+                          </div>
+                        </TableCell>
+                        <TableCell>{integration.page_name || integration.label || '-'}</TableCell>
+                        <TableCell>-</TableCell>
+                        <TableCell>{getStatusBadge(integration.status)}</TableCell>
+                        <TableCell>{assistant?.name || '-'}</TableCell>
+                      </TableRow>
+                    );
+                  })}
+                </>
               )}
             </TableBody>
           </Table>

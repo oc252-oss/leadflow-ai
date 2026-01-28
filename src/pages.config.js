@@ -15,7 +15,6 @@ import Pipeline from './pages/Pipeline';
 import Reengagement from './pages/Reengagement';
 import Reports from './pages/Reports';
 import SalesFunnel from './pages/SalesFunnel';
-import Settings from './pages/Settings';
 import SimulationTraining from './pages/SimulationTraining';
 import Tasks from './pages/Tasks';
 import TreinarAssistente from './pages/TreinarAssistente';
@@ -23,6 +22,7 @@ import VoiceCampaigns from './pages/VoiceCampaigns';
 import VoiceFunnel from './pages/VoiceFunnel';
 import VoiceSimulator from './pages/VoiceSimulator';
 import Units from './pages/Units';
+import Settings from './pages/Settings';
 import __Layout from './Layout.jsx';
 
 
@@ -44,7 +44,6 @@ export const PAGES = {
     "Reengagement": Reengagement,
     "Reports": Reports,
     "SalesFunnel": SalesFunnel,
-    "Settings": Settings,
     "SimulationTraining": SimulationTraining,
     "Tasks": Tasks,
     "TreinarAssistente": TreinarAssistente,
@@ -52,6 +51,7 @@ export const PAGES = {
     "VoiceFunnel": VoiceFunnel,
     "VoiceSimulator": VoiceSimulator,
     "Units": Units,
+    "Settings": Settings,
 }
 
 export const pagesConfig = {

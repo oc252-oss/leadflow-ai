@@ -4,6 +4,9 @@ import { Button } from "@/components/ui/button";
 import { X, GripVertical, MessageCircle, GitBranch, Zap, CheckCircle } from 'lucide-react';
 import { cn } from "@/lib/utils";
 
+// Add missing import for the component
+const MessageCircleIcon = MessageCircle;
+
 const nodeIcons = {
   greeting: MessageCircle,
   question: MessageCircle,

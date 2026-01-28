@@ -1,10 +1,12 @@
 import AIFlows from './pages/AIFlows';
+import AISimulator from './pages/AISimulator';
 import Automations from './pages/Automations';
 import Campaigns from './pages/Campaigns';
 import CompanySettings from './pages/CompanySettings';
 import ConversationFlows from './pages/ConversationFlows';
 import Conversations from './pages/Conversations';
 import Dashboard from './pages/Dashboard';
+import FranchiseDashboard from './pages/FranchiseDashboard';
 import LeadDetail from './pages/LeadDetail';
 import Leads from './pages/Leads';
 import Onboarding from './pages/Onboarding';
@@ -13,24 +15,26 @@ import Reengagement from './pages/Reengagement';
 import Reports from './pages/Reports';
 import SalesFunnel from './pages/SalesFunnel';
 import Settings from './pages/Settings';
-import Tasks from './pages/Tasks';
-import VoiceCampaigns from './pages/VoiceCampaigns';
-import AISimulator from './pages/AISimulator';
-import VoiceSimulator from './pages/VoiceSimulator';
 import SimulationTraining from './pages/SimulationTraining';
-import FranchiseDashboard from './pages/FranchiseDashboard';
+import Tasks from './pages/Tasks';
 import TreinarAssistente from './pages/TreinarAssistente';
+import VoiceCampaigns from './pages/VoiceCampaigns';
+import VoiceSimulator from './pages/VoiceSimulator';
+import Assistants from './pages/Assistants';
+import VoiceFunnel from './pages/VoiceFunnel';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AIFlows": AIFlows,
+    "AISimulator": AISimulator,
     "Automations": Automations,
     "Campaigns": Campaigns,
     "CompanySettings": CompanySettings,
     "ConversationFlows": ConversationFlows,
     "Conversations": Conversations,
     "Dashboard": Dashboard,
+    "FranchiseDashboard": FranchiseDashboard,
     "LeadDetail": LeadDetail,
     "Leads": Leads,
     "Onboarding": Onboarding,
@@ -39,13 +43,13 @@ export const PAGES = {
     "Reports": Reports,
     "SalesFunnel": SalesFunnel,
     "Settings": Settings,
-    "Tasks": Tasks,
-    "VoiceCampaigns": VoiceCampaigns,
-    "AISimulator": AISimulator,
-    "VoiceSimulator": VoiceSimulator,
     "SimulationTraining": SimulationTraining,
-    "FranchiseDashboard": FranchiseDashboard,
+    "Tasks": Tasks,
     "TreinarAssistente": TreinarAssistente,
+    "VoiceCampaigns": VoiceCampaigns,
+    "VoiceSimulator": VoiceSimulator,
+    "Assistants": Assistants,
+    "VoiceFunnel": VoiceFunnel,
 }
 
 export const pagesConfig = {

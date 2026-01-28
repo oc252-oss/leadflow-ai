@@ -20,40 +20,16 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
     greeting_message: '',
     tone: 'elegante',
     behavior_rules: {},
-    voice_settings: {},
-    assistant_id: ''
+    voice_settings: {}
   });
   const [voiceSpeed, setVoiceSpeed] = useState([1.0]);
   const [saving, setSaving] = useState(false);
-  const [assistants, setAssistants] = useState([]);
-  const [loadingAssistants, setLoadingAssistants] = useState(false);
 
-  React.useEffect(() => {
-    if (open) {
-      loadAssistants();
-    }
-  }, [open]);
-
-  const loadAssistants = async () => {
-    setLoadingAssistants(true);
-    try {
-      const data = await base44.entities.Assistant.list('-updated_date', 100);
-      setAssistants(data);
-    } catch (error) {
-      console.error('Erro ao carregar assistentes:', error);
-    } finally {
-      setLoadingAssistants(false);
-    }
-  };
+  const isFormValid = formData.name.trim() && formData.usage_type && formData.channel && formData.system_prompt.trim();
 
   const handleSave = async () => {
-    const hasName = formData.name && formData.name.trim().length > 0;
-    const hasUsageType = formData.usage_type && formData.usage_type.length > 0;
-    const hasChannel = formData.channel && formData.channel.length > 0;
-    const hasPrompt = formData.system_prompt && formData.system_prompt.trim().length > 0;
-
-    if (!hasName || !hasUsageType || !hasChannel || !hasPrompt) {
-      toast.error('Preencha os campos obrigatórios: Nome, Canal, Tipo e Prompt');
+    if (!isFormValid) {
+      toast.error('Preencha os campos obrigatórios');
       return;
     }
 
@@ -78,8 +54,8 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
       }
 
       // Criar script
-       const newScript = await base44.asServiceRole.entities.AIScript.create({
-         assistant_id: formData.assistant_id || null,
+      const newScript = await base44.asServiceRole.entities.AIScript.create({
+        assistant_id: null,
         name: formData.name.trim(),
         description: formData.description.trim(),
         usage_type: formData.usage_type,
@@ -121,8 +97,7 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
       greeting_message: '',
       tone: 'elegante',
       behavior_rules: {},
-      voice_settings: {},
-      assistant_id: ''
+      voice_settings: {}
     });
     setVoiceSpeed([1.0]);
   };
@@ -145,33 +120,16 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
             />
           </div>
 
-          {/* Assistente IA */}
-           <div>
-             <Label className="text-sm font-medium mb-2 block">Assistente IA *</Label>
-             <Select value={formData.assistant_id} onValueChange={(value) => setFormData({...formData, assistant_id: value})}>
-               <SelectTrigger disabled={loadingAssistants}>
-                 <SelectValue placeholder={loadingAssistants ? 'Carregando...' : 'Selecione um assistente'} />
-               </SelectTrigger>
-               <SelectContent>
-                 {assistants.map(assistant => (
-                   <SelectItem key={assistant.id} value={assistant.id}>
-                     {assistant.name}
-                   </SelectItem>
-                 ))}
-               </SelectContent>
-             </Select>
-           </div>
-
-           {/* Descrição */}
-           <div>
-             <Label className="text-sm font-medium mb-2 block">Descrição</Label>
-             <Textarea
-               placeholder="Descreva o propósito deste script..."
-               value={formData.description}
-               onChange={(e) => setFormData({...formData, description: e.target.value})}
-               className="h-20"
-             />
-           </div>
+          {/* Descrição */}
+          <div>
+            <Label className="text-sm font-medium mb-2 block">Descrição</Label>
+            <Textarea
+              placeholder="Descreva o propósito deste script..."
+              value={formData.description}
+              onChange={(e) => setFormData({...formData, description: e.target.value})}
+              className="h-20"
+            />
+          </div>
 
           {/* Canal e Tipo */}
           <div className="grid grid-cols-2 gap-4">
@@ -310,7 +268,7 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
             </Button>
             <Button
               onClick={handleSave}
-              disabled={saving}
+              disabled={!isFormValid || saving}
               className="gap-2 bg-indigo-600 hover:bg-indigo-700"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}

@@ -39,8 +39,8 @@ export default function SimulationTraining() {
   const loadData = async () => {
     try {
       const [assistantsData, flowsData] = await Promise.all([
-        base44.entities.AIAssistant.list(),
-        base44.entities.AIFlow.list()
+        base44.entities.Assistant.filter({ is_active: true }),
+        base44.entities.AIConversationFlow.filter({ is_active: true })
       ]);
       setAssistants(assistantsData || []);
       setFlows(flowsData || []);
@@ -71,8 +71,8 @@ export default function SimulationTraining() {
       });
 
       // Carregar assistente
-       const assistantData = await base44.entities.AIAssistant.filter({ id: selectedAssistant });
-       setAssistant(assistantData[0]);
+      const assistantData = await base44.entities.Assistant.filter({ id: selectedAssistant });
+      setAssistant(assistantData[0]);
 
       // Enviar mensagem de saudação
       if (assistantData[0]?.greeting_message) {
@@ -111,7 +111,7 @@ export default function SimulationTraining() {
 
   const handleSaveAdjustments = async (edits) => {
     try {
-      await base44.asServiceRole.entities.AIAssistant.update(selectedAssistant, {
+      await base44.asServiceRole.entities.Assistant.update(selectedAssistant, {
         system_prompt: edits.system_prompt,
         greeting_message: edits.greeting_message,
         behavior_rules: edits.behavior_rules
@@ -126,7 +126,7 @@ export default function SimulationTraining() {
   const handleMarkReadyForProduction = async () => {
     if (!selectedAssistant) return;
     try {
-      await base44.asServiceRole.entities.AIAssistant.update(selectedAssistant, {
+      await base44.asServiceRole.entities.Assistant.update(selectedAssistant, {
         is_active: true
       });
       toast.success('Assistente marcado como pronto para produção!');

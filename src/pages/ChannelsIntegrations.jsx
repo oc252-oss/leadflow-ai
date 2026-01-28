@@ -110,14 +110,14 @@ export default function ChannelsIntegrations() {
       setOrganization(org);
       setUnit(unitData);
 
-      if (org && unitData) {
+      if (org) {
         const [whatsappData, instagramData, facebookData, allTeamMembers, assistantsData, flowsData] = await Promise.all([
-          base44.entities.WhatsAppIntegration.filter({ unit_id: unitData.id }),
-          base44.entities.FacebookIntegration ? base44.entities.FacebookIntegration.filter({ unit_id: unitData.id }).catch(() => []) : Promise.resolve([]),
-          base44.entities.FacebookIntegration ? base44.entities.FacebookIntegration.filter({ unit_id: unitData.id }).catch(() => []) : Promise.resolve([]),
-          base44.entities.TeamMember.filter({ organization_id: org.id }),
-          base44.entities.Assistant.filter({ organization_id: org.id, unit_id: unitData.id }),
-          base44.entities.AIConversationFlow.filter({ organization_id: org.id, unit_id: unitData.id })
+          base44.entities.WhatsAppIntegration.filter({ organization_id: org.id }).catch(() => []),
+          base44.entities.FacebookIntegration ? base44.entities.FacebookIntegration.filter({ organization_id: org.id }).catch(() => []) : Promise.resolve([]),
+          base44.entities.FacebookIntegration ? base44.entities.FacebookIntegration.filter({ organization_id: org.id }).catch(() => []) : Promise.resolve([]),
+          base44.entities.TeamMember.filter({ organization_id: org.id }).catch(() => []),
+          base44.entities.Assistant.filter({ organization_id: org.id }).catch(() => []),
+          base44.entities.AIConversationFlow.filter({ organization_id: org.id }).catch(() => [])
         ]);
 
         setWhatsappIntegrations(whatsappData);
@@ -158,8 +158,8 @@ export default function ChannelsIntegrations() {
   };
 
   const handleGenerateQR = async () => {
-    if (!unit) {
-      toast.error('Unidade padrão não configurada');
+    if (!organization) {
+      toast.error('Organização padrão não configurada');
       return;
     }
 
@@ -171,7 +171,8 @@ export default function ChannelsIntegrations() {
     setGeneratingQR(true);
     try {
       const response = await base44.functions.invoke('generateWhatsAppQRWeb', {
-        unit_id: unit.id,
+        organization_id: organization.id,
+        unit_id: unit?.id || null,
         label: qrFormData.label || 'WhatsApp Web',
         assigned_agent_email: qrFormData.assigned_agent_email || null,
         assistant_id: qrFormData.assistant_id || null,
@@ -192,14 +193,15 @@ export default function ChannelsIntegrations() {
   };
 
   const handleConnectProvider = async () => {
-    if (!unit || !providerFormData.instance_id || !providerFormData.api_key) {
+    if (!organization || !providerFormData.instance_id || !providerFormData.api_key) {
       toast.error('Preencha todos os campos obrigatórios');
       return;
     }
 
     try {
       await base44.entities.WhatsAppIntegration.create({
-        unit_id: unit.id,
+        organization_id: organization.id,
+        unit_id: unit?.id || null,
         integration_type: 'provider',
         provider: providerFormData.provider,
         phone_number: providerFormData.phone_number,

@@ -85,8 +85,9 @@ export default function Assistants() {
 
   const handleSave = async () => {
     try {
-      if (!formData.name) {
-        toast.error('Nome é obrigatório');
+      // Validações obrigatórias
+      if (!formData.name?.trim()) {
+        toast.error('Nome do assistente é obrigatório');
         return;
       }
 
@@ -100,6 +101,12 @@ export default function Assistants() {
         return;
       }
 
+      // Validações de contexto
+      if (!organization) {
+        toast.error('Organização não foi carregada. Tente novamente.');
+        return;
+      }
+
       const dataToSave = {
         ...formData,
         organization_id: organization.id,
@@ -110,17 +117,17 @@ export default function Assistants() {
 
       if (editingAssistant) {
         await base44.entities.Assistant.update(editingAssistant.id, dataToSave);
-        toast.success('Assistente atualizado');
+        toast.success('Assistente atualizado com sucesso');
       } else {
         await base44.entities.Assistant.create(dataToSave);
-        toast.success('Assistente criado');
+        toast.success('Assistente criado com sucesso! Você já pode usá-lo em campanhas e canais.');
       }
 
       await loadData();
       handleCloseDialog();
     } catch (error) {
       console.error('Error saving assistant:', error);
-      toast.error('Erro ao salvar assistente');
+      toast.error(`Erro ao salvar assistente: ${error.message || 'Tente novamente'}`);
     }
   };
 

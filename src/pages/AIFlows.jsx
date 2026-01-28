@@ -111,18 +111,18 @@ export default function AIFlows() {
       setUnit(unitData);
 
       // Initialize form with default organization/unit
-      if (org && unitData) {
+      if (org) {
         setFormData(prev => ({
           ...prev,
           organization_id: org.id,
           brand_id: org.id,
-          unit_id: unitData.id
+          unit_id: unitData?.id || null
         }));
       }
       
       const [flowsData, campaignsData] = await Promise.all([
-        base44.entities.AIConversationFlow.list('-priority', 100),
-        base44.entities.Campaign.list()
+        base44.entities.AIConversationFlow.filter({ organization_id: org.id }, '-priority', 100).catch(() => []),
+        base44.entities.Campaign.filter({ organization_id: org.id }).catch(() => [])
       ]);
       setFlows(flowsData);
       setCampaigns(campaignsData);
@@ -136,17 +136,23 @@ export default function AIFlows() {
 
   const handleSave = async () => {
     try {
-      if (!formData.name || !formData.organization_id) {
-        toast.error('Nome e organização são obrigatórios');
+      if (!formData.name) {
+        toast.error('Nome do fluxo é obrigatório');
+        return;
+      }
+
+      if (!formData.organization_id) {
+        toast.error('Organização não foi carregada. Recarregue a página.');
         return;
       }
 
       const dataToSave = {
         ...formData,
-        trigger_sources: formData.trigger_sources.length > 0 ? formData.trigger_sources : undefined,
-        trigger_campaigns: formData.trigger_campaigns.length > 0 ? formData.trigger_campaigns : undefined,
-        trigger_keywords: formData.trigger_keywords.length > 0 ? formData.trigger_keywords : undefined,
-        fallback_flow_id: formData.fallback_flow_id || undefined
+        unit_id: formData.unit_id || null,
+        trigger_sources: formData.trigger_sources.length > 0 ? formData.trigger_sources : null,
+        trigger_campaigns: formData.trigger_campaigns.length > 0 ? formData.trigger_campaigns : null,
+        trigger_keywords: formData.trigger_keywords.length > 0 ? formData.trigger_keywords : null,
+        fallback_flow_id: formData.fallback_flow_id || null
       };
 
       if (editingFlow) {

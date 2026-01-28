@@ -14,7 +14,7 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
     type: 'reengagement',
     target_funnel_stages: ['Atendimento Iniciado', 'Qualificado'],
     days_inactive: 7,
-    script: '',
+    script_id: '',
     lead_sources: [],
     exclude_open_tasks: true,
     allowed_hours_start: '09:00',
@@ -26,13 +26,35 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
     is_active: false
   });
 
+  const [scripts, setScripts] = useState([]);
+  const [loadingScripts, setLoadingScripts] = useState(false);
+
   const [saving, setSaving] = useState(false);
   const [showAdvanced, setShowAdvanced] = useState(false);
+
+  useEffect(() => {
+    loadApprovedScripts();
+  }, []);
+
+  const loadApprovedScripts = async () => {
+    setLoadingScripts(true);
+    try {
+      const approved = await base44.entities.AIScript.filter({
+        is_approved: true,
+        status: 'approved'
+      }, '-created_date', 100);
+      setScripts(approved);
+    } catch (error) {
+      console.error('Erro ao carregar scripts aprovados:', error);
+    } finally {
+      setLoadingScripts(false);
+    }
+  };
 
   const isProspecting = data.type === 'active_prospecting';
 
   const handleSave = async (activate = false) => {
-    if (!data.name || !data.script) {
+    if (!data.name || !data.script_id) {
       alert('Nome e script são obrigatórios');
       return;
     }
@@ -257,45 +279,32 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
 
       {/* SECTION 3: VOICE SCRIPT */}
       <div className="space-y-4 border-b pb-6">
-        <h3 className="font-semibold text-slate-900">O Que a IA vai Falar</h3>
+        <h3 className="font-semibold text-slate-900">Script Aprovado*</h3>
         
       <div className="space-y-2">
-        <Label>Mensagem da Ligação*</Label>
-        <Textarea
-          value={data.script}
-          onChange={(e) => setData({ ...data, script: e.target.value })}
-          placeholder={isProspecting 
-            ? `Olá {{lead_name}}, tudo bem?
-Aqui é a assistente virtual da {{clinic_name}}.
-
-Você teve contato conosco há algum tempo e estou ligando para saber se ainda tem interesse em conhecer nossos tratamentos.
-
-Podemos agendar uma avaliação gratuita para você?`
-            : `Olá {{lead_name}}, tudo bem?
-Aqui é a assistente virtual da {{clinic_name}}.
-
-Você demonstrou interesse em {{interest_type}} e estou ligando para saber se posso te ajudar a agendar uma avaliação sem custo.
-
-Posso seguir?`}
-          className="min-h-32"
-        />
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-xs font-medium text-blue-900 mb-1">💡 Variáveis disponíveis:</p>
-          <p className="text-xs text-blue-700">
-            <code className="bg-blue-100 px-1 rounded">{'{{lead_name}}'}</code>{' '}
-            <code className="bg-blue-100 px-1 rounded">{'{{clinic_name}}'}</code>{' '}
-            <code className="bg-blue-100 px-1 rounded">{'{{interest_type}}'}</code>{' '}
-            <code className="bg-blue-100 px-1 rounded">{'{{last_contact_days}}'}</code>
-          </p>
-          <p className="text-xs text-blue-600 mt-1">
-            A IA personaliza automaticamente a mensagem com os dados do lead.
+        <Label>Selecione um Script Aprovado*</Label>
+        <Select value={data.script_id || ''} onValueChange={(value) => setData({ ...data, script_id: value })}>
+          <SelectTrigger disabled={loadingScripts}>
+            <SelectValue placeholder={loadingScripts ? 'Carregando...' : 'Selecione um script'} />
+          </SelectTrigger>
+          <SelectContent>
+            {scripts.length === 0 ? (
+              <div className="p-2 text-xs text-slate-500 text-center">Nenhum script aprovado disponível</div>
+            ) : (
+              scripts.map(script => (
+                <SelectItem key={script.id} value={script.id}>
+                  {script.name} ({script.version}) - {script.usage_type}
+                </SelectItem>
+              ))
+            )}
+          </SelectContent>
+        </Select>
+        <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
+          <p className="text-xs font-medium text-amber-900 mb-1">⚠️ Scripts Aprovados</p>
+          <p className="text-xs text-amber-700">
+            Apenas scripts aprovados podem ser usados em campanhas. Crie e aprove scripts na Biblioteca de Scripts.
           </p>
         </div>
-        <p className="text-xs text-slate-500">
-          {isProspecting 
-            ? '🎯 Use tom consultivo e natural. Foco em retomar conversa, não em vender diretamente.' 
-            : 'Use frases curtas e linguagem natural. Essa mensagem será falada pela IA durante a ligação.'}
-        </p>
       </div>
       </div>
 

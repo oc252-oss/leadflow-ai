@@ -219,17 +219,23 @@ export default function AIFlows() {
   };
 
   const handleCloseDialog = () => {
-    setShowDialog(false);
-    setEditingFlow(null);
-    setEditingQuestionIndex(-1);
-    resetForm();
+   setShowDialog(false);
+   setEditingFlow(null);
+   setEditingQuestionIndex(-1);
+   resetForm();
+  };
+
+  const handleOpenNewFlow = () => {
+   resetForm();
+   setShowDialog(true);
   };
 
   const resetForm = () => {
-    setFormData({
-      organization_id: organization?.id || '',
-      brand_id: organization?.id || '',
-      unit_id: unit?.id || '',
+    setFormData(prev => ({
+      ...prev,
+      organization_id: organization?.id || prev.organization_id || '',
+      brand_id: organization?.id || prev.brand_id || '',
+      unit_id: unit?.id || prev.unit_id || '',
       name: '',
       description: '',
       industry: 'aesthetics',
@@ -248,7 +254,7 @@ export default function AIFlows() {
       auto_assign_hot_leads: true,
       auto_assign_agent_role: 'sales_agent',
       fallback_flow_id: ''
-    });
+    }));
     setNewQuestion({
       id: '',
       question: '',
@@ -385,14 +391,14 @@ export default function AIFlows() {
           <p className="text-slate-500 mt-1">Configure os fluxos de qualificação automática por IA</p>
         </div>
         <div className="flex gap-2">
-          <Button 
-            onClick={() => setShowDialog(true)} 
-            className="bg-indigo-600 hover:bg-indigo-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Novo Fluxo
-          </Button>
-        </div>
+           <Button 
+             onClick={handleOpenNewFlow} 
+             className="bg-indigo-600 hover:bg-indigo-700"
+           >
+             <Plus className="w-4 h-4 mr-2" />
+             Novo Fluxo
+           </Button>
+         </div>
       </div>
 
       {/* Filters */}

@@ -98,6 +98,7 @@ export default function Layout({ children, currentPageName }) {
 
   const navigation = [
     { name: 'Dashboard', label: t('dashboard'), href: createPageUrl('Dashboard'), icon: LayoutDashboard, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
+    { name: 'FranchiseDashboard', label: 'Dashboard Executivo', href: createPageUrl('FranchiseDashboard'), icon: Building2, roles: ['organization_admin', 'brand_manager'] },
     { name: 'Leads', label: t('leads'), href: createPageUrl('Leads'), icon: Users, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
     { name: 'Pipeline', label: t('pipeline'), href: createPageUrl('Pipeline'), icon: GitBranch, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
     { name: 'Conversations', label: t('conversations'), href: createPageUrl('Conversations'), icon: MessageSquare, roles: ['company_admin', 'sales_manager', 'sales_agent'] },

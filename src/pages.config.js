@@ -18,6 +18,7 @@ import VoiceCampaigns from './pages/VoiceCampaigns';
 import AISimulator from './pages/AISimulator';
 import VoiceSimulator from './pages/VoiceSimulator';
 import SimulationTraining from './pages/SimulationTraining';
+import FranchiseDashboard from './pages/FranchiseDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -42,6 +43,7 @@ export const PAGES = {
     "AISimulator": AISimulator,
     "VoiceSimulator": VoiceSimulator,
     "SimulationTraining": SimulationTraining,
+    "FranchiseDashboard": FranchiseDashboard,
 }
 
 export const pagesConfig = {

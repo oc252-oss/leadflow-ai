@@ -15,25 +15,26 @@ import { Bot, Plus, Pencil, Trash2, Star, Check, X, Search, GripVertical, Chevro
 import { toast } from 'sonner';
 import { hasFeature, getLimit, FEATURES } from '@/components/featureGates';
 import UpgradeCTA from '@/components/UpgradeCTA';
+import { getDefaultOrganization, getDefaultUnit, isSingleCompanyMode } from '@/components/singleCompanyMode';
 
 export default function AIFlows() {
   const [flows, setFlows] = useState([]);
-  const [companies, setCompanies] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
-  const [company, setCompany] = useState(null);
+  const [organization, setOrganization] = useState(null);
+  const [unit, setUnit] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
   const [editingFlow, setEditingFlow] = useState(null);
+  const singleCompanyMode = isSingleCompanyMode();
   
   // Filters
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterCompany, setFilterCompany] = useState('all');
-  const [filterUnit, setFilterUnit] = useState('all');
   const [filterIndustry, setFilterIndustry] = useState('all');
   const [filterActive, setFilterActive] = useState('all');
 
   const [formData, setFormData] = useState({
-    company_id: '',
+    organization_id: '',
+    brand_id: '',
     unit_id: '',
     name: '',
     description: '',
@@ -100,23 +101,29 @@ export default function AIFlows() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const user = await base44.auth.me();
-      const teamMembers = await base44.entities.TeamMember.filter({ user_email: user.email });
       
-      let currentCompany = null;
-      if (teamMembers.length > 0) {
-        const companiesData = await base44.entities.Company.filter({ id: teamMembers[0].company_id });
-        currentCompany = companiesData[0];
-        setCompany(currentCompany);
+      // Load organization and unit for single company mode
+      const org = await getDefaultOrganization();
+      const unitData = org ? await getDefaultUnit(org.id) : null;
+      
+      setOrganization(org);
+      setUnit(unitData);
+
+      // Initialize form with default organization/unit
+      if (org && unitData) {
+        setFormData(prev => ({
+          ...prev,
+          organization_id: org.id,
+          brand_id: org.id,
+          unit_id: unitData.id
+        }));
       }
       
-      const [flowsData, companiesData, campaignsData] = await Promise.all([
+      const [flowsData, campaignsData] = await Promise.all([
         base44.entities.AIConversationFlow.list('-priority', 100),
-        base44.entities.Company.list(),
         base44.entities.Campaign.list()
       ]);
       setFlows(flowsData);
-      setCompanies(companiesData);
       setCampaigns(campaignsData);
     } catch (error) {
       toast.error('Erro ao carregar dados');
@@ -128,8 +135,8 @@ export default function AIFlows() {
 
   const handleSave = async () => {
     try {
-      if (!formData.company_id || !formData.name) {
-        toast.error('Empresa e nome são obrigatórios');
+      if (!formData.name || !formData.organization_id) {
+        toast.error('Nome e organização são obrigatórios');
         return;
       }
 
@@ -138,7 +145,6 @@ export default function AIFlows() {
         trigger_sources: formData.trigger_sources.length > 0 ? formData.trigger_sources : undefined,
         trigger_campaigns: formData.trigger_campaigns.length > 0 ? formData.trigger_campaigns : undefined,
         trigger_keywords: formData.trigger_keywords.length > 0 ? formData.trigger_keywords : undefined,
-        unit_id: formData.unit_id || undefined,
         fallback_flow_id: formData.fallback_flow_id || undefined
       };
 
@@ -161,7 +167,8 @@ export default function AIFlows() {
   const handleEdit = (flow) => {
     setEditingFlow(flow);
     setFormData({
-      company_id: flow.company_id || '',
+      organization_id: flow.organization_id || '',
+      brand_id: flow.brand_id || '',
       unit_id: flow.unit_id || '',
       name: flow.name || '',
       description: flow.description || '',
@@ -207,8 +214,9 @@ export default function AIFlows() {
 
   const resetForm = () => {
     setFormData({
-      company_id: '',
-      unit_id: '',
+      organization_id: organization?.id || '',
+      brand_id: organization?.id || '',
+      unit_id: unit?.id || '',
       name: '',
       description: '',
       industry: 'aesthetics',
@@ -332,18 +340,14 @@ export default function AIFlows() {
 
   const filteredFlows = flows.filter(flow => {
     const matchesSearch = flow.name?.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesCompany = filterCompany === 'all' || flow.company_id === filterCompany;
-    const matchesUnit = filterUnit === 'all' || flow.unit_id === filterUnit;
     const matchesIndustry = filterIndustry === 'all' || flow.industry === filterIndustry;
     const matchesActive = filterActive === 'all' || 
       (filterActive === 'active' ? flow.is_active : !flow.is_active);
-    return matchesSearch && matchesCompany && matchesUnit && matchesIndustry && matchesActive;
+    
+    // In single company mode, filter by organization
+    const matchesOrg = !singleCompanyMode || flow.organization_id === organization?.id;
+    return matchesSearch && matchesIndustry && matchesActive && matchesOrg;
   });
-
-  const getCompanyName = (companyId) => {
-    const company = companies.find(c => c.id === companyId);
-    return company?.name || companyId;
-  };
 
   const getCampaignName = (campaignId) => {
     const campaign = campaigns.find(c => c.id === campaignId);
@@ -392,17 +396,6 @@ export default function AIFlows() {
                 />
               </div>
             </div>
-            <Select value={filterCompany} onValueChange={setFilterCompany}>
-              <SelectTrigger className="w-[200px]">
-                <SelectValue placeholder="Empresa" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todas empresas</SelectItem>
-                {companies.map(company => (
-                  <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
             <Select value={filterIndustry} onValueChange={setFilterIndustry}>
               <SelectTrigger className="w-[150px]">
                 <SelectValue placeholder="Segmento" />
@@ -434,8 +427,6 @@ export default function AIFlows() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Empresa</TableHead>
-              <TableHead>Unidade</TableHead>
               <TableHead>Segmento</TableHead>
               <TableHead>Prioridade</TableHead>
               <TableHead>Padrão</TableHead>
@@ -459,8 +450,6 @@ export default function AIFlows() {
                       {flow.name}
                     </div>
                   </TableCell>
-                  <TableCell>{getCompanyName(flow.company_id)}</TableCell>
-                  <TableCell>{flow.unit_id || '-'}</TableCell>
                   <TableCell className="capitalize">
                     {industries.find(i => i.value === flow.industry)?.label || flow.industry || '-'}
                   </TableCell>
@@ -521,29 +510,29 @@ export default function AIFlows() {
 
             {/* General Tab */}
             <TabsContent value="general" className="space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Empresa *</Label>
-                  <Select value={formData.company_id} onValueChange={(value) => setFormData({ ...formData, company_id: value })}>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a empresa" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {companies.map(company => (
-                        <SelectItem key={company.id} value={company.id}>{company.name}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
+              {!singleCompanyMode && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label>Organização *</Label>
+                    <Select value={formData.organization_id} onValueChange={(value) => setFormData({ ...formData, organization_id: value, brand_id: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione a organização" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {/* Organizations would be listed here in multi-company mode */}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Unidade (opcional)</Label>
+                    <Input
+                      value={formData.unit_id}
+                      onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
+                      placeholder="ID da unidade"
+                    />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Unidade (opcional)</Label>
-                  <Input
-                    value={formData.unit_id}
-                    onChange={(e) => setFormData({ ...formData, unit_id: e.target.value })}
-                    placeholder="ID da unidade"
-                  />
-                </div>
-              </div>
+              )}
 
               <div className="space-y-2">
                 <Label>Nome *</Label>

@@ -95,6 +95,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['company_admin', 'sales_manager'] },
     { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Bot, roles: ['company_admin'] },
     { name: 'AISimulator', label: 'Simulador de IA', href: createPageUrl('AISimulator'), icon: Bot, roles: ['company_admin'] },
+    { name: 'VoiceSimulator', label: 'Simulador de Voz', href: createPageUrl('VoiceSimulator'), icon: Phone, roles: ['company_admin'] },
     { name: 'SalesFunnel', label: 'Funil de Vendas', href: createPageUrl('SalesFunnel'), icon: GitBranch, roles: ['company_admin'] },
     { name: 'Tasks', label: 'Tarefas', href: createPageUrl('Tasks'), icon: Clock, roles: ['company_admin', 'sales_manager', 'sales_agent'] },
     { name: 'CompanySettings', label: 'Configurações da Empresa', href: createPageUrl('CompanySettings'), icon: Building2, roles: ['company_admin'] },

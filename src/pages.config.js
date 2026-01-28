@@ -16,6 +16,7 @@ import Settings from './pages/Settings';
 import Tasks from './pages/Tasks';
 import VoiceCampaigns from './pages/VoiceCampaigns';
 import AISimulator from './pages/AISimulator';
+import VoiceSimulator from './pages/VoiceSimulator';
 import __Layout from './Layout.jsx';
 
 
@@ -38,6 +39,7 @@ export const PAGES = {
     "Tasks": Tasks,
     "VoiceCampaigns": VoiceCampaigns,
     "AISimulator": AISimulator,
+    "VoiceSimulator": VoiceSimulator,
 }
 
 export const pagesConfig = {

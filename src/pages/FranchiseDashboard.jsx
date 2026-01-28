@@ -27,7 +27,6 @@ import {
   ROLES 
 } from '@/components/hierarchy/HierarchyUtils';
 import { useNavigate } from 'react-router-dom';
-import PoweredBy from '@/components/branding/PoweredBy';
 
 export default function FranchiseDashboard() {
   const navigate = useNavigate();
@@ -222,10 +221,7 @@ export default function FranchiseDashboard() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-bold text-slate-900">Dashboard Executivo</h1>
-            <PoweredBy variant="dashboard" />
-          </div>
+          <h1 className="text-2xl font-bold text-slate-900">Dashboard Executivo</h1>
           <p className="text-sm text-slate-600 mt-1">
             Monitoramento de performance consolidado
           </p>

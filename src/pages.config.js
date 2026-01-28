@@ -19,7 +19,6 @@ import AISimulator from './pages/AISimulator';
 import VoiceSimulator from './pages/VoiceSimulator';
 import SimulationTraining from './pages/SimulationTraining';
 import FranchiseDashboard from './pages/FranchiseDashboard';
-import OrganizationSettings from './pages/OrganizationSettings';
 import __Layout from './Layout.jsx';
 
 
@@ -45,7 +44,6 @@ export const PAGES = {
     "VoiceSimulator": VoiceSimulator,
     "SimulationTraining": SimulationTraining,
     "FranchiseDashboard": FranchiseDashboard,
-    "OrganizationSettings": OrganizationSettings,
 }
 
 export const pagesConfig = {

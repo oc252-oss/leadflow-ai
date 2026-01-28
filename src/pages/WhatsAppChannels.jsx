@@ -302,8 +302,10 @@ export default function WhatsAppChannels() {
                 </Button>
               </>
             ) : (
-              <AlertCircle className="w-8 h-8 text-red-600 mb-2" />
-        <p className="text-slate-600">Erro ao gerar QR Code</p>
+            <div className="text-center">
+            <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
+            <p className="text-slate-600">Erro ao gerar QR Code</p>
+            </div>
             )}
           </div>
         </DialogContent>

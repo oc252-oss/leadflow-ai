@@ -110,11 +110,11 @@ export default function AIAssistants() {
     setShowDialog(true);
   };
 
-  const isFormValid = formData.name.trim() && formData.channel && formData.default_flow_id;
+  const isFormValid = formData.name.trim() && formData.channel;
 
   const handleSave = async () => {
     if (!isFormValid) {
-      toast.error('Preencha os campos obrigatórios: Nome, Canal e Fluxo');
+      toast.error('Preencha os campos obrigatórios: Nome e Canal');
       return;
     }
     

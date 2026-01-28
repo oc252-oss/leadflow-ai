@@ -3,6 +3,7 @@ import { Search, BookOpen, Bot, GitBranch, Zap, Wifi } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import HelpVisualExample from '../components/HelpVisualExample';
 
 const CATEGORIES = [
   {
@@ -183,6 +184,9 @@ export default function Help() {
         <h1 className="text-3xl font-bold text-slate-900">Ajuda</h1>
         <p className="text-slate-600 mt-2">Encontre respostas e entenda como usar o sistema</p>
       </div>
+
+      {/* Visual Example */}
+      <HelpVisualExample />
 
       {/* Search */}
       <div className="relative">

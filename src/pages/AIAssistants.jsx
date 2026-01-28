@@ -356,26 +356,17 @@ export default function AIAssistants() {
 
              {/* Fluxo */}
              <TabsContent value="fluxo" className="space-y-4 mt-4">
-               {flows.length === 0 && (
-                 <div className="p-4 rounded-lg bg-amber-50 border border-amber-200 flex gap-2">
-                   <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
-                   <p className="text-sm text-amber-700">Nenhum fluxo de IA disponível. Crie um fluxo primeiro em AIFlows.</p>
-                 </div>
-               )}
                <div>
-                 <label className="text-sm font-medium text-slate-700">Fluxo Padrão *</label>
+                 <label className="text-sm font-medium text-slate-700">Fluxo de IA (Opcional)</label>
                  <select 
                    value={formData.default_flow_id}
                    onChange={(e) => setFormData({...formData, default_flow_id: e.target.value})}
-                   className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
-                   disabled={flows.length === 0}
+                   className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                  >
-                   <option value="">
-                     {flows.length === 0 ? 'Nenhum fluxo disponível' : 'Selecione um fluxo'}
-                   </option>
+                   <option value="">Sem fluxo (usar da campanha ou canal)</option>
                    {flows.map(flow => (
                      <option key={flow.id} value={flow.id}>
-                       {flow.name} {flow.is_default ? '(padrão)' : ''}
+                       {flow.name}{flow.is_default ? ' (padrão)' : ''}
                      </option>
                    ))}
                  </select>

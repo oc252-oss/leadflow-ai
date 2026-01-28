@@ -44,8 +44,8 @@ export default function AIAssistants() {
   const loadData = async () => {
     try {
       const [assistantsData, flowsData] = await Promise.all([
-        base44.entities.AIAssistant.list('-updated_date', 100),
-        base44.entities.AIFlow.filter({ is_active: true }, '-updated_date', 100)
+        base44.asServiceRole.entities.Assistant.list('-updated_date', 100),
+        base44.asServiceRole.entities.AIConversationFlow.filter({ is_active: true }, '-updated_date', 100)
       ]);
       setAssistants(assistantsData);
       setFlows(flowsData);
@@ -107,18 +107,33 @@ export default function AIAssistants() {
 
   const handleSave = async () => {
     if (!isFormValid) return;
-    
+
     setIsSaving(true);
     try {
+      const dataToSave = {
+        name: formData.name,
+        description: formData.description,
+        channel: formData.channel,
+        assistant_type: formData.assistant_type,
+        tone: formData.tone,
+        default_flow_id: formData.default_flow_id,
+        greeting_message: formData.greeting_message,
+        system_prompt: formData.system_prompt,
+        is_active: formData.is_active,
+        can_use_voice: formData.can_use_voice,
+        behavior_rules: formData.behavior_rules
+      };
+
       if (editingAssistant) {
-        await base44.entities.AIAssistant.update(editingAssistant.id, formData);
+        await base44.asServiceRole.entities.Assistant.update(editingAssistant.id, dataToSave);
       } else {
-        await base44.entities.AIAssistant.create(formData);
+        await base44.asServiceRole.entities.Assistant.create(dataToSave);
       }
       await loadData();
       setShowDialog(false);
     } catch (error) {
       console.error('Erro ao salvar assistente:', error);
+      alert('Erro ao salvar assistente: ' + error.message);
     } finally {
       setIsSaving(false);
     }
@@ -127,7 +142,7 @@ export default function AIAssistants() {
   const handleDelete = async (id) => {
     if (confirm('Tem certeza que deseja deletar este assistente?')) {
       try {
-        await base44.entities.AIAssistant.delete(id);
+        await base44.asServiceRole.entities.Assistant.delete(id);
         await loadData();
       } catch (error) {
         console.error('Erro ao deletar assistente:', error);
@@ -137,7 +152,7 @@ export default function AIAssistants() {
 
   const handleToggleActive = async (assistant) => {
     try {
-      await base44.entities.AIAssistant.update(assistant.id, { is_active: !assistant.is_active });
+      await base44.asServiceRole.entities.Assistant.update(assistant.id, { is_active: !assistant.is_active });
       await loadData();
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
@@ -181,7 +196,7 @@ export default function AIAssistants() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <h3 className="font-semibold text-slate-900">{assistant.name}</h3>
-                    <p className="text-sm text-slate-600 mt-1">Fluxo: {getFlowName(assistant.ai_flow_id)}</p>
+                    <p className="text-sm text-slate-600 mt-1">Fluxo: {getFlowName(assistant.default_flow_id)}</p>
                     {assistant.greeting_message && (
                       <p className="text-sm text-slate-600 mt-1">"{assistant.greeting_message}"</p>
                     )}

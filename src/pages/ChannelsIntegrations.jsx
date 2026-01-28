@@ -21,7 +21,8 @@ import {
   AlertCircle,
   Loader2,
   Copy,
-  Code
+  Code,
+  Building2
 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
@@ -110,6 +111,11 @@ export default function ChannelsIntegrations() {
   };
 
   const handleGenerateQR = async () => {
+    if (units.length === 0) {
+      toast.error('Cadastre uma unidade antes de conectar canais');
+      return;
+    }
+
     if (!qrFormData.unit_id) {
       toast.error('Selecione uma unidade');
       return;
@@ -127,6 +133,7 @@ export default function ChannelsIntegrations() {
       if (response.data?.qr_code) {
         setQrCode(response.data.qr_code);
         toast.success('QR Code gerado com sucesso');
+        await loadData();
       }
     } catch (error) {
       console.error('Erro ao gerar QR Code:', error);
@@ -228,6 +235,32 @@ export default function ChannelsIntegrations() {
         <p className="text-slate-500 mt-1">Conecte e gerencie todos os canais de atendimento</p>
       </div>
 
+      {/* Alert if no units */}
+      {units.length === 0 && (
+        <Card className="border-amber-200 bg-amber-50">
+          <CardContent className="py-6">
+            <div className="flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5" />
+              <div>
+                <h3 className="font-semibold text-amber-900">Nenhuma unidade cadastrada</h3>
+                <p className="text-sm text-amber-700 mt-1">
+                  Para conectar canais de atendimento, você precisa cadastrar ao menos uma unidade.
+                </p>
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="mt-3 border-amber-600 text-amber-700 hover:bg-amber-100"
+                  onClick={() => window.location.href = '/Units'}
+                >
+                  <Building2 className="w-4 h-4 mr-2" />
+                  Cadastrar Unidade
+                </Button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* WhatsApp Section */}
       <div className="space-y-4">
         <div className="flex items-center gap-2">
@@ -251,14 +284,22 @@ export default function ChannelsIntegrations() {
                   ⚠️ Modo experimental – indicado apenas para testes
                 </p>
               </div>
-              <Button 
-                onClick={() => setShowQRDialog(true)} 
-                variant="outline" 
-                className="w-full"
-              >
-                <QrCode className="w-4 h-4 mr-2" />
-                Gerar QR Code
-              </Button>
+              {units.length === 0 ? (
+                <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
+                  <p className="text-xs text-slate-600 text-center">
+                    Cadastre uma unidade antes de conectar canais
+                  </p>
+                </div>
+              ) : (
+                <Button 
+                  onClick={() => setShowQRDialog(true)} 
+                  variant="outline" 
+                  className="w-full"
+                >
+                  <QrCode className="w-4 h-4 mr-2" />
+                  Gerar QR Code
+                </Button>
+              )}
             </CardContent>
           </Card>
 

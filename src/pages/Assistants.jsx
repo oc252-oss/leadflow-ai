@@ -85,8 +85,13 @@ export default function Assistants() {
 
   const handleSave = async () => {
     try {
-      if (!formData.name || !formData.unit_id) {
-        toast.error('Nome e unidade são obrigatórios');
+      if (!formData.name) {
+        toast.error('Nome é obrigatório');
+        return;
+      }
+
+      if (!formData.unit_id) {
+        toast.error('Selecione uma unidade. Se não houver unidades, cadastre uma primeiro.');
         return;
       }
 
@@ -390,11 +395,22 @@ export default function Assistants() {
                       <SelectValue placeholder="Selecione a unidade" />
                     </SelectTrigger>
                     <SelectContent>
-                      {units.map(unit => (
-                        <SelectItem key={unit.id} value={unit.id}>{unit.name}</SelectItem>
-                      ))}
+                      {units.length === 0 ? (
+                        <div className="p-4 text-sm text-slate-500 text-center">
+                          Nenhuma unidade cadastrada
+                        </div>
+                      ) : (
+                        units.map(unit => (
+                          <SelectItem key={unit.id} value={unit.id}>{unit.name}</SelectItem>
+                        ))
+                      )}
                     </SelectContent>
                   </Select>
+                  {units.length === 0 && (
+                    <p className="text-xs text-amber-600">
+                      ⚠️ Cadastre uma unidade antes de criar assistentes
+                    </p>
+                  )}
                 </div>
 
                 <div className="space-y-2">

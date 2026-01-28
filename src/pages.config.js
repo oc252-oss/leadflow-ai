@@ -1,5 +1,6 @@
 import AIFlows from './pages/AIFlows';
 import AISimulator from './pages/AISimulator';
+import AssistantCentral from './pages/AssistantCentral';
 import Assistants from './pages/Assistants';
 import Automations from './pages/Automations';
 import Campaigns from './pages/Campaigns';
@@ -15,21 +16,21 @@ import Pipeline from './pages/Pipeline';
 import Reengagement from './pages/Reengagement';
 import Reports from './pages/Reports';
 import SalesFunnel from './pages/SalesFunnel';
+import Settings from './pages/Settings';
 import SimulationTraining from './pages/SimulationTraining';
 import Tasks from './pages/Tasks';
 import TreinarAssistente from './pages/TreinarAssistente';
+import Units from './pages/Units';
 import VoiceCampaigns from './pages/VoiceCampaigns';
 import VoiceFunnel from './pages/VoiceFunnel';
 import VoiceSimulator from './pages/VoiceSimulator';
-import Units from './pages/Units';
-import Settings from './pages/Settings';
-import AssistantCentral from './pages/AssistantCentral';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AIFlows": AIFlows,
     "AISimulator": AISimulator,
+    "AssistantCentral": AssistantCentral,
     "Assistants": Assistants,
     "Automations": Automations,
     "Campaigns": Campaigns,
@@ -45,15 +46,14 @@ export const PAGES = {
     "Reengagement": Reengagement,
     "Reports": Reports,
     "SalesFunnel": SalesFunnel,
+    "Settings": Settings,
     "SimulationTraining": SimulationTraining,
     "Tasks": Tasks,
     "TreinarAssistente": TreinarAssistente,
+    "Units": Units,
     "VoiceCampaigns": VoiceCampaigns,
     "VoiceFunnel": VoiceFunnel,
     "VoiceSimulator": VoiceSimulator,
-    "Units": Units,
-    "Settings": Settings,
-    "AssistantCentral": AssistantCentral,
 }
 
 export const pagesConfig = {

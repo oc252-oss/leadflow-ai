@@ -53,6 +53,7 @@ export default function ChannelsIntegrations() {
     flow_id: '',
     label: ''
   });
+  const [qrAutoSelected, setQrAutoSelected] = useState(false);
 
   // WhatsApp Provider
   const [showProviderDialog, setShowProviderDialog] = useState(false);
@@ -125,6 +126,17 @@ export default function ChannelsIntegrations() {
         setTeamMembers(allTeamMembers);
         setAssistants(assistantsData);
         setFlows(flowsData);
+
+        // Auto-select if only one assistant or flow available
+        if (!qrAutoSelected && (assistantsData.length === 1 || flowsData.length === 1)) {
+          if (assistantsData.length === 1) {
+            setQrFormData(prev => ({ ...prev, assistant_id: assistantsData[0].id }));
+          }
+          if (flowsData.length === 1) {
+            setQrFormData(prev => ({ ...prev, flow_id: flowsData[0].id }));
+          }
+          setQrAutoSelected(true);
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -134,9 +146,25 @@ export default function ChannelsIntegrations() {
     }
   };
 
+  const canGenerateQR = () => {
+    return !!(qrFormData.assistant_id || qrFormData.flow_id);
+  };
+
+  const getQRValidationMessage = () => {
+    if (!qrFormData.assistant_id && !qrFormData.flow_id) {
+      return 'Selecione pelo menos um Assistente IA ou Fluxo de IA para gerar o QR Code';
+    }
+    return '';
+  };
+
   const handleGenerateQR = async () => {
     if (!unit) {
       toast.error('Unidade padrão não configurada');
+      return;
+    }
+
+    if (!canGenerateQR()) {
+      toast.error(getQRValidationMessage());
       return;
     }
 
@@ -564,6 +592,17 @@ export default function ChannelsIntegrations() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
+            {/* Validation Alert */}
+            {!canGenerateQR() && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg flex gap-2">
+                <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0" />
+                <div>
+                  <p className="text-sm font-medium text-amber-900">Inteligência IA necessária</p>
+                  <p className="text-xs text-amber-700 mt-1">{getQRValidationMessage()}</p>
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Agente Responsável (opcional)</Label>
               <Select
@@ -608,6 +647,19 @@ export default function ChannelsIntegrations() {
               label="Fluxo de IA (opcional)"
             />
 
+            {/* Priority Info */}
+            {(qrFormData.assistant_id || qrFormData.flow_id) && (
+              <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-xs font-medium text-blue-900">Ordem de Execução:</p>
+                <ul className="text-xs text-blue-700 mt-2 space-y-1 ml-4 list-disc">
+                  {qrFormData.assistant_id && <li>1. Assistente IA assumirá a conversa</li>}
+                  {qrFormData.flow_id && (
+                    <li>{qrFormData.assistant_id ? '2.' : '1.'} Fluxo de IA será acionado</li>
+                  )}
+                </ul>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label>Label (ex: Recepção, Comercial)</Label>
               <Input
@@ -636,8 +688,9 @@ export default function ChannelsIntegrations() {
             </Button>
             <Button 
               onClick={handleGenerateQR}
-              disabled={generatingQR || !unit}
+              disabled={generatingQR || !unit || !canGenerateQR()}
               className="bg-green-600 hover:bg-green-700"
+              title={!canGenerateQR() ? getQRValidationMessage() : ''}
             >
               {generatingQR && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               Gerar QR Code

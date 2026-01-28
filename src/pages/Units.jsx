@@ -74,10 +74,29 @@ export default function Units() {
 
     try {
       const dataToSave = {
-        ...formData,
+        name: formData.name,
         organization_id: teamMember.organization_id,
-        brand_id: formData.brand_id || null
+        code: formData.code,
+        type: formData.type,
+        address: formData.address,
+        city: formData.city,
+        state: formData.state,
+        postal_code: formData.postal_code,
+        phone: formData.phone,
+        email: formData.email,
+        manager_name: formData.manager_name,
+        business_hours_start: formData.business_hours_start,
+        business_hours_end: formData.business_hours_end,
+        timezone: formData.timezone,
+        status: formData.status
       };
+
+      // Only add brand_id if it has a valid value
+      if (formData.brand_id && formData.brand_id !== '') {
+        dataToSave.brand_id = formData.brand_id;
+      }
+
+      console.log('Salvando unidade:', dataToSave);
 
       if (editingUnit) {
         await base44.entities.Unit.update(editingUnit.id, dataToSave);
@@ -91,7 +110,7 @@ export default function Units() {
       handleCloseDialog();
     } catch (error) {
       console.error('Erro ao salvar unidade:', error);
-      toast.error('Erro ao salvar unidade');
+      toast.error(`Erro ao salvar: ${error.message || 'Tente novamente'}`);
     }
   };
 

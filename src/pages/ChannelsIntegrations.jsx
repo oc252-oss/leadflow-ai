@@ -28,6 +28,8 @@ import {
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
 import { getDefaultOrganization, getDefaultUnit, isSingleCompanyMode } from '@/components/singleCompanyMode';
+import IntegrationStatusPanel from '@/components/channels/IntegrationStatusPanel';
+import IntegrationFlowSelector from '@/components/channels/IntegrationFlowSelector';
 
 export default function ChannelsIntegrations() {
   const [whatsappIntegrations, setWhatsappIntegrations] = useState([]);
@@ -257,6 +259,13 @@ export default function ChannelsIntegrations() {
         <h1 className="text-3xl font-bold text-slate-900">Canais & Integrações</h1>
         <p className="text-slate-500 mt-1">Conecte e gerencie todos os canais de atendimento</p>
       </div>
+
+      {/* Status Panel */}
+      <IntegrationStatusPanel 
+        whatsappIntegrations={whatsappIntegrations}
+        instagramIntegrations={instagramIntegrations}
+        facebookIntegrations={facebookIntegrations}
+      />
 
       {/* WhatsApp Section */}
       <div className="space-y-4">
@@ -584,30 +593,20 @@ export default function ChannelsIntegrations() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={null}>Nenhum</SelectItem>
-                  {filteredAssistants.map(assistant => (
+                  {assistants.map(assistant => (
                     <SelectItem key={assistant.id} value={assistant.id}>{assistant.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Fluxo de IA (opcional)</Label>
-              <Select
-                value={qrFormData.flow_id}
-                onValueChange={(value) => setQrFormData({ ...qrFormData, flow_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Nenhum" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={null}>Nenhum</SelectItem>
-                  {flows.map(flow => (
-                    <SelectItem key={flow.id} value={flow.id}>{flow.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <IntegrationFlowSelector 
+              flows={flows}
+              selectedFlowId={qrFormData.flow_id}
+              onFlowChange={(value) => setQrFormData({ ...qrFormData, flow_id: value })}
+              channelType="whatsapp"
+              label="Fluxo de IA (opcional)"
+            />
 
             <div className="space-y-2">
               <Label>Label (ex: Recepção, Comercial)</Label>
@@ -744,30 +743,20 @@ export default function ChannelsIntegrations() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={null}>Nenhum</SelectItem>
-                  {filteredAssistants.map(assistant => (
+                  {assistants.map(assistant => (
                     <SelectItem key={assistant.id} value={assistant.id}>{assistant.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
-              <Label>Fluxo de IA</Label>
-              <Select
-                value={providerFormData.flow_id}
-                onValueChange={(value) => setProviderFormData({ ...providerFormData, flow_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Nenhum" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={null}>Nenhum</SelectItem>
-                  {flows.map(flow => (
-                    <SelectItem key={flow.id} value={flow.id}>{flow.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+            <IntegrationFlowSelector 
+              flows={flows}
+              selectedFlowId={providerFormData.flow_id}
+              onFlowChange={(value) => setProviderFormData({ ...providerFormData, flow_id: value })}
+              channelType="whatsapp"
+              label="Fluxo de IA"
+            />
 
             <div className="space-y-2">
               <Label>Label (ex: Comercial, Pós-venda)</Label>
@@ -843,12 +832,20 @@ export default function ChannelsIntegrations() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={null}>Nenhum</SelectItem>
-                  {filteredAssistants.map(assistant => (
+                  {assistants.map(assistant => (
                     <SelectItem key={assistant.id} value={assistant.id}>{assistant.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            <IntegrationFlowSelector 
+              flows={flows}
+              selectedFlowId={instagramFormData.flow_id}
+              onFlowChange={(value) => setInstagramFormData({ ...instagramFormData, flow_id: value })}
+              channelType="instagram"
+              label="Fluxo de IA (opcional)"
+            />
 
             <div className="space-y-3">
               <Label>Habilitar em:</Label>
@@ -945,12 +942,20 @@ export default function ChannelsIntegrations() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={null}>Nenhum</SelectItem>
-                  {filteredAssistants.map(assistant => (
+                  {assistants.map(assistant => (
                     <SelectItem key={assistant.id} value={assistant.id}>{assistant.name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
+
+            <IntegrationFlowSelector 
+              flows={flows}
+              selectedFlowId={facebookFormData.flow_id}
+              onFlowChange={(value) => setFacebookFormData({ ...facebookFormData, flow_id: value })}
+              channelType="facebook"
+              label="Fluxo de IA (opcional)"
+            />
 
             <div className="space-y-3">
               <Label>Habilitar em:</Label>

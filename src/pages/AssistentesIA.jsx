@@ -12,7 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Bot, Plus, Pencil, Trash2, MessageSquare, Phone, Zap } from 'lucide-react';
 import { toast } from 'sonner';
-import { createPageUrl } from './utils';
+import { createPageUrl } from '../utils';
 
 export default function AssistentesIA() {
   const [assistants, setAssistants] = useState([]);

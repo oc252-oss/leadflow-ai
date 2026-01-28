@@ -697,7 +697,7 @@ export default function ChannelsIntegrations() {
             </Button>
             <Button 
               onClick={handleGenerateQR}
-              disabled={generatingQR || !unit || !canGenerateQR()}
+              disabled={generatingQR || !canGenerateQR()}
               className="bg-green-600 hover:bg-green-700"
               title={!canGenerateQR() ? getQRValidationMessage() : ''}
             >

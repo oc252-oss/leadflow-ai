@@ -75,7 +75,8 @@ export default function Units() {
     try {
       const dataToSave = {
         ...formData,
-        organization_id: teamMember.organization_id
+        organization_id: teamMember.organization_id,
+        brand_id: formData.brand_id || null
       };
 
       if (editingUnit) {

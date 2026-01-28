@@ -608,14 +608,13 @@ export default function ChannelsIntegrations() {
             <div className="space-y-2">
               <Label>Agente Responsável (opcional)</Label>
               <Select
-                value={qrFormData.assigned_agent_email}
-                onValueChange={(value) => setQrFormData({ ...qrFormData, assigned_agent_email: value })}
+                value={qrFormData.assigned_agent_email || ''}
+                onValueChange={(value) => setQrFormData({ ...qrFormData, assigned_agent_email: value || null })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Nenhum" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value={null}>Nenhum</SelectItem>
                   {filteredTeamMembers.map(tm => (
                     <SelectItem key={tm.id} value={tm.user_email}>{tm.user_email}</SelectItem>
                   ))}
@@ -624,26 +623,21 @@ export default function ChannelsIntegrations() {
             </div>
 
             <div className="space-y-2">
-              <Label>Assistente IA (opcional)</Label>
-              <Select
-                value={qrFormData.assistant_id || ''}
-                onValueChange={(value) => setQrFormData({ ...qrFormData, assistant_id: value || null })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Nenhum" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={null}>Nenhum</SelectItem>
-                  {assistants.length === 0 ? (
-                    <SelectItem disabled value="">Nenhum assistente disponível</SelectItem>
-                  ) : (
-                    assistants.map(assistant => (
-                      <SelectItem key={assistant.id} value={assistant.id}>{assistant.name}</SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
+               <Label>Assistente IA (opcional)</Label>
+               <Select
+                 value={qrFormData.assistant_id || ''}
+                 onValueChange={(value) => setQrFormData({ ...qrFormData, assistant_id: value || null })}
+               >
+                 <SelectTrigger>
+                   <SelectValue placeholder="Nenhum" />
+                 </SelectTrigger>
+                 <SelectContent>
+                   {assistants.map(assistant => (
+                     <SelectItem key={assistant.id} value={assistant.id}>{assistant.name}</SelectItem>
+                   ))}
+                 </SelectContent>
+               </Select>
+             </div>
 
             <div className="space-y-2">
                <Label>Fluxo de IA (opcional)</Label>
@@ -655,14 +649,9 @@ export default function ChannelsIntegrations() {
                    <SelectValue placeholder="Nenhum" />
                  </SelectTrigger>
                  <SelectContent>
-                   <SelectItem value={null}>Nenhum</SelectItem>
-                   {flows.length === 0 ? (
-                     <SelectItem disabled value="">Nenhum fluxo disponível</SelectItem>
-                   ) : (
-                     flows.map(flow => (
-                       <SelectItem key={flow.id} value={flow.id}>{flow.name}</SelectItem>
-                     ))
-                   )}
+                   {flows.map(flow => (
+                     <SelectItem key={flow.id} value={flow.id}>{flow.name}</SelectItem>
+                   ))}
                  </SelectContent>
                </Select>
              </div>

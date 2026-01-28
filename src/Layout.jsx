@@ -121,9 +121,8 @@ export default function Layout({ children, currentPageName }) {
     { type: 'divider' },
     { name: 'Automations', label: t('automations'), href: createPageUrl('Automations'), icon: Zap, roles: ['company_admin', 'unit_admin'] },
     { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['company_admin', 'sales_manager', 'brand_manager'] },
-    { name: 'CompanySettings', label: 'Configurações da Empresa', href: createPageUrl('CompanySettings'), icon: Building2, roles: ['company_admin', 'unit_admin'] },
     { name: 'Units', label: 'Unidades', href: createPageUrl('Units'), icon: Building2, roles: ['company_admin', 'brand_manager', 'organization_admin'] },
-    { name: 'Settings', label: t('settings'), href: createPageUrl('Settings'), icon: Settings, roles: ['company_admin', 'unit_admin'] },
+    { name: 'Settings', label: 'Configurações', href: createPageUrl('Settings'), icon: Settings, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
   ];
 
   const filteredNav = navigation.filter(item => {

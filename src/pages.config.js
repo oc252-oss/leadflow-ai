@@ -4,7 +4,6 @@ import Assistants from './pages/Assistants';
 import Automations from './pages/Automations';
 import Campaigns from './pages/Campaigns';
 import ChannelsIntegrations from './pages/ChannelsIntegrations';
-import CompanySettings from './pages/CompanySettings';
 import ConversationFlows from './pages/ConversationFlows';
 import Conversations from './pages/Conversations';
 import Dashboard from './pages/Dashboard';
@@ -34,7 +33,6 @@ export const PAGES = {
     "Automations": Automations,
     "Campaigns": Campaigns,
     "ChannelsIntegrations": ChannelsIntegrations,
-    "CompanySettings": CompanySettings,
     "ConversationFlows": ConversationFlows,
     "Conversations": Conversations,
     "Dashboard": Dashboard,

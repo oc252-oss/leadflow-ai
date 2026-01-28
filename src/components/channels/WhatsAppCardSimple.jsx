@@ -12,9 +12,9 @@ export default function WhatsAppCardSimple({ connection, onRefresh }) {
 
   useEffect(() => {
     if (connection?.status === 'waiting_qr') {
-      fetchQRCode();
+      fetchQRCode(connection.id, `ch_${connection.id}`);
     }
-  }, [connection?.status]);
+  }, [connection?.status, connection?.id]);
 
   const getStatusLabel = (status) => {
     const labels = {
@@ -37,25 +37,30 @@ export default function WhatsAppCardSimple({ connection, onRefresh }) {
   const handleGenerateQR = async () => {
     setLoading(true);
     try {
-      // Chamar API externa para gerar QR
-      const response = await fetch('https://api.whatsapp-provider.com/whatsapp/connect', {
+      const serverUrl = import.meta.env.VITE_WHATSAPP_SERVER_URL || 'http://localhost:3001';
+      const channelId = connection?.id || `ch_${Date.now()}`;
+
+      // Chamar servidor para iniciar sessão
+      const response = await fetch(`${serverUrl}/whatsapp/connect`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'initiate' })
+        body: JSON.stringify({ channelId })
       });
 
       if (!response.ok) throw new Error('Falha ao gerar QR');
 
-      // Salvar status como waiting_qr
+      // Salvar conexão no Base44
       if (connection?.id) {
         await base44.entities.ChannelConnection.update(connection.id, {
           status: 'waiting_qr'
         });
       } else {
-        await base44.entities.ChannelConnection.create({
+        const newConnection = await base44.entities.ChannelConnection.create({
           channel_type: 'whatsapp',
           status: 'waiting_qr'
         });
+        // Buscar QR da nova conexão
+        await fetchQRCode(newConnection.id, `ch_${newConnection.id}`);
       }
 
       toast.success('QR Code gerado. Escaneie para conectar.');
@@ -68,20 +73,22 @@ export default function WhatsAppCardSimple({ connection, onRefresh }) {
     }
   };
 
-  const fetchQRCode = async () => {
+  const fetchQRCode = async (connectionId, channelId) => {
     try {
-      const response = await fetch('https://api.whatsapp-provider.com/whatsapp/qrcode', {
-        method: 'GET'
-      });
+      const serverUrl = import.meta.env.VITE_WHATSAPP_SERVER_URL || 'http://localhost:3001';
+
+      const response = await fetch(`${serverUrl}/whatsapp/qrcode/${channelId}`);
 
       if (!response.ok) throw new Error('Falha ao buscar QR');
 
       const data = await response.json();
-      setQrCode(data.qr_code_base64);
+      setQrCode(data.qr_code);
 
-      if (connection?.id) {
-        await base44.entities.ChannelConnection.update(connection.id, {
-          qr_code_base64: data.qr_code_base64
+      if (connectionId) {
+        await base44.entities.ChannelConnection.update(connectionId, {
+          qr_code_base64: data.qr_code,
+          phone_number: data.phone_number,
+          status: data.status
         });
       }
     } catch (error) {

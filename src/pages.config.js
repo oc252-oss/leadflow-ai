@@ -1,4 +1,6 @@
+import AIAssistants from './pages/AIAssistants';
 import AIAssistantsSimple from './pages/AIAssistantsSimple';
+import AIFlows from './pages/AIFlows';
 import AIFlowsSimple from './pages/AIFlowsSimple';
 import AISimulator from './pages/AISimulator';
 import AssistantCentral from './pages/AssistantCentral';
@@ -9,6 +11,7 @@ import ConversationFlows from './pages/ConversationFlows';
 import Conversations from './pages/Conversations';
 import Dashboard from './pages/Dashboard';
 import FranchiseDashboard from './pages/FranchiseDashboard';
+import IntegrationHub from './pages/IntegrationHub';
 import LeadDetail from './pages/LeadDetail';
 import Leads from './pages/Leads';
 import Onboarding from './pages/Onboarding';
@@ -24,15 +27,15 @@ import Units from './pages/Units';
 import VoiceCampaigns from './pages/VoiceCampaigns';
 import VoiceFunnel from './pages/VoiceFunnel';
 import VoiceSimulator from './pages/VoiceSimulator';
-import IntegrationHub from './pages/IntegrationHub';
-import AIFlows from './pages/AIFlows';
-import AIAssistants from './pages/AIAssistants';
 import WhatsAppIntegration from './pages/WhatsAppIntegration';
+import WhatsAppChannels from './pages/WhatsAppChannels';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
+    "AIAssistants": AIAssistants,
     "AIAssistantsSimple": AIAssistantsSimple,
+    "AIFlows": AIFlows,
     "AIFlowsSimple": AIFlowsSimple,
     "AISimulator": AISimulator,
     "AssistantCentral": AssistantCentral,
@@ -43,6 +46,7 @@ export const PAGES = {
     "Conversations": Conversations,
     "Dashboard": Dashboard,
     "FranchiseDashboard": FranchiseDashboard,
+    "IntegrationHub": IntegrationHub,
     "LeadDetail": LeadDetail,
     "Leads": Leads,
     "Onboarding": Onboarding,
@@ -58,10 +62,8 @@ export const PAGES = {
     "VoiceCampaigns": VoiceCampaigns,
     "VoiceFunnel": VoiceFunnel,
     "VoiceSimulator": VoiceSimulator,
-    "IntegrationHub": IntegrationHub,
-    "AIFlows": AIFlows,
-    "AIAssistants": AIAssistants,
     "WhatsAppIntegration": WhatsAppIntegration,
+    "WhatsAppChannels": WhatsAppChannels,
 }
 
 export const pagesConfig = {

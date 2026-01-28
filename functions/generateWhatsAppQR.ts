@@ -5,8 +5,8 @@ import QRCode from 'npm:qrcode@1.5.3';
 
 const activeSessions = new Map();
 
-async function startWhatsAppSession(integrationId, base44) {
-  const sessionPath = `/tmp/whatsapp_${integrationId}`;
+async function startWhatsAppSession(channelId, base44) {
+  const sessionPath = `/tmp/whatsapp_${channelId}`;
   const { state, saveCreds } = await useMultiFileAuthState(sessionPath);
 
   const socket = makeWASocket({
@@ -14,32 +14,29 @@ async function startWhatsAppSession(integrationId, base44) {
     printQRInTerminal: false
   });
 
-  let qrCode = null;
-
   socket.ev.on('creds.update', saveCreds);
 
   socket.ev.on('connection.update', async (update) => {
     const { connection, qr } = update;
 
     if (qr) {
-      qrCode = await QRCode.toDataURL(qr);
-      await base44.asServiceRole.entities.WhatsAppIntegration.update(integrationId, {
-        qr_code: qrCode,
+      const qrCodeData = await QRCode.toDataURL(qr);
+      await base44.asServiceRole.entities.WhatsAppChannel.update(channelId, {
+        qr_code: qrCodeData,
         status: 'pending'
       });
     }
 
     if (connection === 'open') {
-      const phoneId = socket.user?.id?.split(':')[0] || '';
-      await base44.asServiceRole.entities.WhatsAppIntegration.update(integrationId, {
+      const phoneNumber = socket.user?.id?.split(':')[0] || '';
+      await base44.asServiceRole.entities.WhatsAppChannel.update(channelId, {
         status: 'connected',
-        phone_number: phoneId
+        phone_number: `+${phoneNumber}`
       });
     }
   });
 
-  activeSessions.set(integrationId, { socket, qrCode: null });
-  return { socket, qrCode: null };
+  activeSessions.set(channelId, socket);
 }
 
 Deno.serve(async (req) => {
@@ -52,39 +49,29 @@ Deno.serve(async (req) => {
     }
 
     const payload = await req.json();
-    const { integrationId } = payload;
+    const { channelId } = payload;
 
-    if (!integrationId) {
-      return Response.json({ error: 'integrationId é obrigatório' }, { status: 400 });
+    if (!channelId) {
+      return Response.json({ error: 'channelId é obrigatório' }, { status: 400 });
     }
 
-    const integrations = await base44.entities.WhatsAppIntegration.filter({ id: integrationId });
-    if (!integrations || integrations.length === 0) {
-      return Response.json({ error: 'Integração não encontrada' }, { status: 404 });
+    const channels = await base44.entities.WhatsAppChannel.filter({ id: channelId });
+    if (!channels || channels.length === 0) {
+      return Response.json({ error: 'Canal não encontrado' }, { status: 404 });
     }
 
-    const integration = integrations[0];
-    if (!integration.ai_assistant_id) {
-      return Response.json({ error: 'Assistente não selecionado' }, { status: 400 });
+    if (!activeSessions.has(channelId)) {
+      await startWhatsAppSession(channelId, base44);
     }
 
-    // Iniciar sessão se não estiver ativa
-    if (!activeSessions.has(integrationId)) {
-      await startWhatsAppSession(integrationId, base44);
-    }
-
-    const session = activeSessions.get(integrationId);
-    
-    // Aguardar o QR Code ser gerado
     await new Promise(resolve => setTimeout(resolve, 1500));
 
-    const integrationData = await base44.entities.WhatsAppIntegration.filter({ id: integrationId });
-    const qrCode = integrationData[0]?.qr_code;
+    const channelData = await base44.entities.WhatsAppChannel.filter({ id: channelId });
+    const qrCode = channelData[0]?.qr_code;
 
     return Response.json({
       qr_code: qrCode || null,
-      status: 'pending',
-      message: qrCode ? 'QR Code pronto' : 'Gerando QR Code...'
+      status: 'pending'
     });
   } catch (error) {
     console.error('Erro:', error);

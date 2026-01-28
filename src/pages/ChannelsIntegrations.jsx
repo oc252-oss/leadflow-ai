@@ -445,41 +445,39 @@ export default function ChannelsIntegrations() {
           <h2 className="text-xl font-semibold text-slate-900">Instagram</h2>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Instagram Business</CardTitle>
-            <CardDescription>Conecte via Facebook Business</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="instagram-direct">Instagram Direct</Label>
-                <Switch
-                  id="instagram-direct"
-                  checked={instagramConfig.direct_messages}
-                  onCheckedChange={(checked) => 
-                    setInstagramConfig({ ...instagramConfig, direct_messages: checked })
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="instagram-comments">Comentários do Instagram</Label>
-                <Switch
-                  id="instagram-comments"
-                  checked={instagramConfig.comments}
-                  onCheckedChange={(checked) => 
-                    setInstagramConfig({ ...instagramConfig, comments: checked })
-                  }
-                />
-              </div>
+        <div className="space-y-3">
+          <Button 
+            onClick={() => setShowInstagramDialog(true)}
+            className="w-full bg-pink-600 hover:bg-pink-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Conectar Conta Instagram
+          </Button>
+
+          {filteredInstagram.length > 0 && (
+            <div className="space-y-2">
+              {filteredInstagram.map(ig => (
+                <Card key={ig.id}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium">{ig.account_name || ig.page_name}</p>
+                        <p className="text-xs text-slate-500">{ig.label}</p>
+                        <div className="flex gap-2 mt-2">
+                          {ig.direct_messages && <Badge className="text-xs">DM</Badge>}
+                          {ig.comments && <Badge className="text-xs">Comentários</Badge>}
+                        </div>
+                      </div>
+                      <Badge className={ig.status === 'connected' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'}>
+                        {ig.status}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-            <Button variant="outline" className="w-full" disabled>
-              <Instagram className="w-4 h-4 mr-2" />
-              Conectar Instagram
-            </Button>
-            <p className="text-xs text-slate-500">Em breve</p>
-          </CardContent>
-        </Card>
+          )}
+        </div>
       </div>
 
       {/* Facebook Section */}
@@ -489,41 +487,39 @@ export default function ChannelsIntegrations() {
           <h2 className="text-xl font-semibold text-slate-900">Facebook</h2>
         </div>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">Facebook Pages</CardTitle>
-            <CardDescription>Messenger e comentários de anúncios</CardDescription>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="facebook-messenger">Messenger</Label>
-                <Switch
-                  id="facebook-messenger"
-                  checked={facebookConfig.messenger}
-                  onCheckedChange={(checked) => 
-                    setFacebookConfig({ ...facebookConfig, messenger: checked })
-                  }
-                />
-              </div>
-              <div className="flex items-center justify-between">
-                <Label htmlFor="facebook-comments">Comentários de anúncios</Label>
-                <Switch
-                  id="facebook-comments"
-                  checked={facebookConfig.ad_comments}
-                  onCheckedChange={(checked) => 
-                    setFacebookConfig({ ...facebookConfig, ad_comments: checked })
-                  }
-                />
-              </div>
+        <div className="space-y-3">
+          <Button 
+            onClick={() => setShowFacebookDialog(true)}
+            className="w-full bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Conectar Página Facebook
+          </Button>
+
+          {filteredFacebook.length > 0 && (
+            <div className="space-y-2">
+              {filteredFacebook.map(fb => (
+                <Card key={fb.id}>
+                  <CardContent className="pt-6">
+                    <div className="flex items-start justify-between">
+                      <div>
+                        <p className="font-medium">{fb.page_name}</p>
+                        <p className="text-xs text-slate-500">{fb.label}</p>
+                        <div className="flex gap-2 mt-2">
+                          {fb.messenger && <Badge className="text-xs">Messenger</Badge>}
+                          {fb.ad_comments && <Badge className="text-xs">Ads</Badge>}
+                        </div>
+                      </div>
+                      <Badge className={fb.status === 'connected' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'}>
+                        {fb.status}
+                      </Badge>
+                    </div>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
-            <Button variant="outline" className="w-full" disabled>
-              <Facebook className="w-4 h-4 mr-2" />
-              Conectar Facebook Pages
-            </Button>
-            <p className="text-xs text-slate-500">Em breve</p>
-          </CardContent>
-        </Card>
+          )}
+        </div>
       </div>
 
       {/* Webchat Section */}

@@ -358,32 +358,70 @@ export default function AIAssistants() {
              <TabsContent value="fluxo" className="space-y-4 mt-4">
                <div>
                  <label className="text-sm font-medium text-slate-700">Fluxo de IA (Opcional)</label>
-                 <select 
-                   value={formData.default_flow_id}
-                   onChange={(e) => setFormData({...formData, default_flow_id: e.target.value})}
-                   className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                 >
-                   <option value="">Sem fluxo (usar da campanha ou canal)</option>
-                   {flows.map(flow => (
-                     <option key={flow.id} value={flow.id}>
-                       {flow.name}{flow.is_default ? ' (padrão)' : ''}
-                     </option>
-                   ))}
-                 </select>
+                 <p className="text-xs text-slate-500 mt-1 mb-3">Selecione um fluxo para usar como padrão ou deixe em branco</p>
+
+                 {flows.length === 0 ? (
+                   <div className="p-4 rounded-lg bg-slate-50 border border-slate-200">
+                     <p className="text-sm text-slate-600">Nenhum fluxo de IA disponível no momento</p>
+                   </div>
+                 ) : (
+                   <div className="space-y-2">
+                     {/* Opção Sem Fluxo */}
+                     <div 
+                       onClick={() => setFormData({...formData, default_flow_id: ''})}
+                       className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                         formData.default_flow_id === '' 
+                           ? 'border-indigo-600 bg-indigo-50' 
+                           : 'border-slate-200 hover:border-slate-300 bg-white'
+                       }`}
+                     >
+                       <p className="font-medium text-slate-900">Sem fluxo (usar da campanha ou canal)</p>
+                     </div>
+
+                     {/* Fluxos Disponíveis */}
+                     {flows.map(flow => (
+                       <div
+                         key={flow.id}
+                         onClick={() => setFormData({...formData, default_flow_id: flow.id})}
+                         className={`p-4 rounded-lg border-2 cursor-pointer transition-all ${
+                           formData.default_flow_id === flow.id
+                             ? 'border-indigo-600 bg-indigo-50'
+                             : 'border-slate-200 hover:border-slate-300 bg-white'
+                         }`}
+                       >
+                         <div className="flex items-start justify-between">
+                           <div className="flex-1">
+                             <p className="font-medium text-slate-900">{flow.name}</p>
+                             {flow.description && (
+                               <p className="text-sm text-slate-600 mt-1">{flow.description}</p>
+                             )}
+                             <div className="flex gap-2 mt-2 flex-wrap">
+                               <Badge variant="secondary" className="text-xs capitalize">
+                                 {flow.industry || 'Geral'}
+                               </Badge>
+                               {flow.is_active && (
+                                 <Badge className="text-xs bg-green-100 text-green-800">
+                                   Ativo
+                                 </Badge>
+                               )}
+                               {flow.is_default && (
+                                 <Badge className="text-xs bg-blue-100 text-blue-800">
+                                   Padrão
+                                 </Badge>
+                               )}
+                             </div>
+                           </div>
+                           {formData.default_flow_id === flow.id && (
+                             <div className="ml-2 pt-1">
+                               <Badge className="bg-indigo-600">Selecionado</Badge>
+                             </div>
+                           )}
+                         </div>
+                       </div>
+                     ))}
+                   </div>
+                 )}
                </div>
-               {formData.default_flow_id && flows.find(f => f.id === formData.default_flow_id) && (
-                 <div className="p-3 rounded-lg bg-indigo-50 border border-indigo-200">
-                   <p className="text-xs text-indigo-600 font-medium">Fluxo Selecionado:</p>
-                   <p className="text-sm text-indigo-900 font-medium mt-1">
-                     {flows.find(f => f.id === formData.default_flow_id)?.name}
-                   </p>
-                   {flows.find(f => f.id === formData.default_flow_id)?.description && (
-                     <p className="text-sm text-indigo-700 mt-2">
-                       {flows.find(f => f.id === formData.default_flow_id)?.description}
-                     </p>
-                   )}
-                 </div>
-               )}
              </TabsContent>
 
              {/* Comportamento */}

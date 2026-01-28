@@ -1,4 +1,5 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
+import QRCode from 'npm:qrcode@1.5.3';
 
 Deno.serve(async (req) => {
   try {
@@ -29,19 +30,22 @@ Deno.serve(async (req) => {
       return Response.json({ error: 'Assistente não selecionado' }, { status: 400 });
     }
 
-    // Gerar QR Code simulado (em produção, conectar com Baileys ou similar)
+    // Gerar dados únicos para QR Code
     const sessionId = `session_${integrationId}_${Date.now()}`;
-    const qrCodeData = `whatsapp_qr_${sessionId}`;
+    const qrData = `whatsapp://integrate?session=${sessionId}&integration=${integrationId}`;
+    
+    // Gerar QR Code real
+    const qrCodeUrl = await QRCode.toDataURL(qrData);
     
     // Atualizar integração com QR Code
     await base44.entities.WhatsAppIntegration.update(integrationId, {
-      qr_code: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==`,
+      qr_code: qrCodeUrl,
       session_id: sessionId,
       status: 'pending'
     });
 
     return Response.json({
-      qr_code: `data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==`,
+      qr_code: qrCodeUrl,
       session_id: sessionId
     });
   } catch (error) {

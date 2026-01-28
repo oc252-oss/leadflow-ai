@@ -102,28 +102,38 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Leads', label: t('leads'), href: createPageUrl('Leads'), icon: Users, roles: ['company_admin', 'sales_manager', 'sales_agent', 'unit_admin'] },
     { name: 'Pipeline', label: t('pipeline'), href: createPageUrl('Pipeline'), icon: GitBranch, roles: ['company_admin', 'sales_manager', 'sales_agent', 'unit_admin'] },
     { name: 'Conversations', label: t('conversations'), href: createPageUrl('Conversations'), icon: MessageSquare, roles: ['company_admin', 'sales_manager', 'sales_agent', 'unit_admin'] },
-    { name: 'Campaigns', label: t('campaigns'), href: createPageUrl('Campaigns'), icon: Target, roles: ['company_admin', 'sales_manager', 'unit_admin'] },
     { name: 'Tasks', label: 'Tarefas', href: createPageUrl('Tasks'), icon: Clock, roles: ['company_admin', 'sales_manager', 'sales_agent', 'unit_admin'] },
-    null,
+    { name: 'SalesFunnel', label: 'Funil de Vendas', href: createPageUrl('SalesFunnel'), icon: GitBranch, roles: ['company_admin', 'brand_manager'] },
+    { type: 'divider' },
+    { name: 'Campaigns', label: t('campaigns'), href: createPageUrl('Campaigns'), icon: Target, roles: ['company_admin', 'sales_manager', 'unit_admin'] },
+    { name: 'Reengagement', label: 'Reengajamento', href: createPageUrl('Reengagement'), icon: RefreshCw, roles: ['company_admin', 'sales_manager', 'unit_admin'] },
+    { type: 'divider' },
+    { type: 'header', label: 'Inteligência Artificial', roles: ['company_admin', 'unit_admin', 'brand_manager', 'sales_manager', 'sales_agent'] },
     { name: 'Assistants', label: 'Assistentes IA', href: createPageUrl('Assistants'), icon: Bot, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
     { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Bot, roles: ['company_admin', 'brand_manager'] },
     { name: 'SimulationTraining', label: 'Simulação & Treinamento', href: createPageUrl('SimulationTraining'), icon: Bot, roles: ['company_admin', 'sales_manager', 'sales_agent', 'unit_admin'] },
-    null,
-    { name: 'VoiceCampaigns', label: 'CLINIQ Voice', href: createPageUrl('VoiceCampaigns'), icon: Phone, roles: ['company_admin', 'sales_manager', 'unit_admin'] },
+    { type: 'divider' },
+    { type: 'header', label: 'CLINIQ Voice', roles: ['company_admin', 'sales_manager', 'unit_admin'] },
+    { name: 'VoiceCampaigns', label: 'Campanhas de Voz', href: createPageUrl('VoiceCampaigns'), icon: Phone, roles: ['company_admin', 'sales_manager', 'unit_admin'] },
     { name: 'VoiceFunnel', label: 'Funil de Voz', href: createPageUrl('VoiceFunnel'), icon: Phone, roles: ['company_admin', 'sales_manager', 'unit_admin'] },
-    null,
-    { name: 'Reengagement', label: 'Reengajamento', href: createPageUrl('Reengagement'), icon: RefreshCw, roles: ['company_admin', 'sales_manager', 'unit_admin'] },
+    { type: 'divider' },
     { name: 'Automations', label: t('automations'), href: createPageUrl('Automations'), icon: Zap, roles: ['company_admin', 'unit_admin'] },
     { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['company_admin', 'sales_manager', 'brand_manager'] },
-    null,
-    { name: 'SalesFunnel', label: 'Funil de Vendas', href: createPageUrl('SalesFunnel'), icon: GitBranch, roles: ['company_admin', 'brand_manager'] },
     { name: 'CompanySettings', label: 'Configurações da Empresa', href: createPageUrl('CompanySettings'), icon: Building2, roles: ['company_admin', 'unit_admin'] },
     { name: 'Settings', label: t('settings'), href: createPageUrl('Settings'), icon: Settings, roles: ['company_admin', 'unit_admin'] },
   ];
 
-  const filteredNav = navigation.filter(item => 
-    item && item.label && (!teamMember?.role || item.roles.includes(teamMember.role)) && canAccessPage(item.name)
-  );
+  const filteredNav = navigation.filter(item => {
+    if (!item) return false;
+
+    // Keep dividers and headers if user has access to any child
+    if (item.type === 'divider' || item.type === 'header') {
+      return !item.roles || !teamMember?.role || item.roles.includes(teamMember.role);
+    }
+
+    // Regular nav items
+    return item.label && (!teamMember?.role || item.roles.includes(teamMember.role)) && canAccessPage(item.name);
+  });
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -171,8 +181,27 @@ export default function Layout({ children, currentPageName }) {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-            {filteredNav.map((item) => {
-              if (!item || !item.label) return null;
+            {filteredNav.map((item, idx) => {
+              if (!item) return null;
+
+              // Render divider
+              if (item.type === 'divider') {
+                return <div key={`divider-${idx}`} className="my-2 border-t border-slate-200" />;
+              }
+
+              // Render header
+              if (item.type === 'header') {
+                return (
+                  <div key={`header-${idx}`} className="px-3 pt-4 pb-2">
+                    <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+                      {item.label}
+                    </p>
+                  </div>
+                );
+              }
+
+              // Render regular nav item
+              if (!item.label) return null;
               const isActive = currentPageName === item.name;
               return (
                 <Link

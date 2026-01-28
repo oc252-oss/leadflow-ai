@@ -1,64 +1,81 @@
-import express from 'express';
-import makeWASocket, { useMultiFileAuthState } from '@whiskeysockets/baileys';
-import QRCode from 'qrcode';
+import express from 'express'
+import makeWASocket, { useMultiFileAuthState, DisconnectReason } from '@whiskeysockets/baileys'
+import QRCode from 'qrcode'
+import fs from 'fs'
 
-const app = express();
-app.use(express.json());
+const app = express()
+app.use(express.json())
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000
 
-let sock;
-let lastQr = null;
+let sock = null
+let lastQr = null
+let connectionStatus = 'idle'
 
-// Inicializa WhatsApp
 async function startWhatsApp() {
-  const { state, saveCreds } = await useMultiFileAuthState('./auth');
+  const { state, saveCreds } = await useMultiFileAuthState('./auth')
 
   sock = makeWASocket({
     auth: state,
-    printQRInTerminal: true
-  });
+    printQRInTerminal: false
+  })
 
-  sock.ev.on('creds.update', saveCreds);
+  sock.ev.on('creds.update', saveCreds)
 
   sock.ev.on('connection.update', async (update) => {
-    const { qr, connection } = update;
+    const { connection, qr, lastDisconnect } = update
 
     if (qr) {
-      lastQr = await QRCode.toDataURL(qr);
-      console.log('QR Code atualizado');
+      lastQr = await QRCode.toDataURL(qr)
+      connectionStatus = 'qr'
+      console.log('📲 QR Code gerado')
     }
 
     if (connection === 'open') {
-      console.log('✅ WhatsApp conectado');
+      connectionStatus = 'connected'
+      lastQr = null
+      console.log('✅ WhatsApp conectado com sucesso')
     }
 
     if (connection === 'close') {
-      console.log('⚠️ WhatsApp desconectado, reiniciando...');
-      startWhatsApp();
+      const shouldReconnect =
+        lastDisconnect?.error?.output?.statusCode !== DisconnectReason.loggedOut
+
+      console.log('⚠️ WhatsApp desconectado')
+
+      if (shouldReconnect) {
+        connectionStatus = 'reconnecting'
+        startWhatsApp()
+      } else {
+        connectionStatus = 'logged_out'
+      }
     }
-  });
+  })
 }
 
-// Endpoint de teste (Render exige isso)
-app.get('/', (req, res) => {
-  res.send('Servidor WhatsApp ativo');
-});
-
-// Endpoint para o Base44 buscar o QR Code
+/**
+ * Endpoint que o Base44 vai chamar
+ * GET /connect
+ */
 app.get('/connect', async (req, res) => {
   if (!sock) {
-    await startWhatsApp();
+    console.log('🚀 Iniciando sessão WhatsApp')
+    await startWhatsApp()
   }
 
   res.json({
-    status: lastQr ? 'qr_ready' : 'waiting_qr',
+    status: connectionStatus,
     qr_code: lastQr
-  });
-});
+  })
+})
 
-// 🚨 OBRIGATÓRIO PARA O RENDER
+/**
+ * Health check (IMPORTANTE PARA O RENDER)
+ */
+app.get('/', (req, res) => {
+  res.send('WhatsApp Server ONLINE')
+})
+
 app.listen(PORT, () => {
-  console.log(`🚀 Servidor rodando na porta ${PORT}`);
-  startWhatsApp();
-});
+  console.log(`🚀 Servidor WhatsApp rodando na porta ${PORT}`)
+})

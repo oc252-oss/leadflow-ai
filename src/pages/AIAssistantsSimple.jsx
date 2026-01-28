@@ -340,15 +340,19 @@ export default function AIAssistantsSimple() {
               </div>
 
               <div className="space-y-2">
-                <Label>Fluxo de IA *</Label>
-                <Select value={formData.ai_flow_id} onValueChange={(value) => setFormData({ ...formData, ai_flow_id: value })}>
+                <Label>Fluxo de IA</Label>
+                <Select value={formData.ai_flow_id || ''} onValueChange={(value) => setFormData({ ...formData, ai_flow_id: value || null })}>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um fluxo" />
+                    <SelectValue placeholder="Selecione um fluxo (opcional)" />
                   </SelectTrigger>
                   <SelectContent>
-                    {flows.map(flow => (
-                      <SelectItem key={flow.id} value={flow.id}>{flow.name}</SelectItem>
-                    ))}
+                    {flows.length === 0 ? (
+                      <div className="px-2 py-1.5 text-xs text-slate-500">Nenhum fluxo disponível</div>
+                    ) : (
+                      flows.map(flow => (
+                        <SelectItem key={flow.id} value={flow.id}>{flow.name}</SelectItem>
+                      ))
+                    )}
                   </SelectContent>
                 </Select>
               </div>

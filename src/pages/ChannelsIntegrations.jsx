@@ -473,15 +473,15 @@ export default function ChannelsIntegrations() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {(filteredWhatsapp.length + filteredInstagram.length + filteredFacebook.length) === 0 ? (
-                <TableRow>
-                  <TableCell colSpan={5} className="text-center py-12 text-slate-500">
-                    Nenhum canal conectado
-                  </TableCell>
-                </TableRow>
-              ) : (
-                <>
-                  {filteredWhatsapp.map((integration) => {
+                {(whatsappIntegrations.length + instagramIntegrations.length + facebookIntegrations.length) === 0 ? (
+                  <TableRow>
+                    <TableCell colSpan={5} className="text-center py-12 text-slate-500">
+                      Nenhum canal conectado
+                    </TableCell>
+                  </TableRow>
+                ) : (
+                  <>
+                    {whatsappIntegrations.map((integration) => {
                     const assistant = assistants.find(a => a.id === integration.assistant_id);
                     const agent = teamMembers.find(tm => tm.user_email === integration.assigned_agent_email);
 
@@ -501,7 +501,7 @@ export default function ChannelsIntegrations() {
                       </TableRow>
                     );
                   })}
-                  {filteredInstagram.map((integration) => {
+                  {instagramIntegrations.map((integration) => {
                     const assistant = assistants.find(a => a.id === integration.assistant_id);
 
                     return (
@@ -519,7 +519,7 @@ export default function ChannelsIntegrations() {
                       </TableRow>
                     );
                   })}
-                  {filteredFacebook.map((integration) => {
+                  {facebookIntegrations.map((integration) => {
                     const assistant = assistants.find(a => a.id === integration.assistant_id);
 
                     return (
@@ -555,23 +555,6 @@ export default function ChannelsIntegrations() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div className="space-y-2">
-              <Label>Unidade *</Label>
-              <Select
-                value={qrFormData.unit_id}
-                onValueChange={(value) => setQrFormData({ ...qrFormData, unit_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione a unidade" />
-                </SelectTrigger>
-                <SelectContent>
-                  {units.map(unit => (
-                    <SelectItem key={unit.id} value={unit.id}>{unit.name}</SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-
             <div className="space-y-2">
               <Label>Agente Responsável (opcional)</Label>
               <Select
@@ -654,7 +637,7 @@ export default function ChannelsIntegrations() {
             </Button>
             <Button 
               onClick={handleGenerateQR}
-              disabled={generatingQR || !qrFormData.unit_id}
+              disabled={generatingQR || !unit}
               className="bg-green-600 hover:bg-green-700"
             >
               {generatingQR && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
@@ -675,40 +658,21 @@ export default function ChannelsIntegrations() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Provider *</Label>
-                <Select
-                  value={providerFormData.provider}
-                  onValueChange={(value) => setProviderFormData({ ...providerFormData, provider: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="zapi">Z-API</SelectItem>
-                    <SelectItem value="gupshup">Gupshup</SelectItem>
-                    <SelectItem value="360dialog">360Dialog</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Unidade *</Label>
-                <Select
-                  value={providerFormData.unit_id}
-                  onValueChange={(value) => setProviderFormData({ ...providerFormData, unit_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {units.map(unit => (
-                      <SelectItem key={unit.id} value={unit.id}>{unit.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
+            <div className="space-y-2">
+              <Label>Provider *</Label>
+              <Select
+                value={providerFormData.provider}
+                onValueChange={(value) => setProviderFormData({ ...providerFormData, provider: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="zapi">Z-API</SelectItem>
+                  <SelectItem value="gupshup">Gupshup</SelectItem>
+                  <SelectItem value="360dialog">360Dialog</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
@@ -840,32 +804,13 @@ export default function ChannelsIntegrations() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Unidade *</Label>
-                <Select
-                  value={instagramFormData.unit_id}
-                  onValueChange={(value) => setInstagramFormData({ ...instagramFormData, unit_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {units.map(unit => (
-                      <SelectItem key={unit.id} value={unit.id}>{unit.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Nome da Conta *</Label>
-                <Input
-                  value={instagramFormData.account_name}
-                  onChange={(e) => setInstagramFormData({ ...instagramFormData, account_name: e.target.value })}
-                  placeholder="@sua_conta"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label>Nome da Conta *</Label>
+              <Input
+                value={instagramFormData.account_name}
+                onChange={(e) => setInstagramFormData({ ...instagramFormData, account_name: e.target.value })}
+                placeholder="@sua_conta"
+              />
             </div>
 
             <div className="space-y-2">
@@ -961,32 +906,13 @@ export default function ChannelsIntegrations() {
           </DialogHeader>
 
           <div className="space-y-4 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Unidade *</Label>
-                <Select
-                  value={facebookFormData.unit_id}
-                  onValueChange={(value) => setFacebookFormData({ ...facebookFormData, unit_id: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {units.map(unit => (
-                      <SelectItem key={unit.id} value={unit.id}>{unit.name}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-
-              <div className="space-y-2">
-                <Label>Nome da Página *</Label>
-                <Input
-                  value={facebookFormData.page_name}
-                  onChange={(e) => setFacebookFormData({ ...facebookFormData, page_name: e.target.value })}
-                  placeholder="Nome da página"
-                />
-              </div>
+            <div className="space-y-2">
+              <Label>Nome da Página *</Label>
+              <Input
+                value={facebookFormData.page_name}
+                onChange={(e) => setFacebookFormData({ ...facebookFormData, page_name: e.target.value })}
+                placeholder="Nome da página"
+              />
             </div>
 
             <div className="space-y-2">

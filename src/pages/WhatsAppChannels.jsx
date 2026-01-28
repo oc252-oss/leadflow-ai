@@ -136,13 +136,15 @@ export default function WhatsAppChannels() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center">
-        <h1 className="text-3xl font-bold">Conexões</h1>
-        <p className="text-sm text-slate-600">Gerencie suas conexões de WhatsApp com Scripts aprovados</p>
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold">Conexões</h1>
+          <p className="text-sm text-slate-600 mt-1">Gerencie suas conexões de WhatsApp com Scripts aprovados</p>
+        </div>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
             <Button className="bg-indigo-600 hover:bg-indigo-700">
-              <Plus className="w-4 h-4 mr-2" /> Novo Canal
+              <Plus className="w-4 h-4 mr-2" /> Nova Conexão
             </Button>
           </DialogTrigger>
           <DialogContent>
@@ -188,9 +190,9 @@ export default function WhatsAppChannels() {
               <Button 
                 onClick={handleCreateChannel} 
                 className="w-full bg-indigo-600 hover:bg-indigo-700"
-                disabled={scripts.length === 0 || !formData.script_id}
+                disabled={!formData.label || !formData.script_id}
               >
-                Criar Canal
+                Criar Conexão
               </Button>
             </div>
           </DialogContent>
@@ -300,7 +302,8 @@ export default function WhatsAppChannels() {
                 </Button>
               </>
             ) : (
-              <p className="text-slate-600">Erro ao gerar QR Code</p>
+              <AlertCircle className="w-8 h-8 text-red-600 mb-2" />
+        <p className="text-slate-600">Erro ao gerar QR Code</p>
             )}
           </div>
         </DialogContent>

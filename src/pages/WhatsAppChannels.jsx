@@ -69,31 +69,47 @@ export default function WhatsAppChannels() {
     setShowQRDialog(true);
 
     try {
-      const response = await base44.functions.invoke('generateWhatsAppQR', {
-        channelId: channel.id
-      });
+      let qrPollingAttempts = 0;
+      const maxQRAttempts = 15; // 30 segundos para gerar QR
 
-      if (response.data?.qr_code) {
-        setQrCode(response.data.qr_code);
-      }
-      setQrLoading(false);
+      // Poll para gerar QR Code
+      const qrInterval = setInterval(async () => {
+        qrPollingAttempts++;
+        try {
+          const response = await base44.functions.invoke('generateWhatsAppQR', {
+            channelId: channel.id
+          });
 
-      // Poll para status de conexão a cada 3 segundos
-      let attempts = 0;
-      const maxAttempts = 40; // 2 minutos
+          if (response.data?.qr_code) {
+            setQrCode(response.data.qr_code);
+            clearInterval(qrInterval);
+            setQrLoading(false);
 
-      const checkStatus = setInterval(async () => {
-        attempts++;
-        const updated = await base44.entities.WhatsAppChannel.filter({ id: channel.id });
-        if (updated[0]?.status === 'connected') {
-          clearInterval(checkStatus);
-          setShowQRDialog(false);
-          await loadData();
+            // Começar polling de conexão após QR gerado
+            let statusAttempts = 0;
+            const maxStatusAttempts = 40; // 2 minutos
+            const statusInterval = setInterval(async () => {
+              statusAttempts++;
+              const updated = await base44.entities.WhatsAppChannel.filter({ id: channel.id });
+              if (updated[0]?.status === 'connected') {
+                clearInterval(statusInterval);
+                setShowQRDialog(false);
+                await loadData();
+              }
+              if (statusAttempts >= maxStatusAttempts) {
+                clearInterval(statusInterval);
+              }
+            }, 3000);
+          }
+
+          if (qrPollingAttempts >= maxQRAttempts) {
+            clearInterval(qrInterval);
+            setQrLoading(false);
+          }
+        } catch (error) {
+          console.error('Erro polling QR:', error);
         }
-        if (attempts >= maxAttempts) {
-          clearInterval(checkStatus);
-        }
-      }, 3000);
+      }, 2000);
     } catch (error) {
       console.error('Erro ao gerar QR Code:', error);
       setQrLoading(false);

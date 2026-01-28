@@ -78,8 +78,8 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
       }
 
       // Criar script
-      const newScript = await base44.asServiceRole.entities.AIScript.create({
-        assistant_id: null,
+       const newScript = await base44.asServiceRole.entities.AIScript.create({
+         assistant_id: formData.assistant_id || null,
         name: formData.name.trim(),
         description: formData.description.trim(),
         usage_type: formData.usage_type,

@@ -145,16 +145,33 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
             />
           </div>
 
-          {/* Descrição */}
-          <div>
-            <Label className="text-sm font-medium mb-2 block">Descrição</Label>
-            <Textarea
-              placeholder="Descreva o propósito deste script..."
-              value={formData.description}
-              onChange={(e) => setFormData({...formData, description: e.target.value})}
-              className="h-20"
-            />
-          </div>
+          {/* Assistente IA */}
+           <div>
+             <Label className="text-sm font-medium mb-2 block">Assistente IA *</Label>
+             <Select value={formData.assistant_id} onValueChange={(value) => setFormData({...formData, assistant_id: value})}>
+               <SelectTrigger disabled={loadingAssistants}>
+                 <SelectValue placeholder={loadingAssistants ? 'Carregando...' : 'Selecione um assistente'} />
+               </SelectTrigger>
+               <SelectContent>
+                 {assistants.map(assistant => (
+                   <SelectItem key={assistant.id} value={assistant.id}>
+                     {assistant.name}
+                   </SelectItem>
+                 ))}
+               </SelectContent>
+             </Select>
+           </div>
+
+           {/* Descrição */}
+           <div>
+             <Label className="text-sm font-medium mb-2 block">Descrição</Label>
+             <Textarea
+               placeholder="Descreva o propósito deste script..."
+               value={formData.description}
+               onChange={(e) => setFormData({...formData, description: e.target.value})}
+               className="h-20"
+             />
+           </div>
 
           {/* Canal e Tipo */}
           <div className="grid grid-cols-2 gap-4">

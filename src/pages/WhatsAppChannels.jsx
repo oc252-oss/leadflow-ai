@@ -42,14 +42,14 @@ export default function WhatsAppChannels() {
   };
 
   const handleCreateChannel = async () => {
-    if (!formData.label || !formData.script_id) {
-      toast.error('Nome e Script são obrigatórios');
+    if (!formData.script_id) {
+      toast.error('Selecione um script aprovado');
       return;
     }
 
     try {
       await base44.entities.WhatsAppChannel.create({
-        label: formData.label,
+        label: formData.label || 'WhatsApp Channel',
         script_id: formData.script_id,
         phone_number: '',
         status: 'disconnected'
@@ -58,10 +58,10 @@ export default function WhatsAppChannels() {
       setFormData({ label: '', script_id: '' });
       setShowCreateDialog(false);
       await loadData();
-      toast.success('Conexão criada com sucesso!');
+      toast.success('Canal criado com sucesso!');
     } catch (error) {
-      console.error('Erro ao criar conexão:', error);
-      toast.error('Erro ao criar conexão: ' + error.message);
+      console.error('Erro ao criar canal:', error);
+      toast.error('Erro ao criar canal');
     }
   };
 
@@ -108,15 +108,14 @@ export default function WhatsAppChannels() {
   };
 
   const handleDeleteChannel = async (channelId) => {
-    if (!confirm('Tem certeza que deseja deletar esta conexão?')) return;
+    if (!confirm('Tem certeza que deseja deletar este canal?')) return;
 
     try {
       await base44.entities.WhatsAppChannel.delete(channelId);
-      toast.success('Conexão deletada');
       await loadData();
     } catch (error) {
-      console.error('Erro ao deletar conexão:', error);
-      toast.error('Erro ao deletar conexão');
+      console.error('Erro ao deletar canal:', error);
+      alert('Erro ao deletar canal');
     }
   };
 
@@ -136,20 +135,17 @@ export default function WhatsAppChannels() {
 
   return (
     <div className="space-y-6">
-      <div className="flex justify-between items-center mb-6">
-        <div>
-          <h1 className="text-3xl font-bold">Conexões</h1>
-          <p className="text-sm text-slate-600 mt-1">Gerencie suas conexões de WhatsApp com Scripts aprovados</p>
-        </div>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Canais WhatsApp</h1>
         <Dialog open={showCreateDialog} onOpenChange={setShowCreateDialog}>
           <DialogTrigger asChild>
             <Button className="bg-indigo-600 hover:bg-indigo-700">
-              <Plus className="w-4 h-4 mr-2" /> Nova Conexão
+              <Plus className="w-4 h-4 mr-2" /> Novo Canal
             </Button>
           </DialogTrigger>
           <DialogContent>
             <DialogHeader>
-              <DialogTitle>Nova Conexão WhatsApp</DialogTitle>
+              <DialogTitle>Criar Novo Canal WhatsApp</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
               {scripts.length === 0 ? (
@@ -163,7 +159,7 @@ export default function WhatsAppChannels() {
               ) : (
                 <>
                   <div>
-                    <label className="text-sm font-medium">Nome da Conexão *</label>
+                    <label className="text-sm font-medium">Rótulo (Opcional)</label>
                     <Input
                       placeholder="Ex: WhatsApp Comercial"
                       value={formData.label}
@@ -190,9 +186,9 @@ export default function WhatsAppChannels() {
               <Button 
                 onClick={handleCreateChannel} 
                 className="w-full bg-indigo-600 hover:bg-indigo-700"
-                disabled={!formData.label || !formData.script_id}
+                disabled={scripts.length === 0 || !formData.script_id}
               >
-                Criar Conexão
+                Criar Canal
               </Button>
             </div>
           </DialogContent>
@@ -200,28 +196,19 @@ export default function WhatsAppChannels() {
       </div>
 
       {loading ? (
-      <div className="flex items-center justify-center py-12">
-      <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-      </div>
+        <div className="flex items-center justify-center py-12">
+          <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
+        </div>
       ) : channels.length === 0 ? (
-      <Card className="border-dashed">
-      <CardContent className="flex flex-col items-center justify-center py-12">
-       <MessageSquare className="w-12 h-12 text-slate-300 mb-4" />
-       <p className="text-slate-600 mb-4">Nenhuma conexão criada ainda</p>
-       {scripts.length === 0 ? (
-         <div className="text-center">
-           <p className="text-sm text-slate-500 mb-4">Crie um script aprovado em Biblioteca de Scripts primeiro</p>
-           <Button onClick={() => setShowCreateDialog(true)} variant="outline" disabled>
-             <Plus className="w-4 h-4 mr-2" /> Criar Conexão
-           </Button>
-         </div>
-       ) : (
-         <Button onClick={() => setShowCreateDialog(true)} variant="outline">
-           <Plus className="w-4 h-4 mr-2" /> Criar Primeira Conexão
-         </Button>
-       )}
-      </CardContent>
-      </Card>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <MessageSquare className="w-12 h-12 text-slate-300 mb-4" />
+            <p className="text-slate-600 mb-4">Nenhum canal criado ainda</p>
+            <Button onClick={() => setShowCreateDialog(true)} variant="outline">
+              <Plus className="w-4 h-4 mr-2" /> Criar Primeiro Canal
+            </Button>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-4">
           {channels.map(channel => (
@@ -302,10 +289,7 @@ export default function WhatsAppChannels() {
                 </Button>
               </>
             ) : (
-            <div className="text-center">
-            <AlertCircle className="w-8 h-8 text-red-600 mx-auto mb-2" />
-            <p className="text-slate-600">Erro ao gerar QR Code</p>
-            </div>
+              <p className="text-slate-600">Erro ao gerar QR Code</p>
             )}
           </div>
         </DialogContent>

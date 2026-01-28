@@ -69,26 +69,42 @@ export default function WhatsAppIntegration() {
 
     setSelectedIntegration(integration);
     setQrLoading(true);
+    setQrCode(null);
+    setShowQRDialog(true);
+
     try {
-      const response = await base44.functions.invoke('generateWhatsAppQR', {
+      // Iniciar função no servidor
+      await base44.functions.invoke('generateWhatsAppQR', {
         integrationId: integration.id
       });
-      if (response.data.qr_code) {
-        setQrCode(response.data.qr_code);
-        setShowQRDialog(true);
-      } else {
-        alert('QR Code sendo gerado. Aguarde 2 segundos e tente novamente.');
-        setTimeout(() => {
-          handleGenerateQR(integration);
-        }, 2000);
-        return;
-      }
-      await loadData();
+
+      // Polling para obter QR Code
+      const pollInterval = setInterval(async () => {
+        try {
+          const response = await base44.functions.invoke('generateWhatsAppQR', {
+            integrationId: integration.id
+          });
+
+          if (response.data.qr_code) {
+            setQrCode(response.data.qr_code);
+            clearInterval(pollInterval);
+            setQrLoading(false);
+          }
+        } catch (error) {
+          console.error('Erro ao buscar QR Code:', error);
+        }
+      }, 2000);
+
+      // Timeout de 30 segundos
+      setTimeout(() => {
+        clearInterval(pollInterval);
+        setQrLoading(false);
+      }, 30000);
     } catch (error) {
       console.error('Erro ao gerar QR Code:', error);
-      alert('Erro ao gerar QR Code');
-    } finally {
+      setShowQRDialog(false);
       setQrLoading(false);
+      alert('Erro ao gerar QR Code');
     }
   };
 

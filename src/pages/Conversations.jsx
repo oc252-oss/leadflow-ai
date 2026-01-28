@@ -143,7 +143,7 @@ export default function Conversations() {
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
             <Input
-              placeholder="Search conversations..."
+              placeholder="Buscar conversas..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="pl-10"
@@ -151,18 +151,18 @@ export default function Conversations() {
           </div>
           <Tabs value={filter} onValueChange={setFilter}>
             <TabsList className="w-full">
-              <TabsTrigger value="all" className="flex-1">All</TabsTrigger>
+              <TabsTrigger value="all" className="flex-1">Todas</TabsTrigger>
               <TabsTrigger value="bot_active" className="flex-1 gap-1">
                 <Bot className="w-3 h-3" />
-                AI
+                IA
               </TabsTrigger>
               <TabsTrigger value="human_active" className="flex-1 gap-1">
                 <User className="w-3 h-3" />
-                Agent
+                Agente
               </TabsTrigger>
               <TabsTrigger value="waiting_response" className="flex-1 gap-1">
                 <Clock className="w-3 h-3" />
-                Wait
+                Aguardando
               </TabsTrigger>
             </TabsList>
           </Tabs>

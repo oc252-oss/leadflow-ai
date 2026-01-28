@@ -204,7 +204,7 @@ function Campaigns() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Total Campaigns</p>
+                <p className="text-sm text-slate-500">Total de Campanhas</p>
                 <p className="text-2xl font-bold text-slate-900">{stats.totalCampaigns}</p>
               </div>
               <div className="p-3 rounded-xl bg-indigo-100">
@@ -217,7 +217,7 @@ function Campaigns() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Active Campaigns</p>
+                <p className="text-sm text-slate-500">Campanhas Ativas</p>
                 <p className="text-2xl font-bold text-slate-900">{stats.activeCampaigns}</p>
               </div>
               <div className="p-3 rounded-xl bg-emerald-100">
@@ -230,7 +230,7 @@ function Campaigns() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Total Leads</p>
+                <p className="text-sm text-slate-500">Total de Leads</p>
                 <p className="text-2xl font-bold text-slate-900">{stats.totalLeads}</p>
               </div>
               <div className="p-3 rounded-xl bg-blue-100">
@@ -243,7 +243,7 @@ function Campaigns() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Conversions</p>
+                <p className="text-sm text-slate-500">Conversões</p>
                 <p className="text-2xl font-bold text-slate-900">{stats.totalConversions}</p>
               </div>
               <div className="p-3 rounded-xl bg-violet-100">
@@ -259,7 +259,7 @@ function Campaigns() {
         <div className="relative flex-1 max-w-md">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
           <Input
-            placeholder="Search campaigns..."
+            placeholder="Buscar campanhas..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
             className="pl-10"
@@ -267,7 +267,7 @@ function Campaigns() {
         </div>
         <Button onClick={() => setShowAddDialog(true)} className="bg-indigo-600 hover:bg-indigo-700">
           <Plus className="w-4 h-4 mr-2" />
-          Add Campaign
+          Adicionar Campanha
         </Button>
       </div>
 
@@ -276,12 +276,12 @@ function Campaigns() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Campaign</TableHead>
-              <TableHead>Platform</TableHead>
+              <TableHead>Campanha</TableHead>
+              <TableHead>Plataforma</TableHead>
               <TableHead>Status</TableHead>
               <TableHead className="text-center">Leads</TableHead>
-              <TableHead className="text-center">Conversions</TableHead>
-              <TableHead className="text-center">Conv. Rate</TableHead>
+              <TableHead className="text-center">Conversões</TableHead>
+              <TableHead className="text-center">Taxa Conv.</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
@@ -289,7 +289,7 @@ function Campaigns() {
             {filteredCampaigns.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={7} className="text-center py-12 text-slate-500">
-                  No campaigns found
+                  Nenhuma campanha encontrada
                 </TableCell>
               </TableRow>
             ) : (
@@ -350,14 +350,14 @@ function Campaigns() {
                         <DropdownMenuContent align="end">
                           <DropdownMenuItem onClick={() => handleEdit(campaign)}>
                             <Edit2 className="w-4 h-4 mr-2" />
-                            Edit
+                            Editar
                           </DropdownMenuItem>
                           <DropdownMenuItem 
                             className="text-red-600"
                             onClick={() => handleDelete(campaign.id)}
                           >
                             <Trash2 className="w-4 h-4 mr-2" />
-                            Delete
+                            Excluir
                           </DropdownMenuItem>
                         </DropdownMenuContent>
                       </DropdownMenu>
@@ -374,25 +374,25 @@ function Campaigns() {
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{editingCampaign ? 'Edit Campaign' : 'Add Campaign'}</DialogTitle>
+            <DialogTitle>{editingCampaign ? 'Editar Campanha' : 'Adicionar Campanha'}</DialogTitle>
             <DialogDescription>
-              {editingCampaign ? 'Update campaign details' : 'Create a new campaign to track leads'}
+              {editingCampaign ? 'Atualizar detalhes da campanha' : 'Criar uma nova campanha para rastrear leads'}
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>Campaign Name *</Label>
+              <Label>Nome da Campanha *</Label>
               <Input
                 value={formData.campaign_name}
                 onChange={(e) => setFormData({ ...formData, campaign_name: e.target.value })}
-                placeholder="Summer Sale 2024"
+                placeholder="Promoção Verão 2024"
               />
             </div>
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Platform</Label>
+                <Label>Plataforma</Label>
                 <Select
                   value={formData.platform}
                   onValueChange={(value) => setFormData({ ...formData, platform: value })}
@@ -409,7 +409,7 @@ function Campaigns() {
                 </Select>
               </div>
               <div className="space-y-2">
-                <Label>Objective</Label>
+                <Label>Objetivo</Label>
                 <Select
                   value={formData.objective}
                   onValueChange={(value) => setFormData({ ...formData, objective: value })}
@@ -418,17 +418,17 @@ function Campaigns() {
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="lead_generation">Lead Generation</SelectItem>
-                    <SelectItem value="messages">Messages</SelectItem>
-                    <SelectItem value="conversions">Conversions</SelectItem>
-                    <SelectItem value="traffic">Traffic</SelectItem>
+                    <SelectItem value="lead_generation">Geração de Leads</SelectItem>
+                    <SelectItem value="messages">Mensagens</SelectItem>
+                    <SelectItem value="conversions">Conversões</SelectItem>
+                    <SelectItem value="traffic">Tráfego</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label>Facebook Campaign ID</Label>
+              <Label>ID da Campanha Facebook</Label>
               <Input
                 value={formData.external_campaign_id}
                 onChange={(e) => setFormData({ ...formData, external_campaign_id: e.target.value })}
@@ -438,19 +438,19 @@ function Campaigns() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Ad Set Name</Label>
+                <Label>Nome do Conjunto de Anúncios</Label>
                 <Input
                   value={formData.adset_name}
                   onChange={(e) => setFormData({ ...formData, adset_name: e.target.value })}
-                  placeholder="Audience A"
+                  placeholder="Público A"
                 />
               </div>
               <div className="space-y-2">
-                <Label>Ad Name</Label>
+                <Label>Nome do Anúncio</Label>
                 <Input
                   value={formData.ad_name}
                   onChange={(e) => setFormData({ ...formData, ad_name: e.target.value })}
-                  placeholder="Creative 1"
+                  placeholder="Criativo 1"
                 />
               </div>
             </div>
@@ -465,9 +465,9 @@ function Campaigns() {
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="paused">Paused</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
+                  <SelectItem value="active">Ativa</SelectItem>
+                  <SelectItem value="paused">Pausada</SelectItem>
+                  <SelectItem value="completed">Concluída</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -478,7 +478,7 @@ function Campaigns() {
               setShowAddDialog(false);
               setEditingCampaign(null);
             }}>
-              Cancel
+              Cancelar
             </Button>
             <Button 
               onClick={handleSave}
@@ -486,7 +486,7 @@ function Campaigns() {
               className="bg-indigo-600 hover:bg-indigo-700"
             >
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              {editingCampaign ? 'Update' : 'Create'}
+              {editingCampaign ? 'Atualizar' : 'Criar'}
             </Button>
           </DialogFooter>
         </DialogContent>

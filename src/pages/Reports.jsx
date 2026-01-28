@@ -186,8 +186,8 @@ function Reports() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-slate-900">Reports & Analytics</h2>
-          <p className="text-slate-500 mt-1">Track your lead generation and sales performance</p>
+          <h2 className="text-2xl font-bold text-slate-900">Relatórios & Análises</h2>
+          <p className="text-slate-500 mt-1">Acompanhe sua geração de leads e performance de vendas</p>
         </div>
         <div className="flex items-center gap-3">
           <Select value={dateRange} onValueChange={setDateRange}>
@@ -196,15 +196,15 @@ function Reports() {
               <SelectValue />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="7">Last 7 days</SelectItem>
-              <SelectItem value="14">Last 14 days</SelectItem>
-              <SelectItem value="30">Last 30 days</SelectItem>
-              <SelectItem value="90">Last 90 days</SelectItem>
+              <SelectItem value="7">Últimos 7 dias</SelectItem>
+              <SelectItem value="14">Últimos 14 dias</SelectItem>
+              <SelectItem value="30">Últimos 30 dias</SelectItem>
+              <SelectItem value="90">Últimos 90 dias</SelectItem>
             </SelectContent>
           </Select>
           <Button variant="outline">
             <Download className="w-4 h-4 mr-2" />
-            Export
+            Exportar
           </Button>
         </div>
       </div>
@@ -215,7 +215,7 @@ function Reports() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Total Leads</p>
+                <p className="text-sm text-slate-500">Total de Leads</p>
                 <p className="text-3xl font-bold text-slate-900">{metrics.totalLeads}</p>
               </div>
               <div className="p-3 rounded-xl bg-indigo-100">
@@ -228,7 +228,7 @@ function Reports() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Hot Leads</p>
+                <p className="text-sm text-slate-500">Leads Quentes</p>
                 <p className="text-3xl font-bold text-slate-900">{metrics.hotLeads}</p>
               </div>
               <div className="p-3 rounded-xl bg-orange-100">
@@ -241,7 +241,7 @@ function Reports() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Conversions</p>
+                <p className="text-sm text-slate-500">Conversões</p>
                 <p className="text-3xl font-bold text-slate-900">{metrics.conversions}</p>
               </div>
               <div className="p-3 rounded-xl bg-emerald-100">
@@ -254,7 +254,7 @@ function Reports() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Conversion Rate</p>
+                <p className="text-sm text-slate-500">Taxa de Conversão</p>
                 <p className="text-3xl font-bold text-slate-900">{metrics.conversionRate}%</p>
               </div>
               <div className="p-3 rounded-xl bg-violet-100">
@@ -270,19 +270,19 @@ function Reports() {
         <TabsList className="bg-white border">
           <TabsTrigger value="overview" className="gap-2">
             <BarChart3 className="w-4 h-4" />
-            Overview
+            Visão Geral
           </TabsTrigger>
           <TabsTrigger value="sources" className="gap-2">
             <PieChartIcon className="w-4 h-4" />
-            Sources
+            Origens
           </TabsTrigger>
           <TabsTrigger value="campaigns" className="gap-2">
             <Target className="w-4 h-4" />
-            Campaigns
+            Campanhas
           </TabsTrigger>
           <TabsTrigger value="agents" className="gap-2">
             <Users className="w-4 h-4" />
-            Agents
+            Agentes
           </TabsTrigger>
         </TabsList>
 
@@ -290,7 +290,7 @@ function Reports() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="border-0 shadow-sm">
               <CardHeader>
-                <CardTitle>Daily Leads & Conversions</CardTitle>
+                <CardTitle>Leads e Conversões Diárias</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
@@ -320,7 +320,7 @@ function Reports() {
 
             <Card className="border-0 shadow-sm">
               <CardHeader>
-                <CardTitle>Funnel Distribution</CardTitle>
+                <CardTitle>Distribuição do Funil</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
@@ -343,7 +343,7 @@ function Reports() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="border-0 shadow-sm">
               <CardHeader>
-                <CardTitle>Lead Sources Distribution</CardTitle>
+                <CardTitle>Distribuição por Origem</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="h-80">
@@ -372,7 +372,7 @@ function Reports() {
 
             <Card className="border-0 shadow-sm">
               <CardHeader>
-                <CardTitle>Source Performance</CardTitle>
+                <CardTitle>Desempenho por Origem</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
@@ -404,7 +404,7 @@ function Reports() {
         <TabsContent value="campaigns">
           <Card className="border-0 shadow-sm">
             <CardHeader>
-              <CardTitle>Campaign Performance</CardTitle>
+              <CardTitle>Desempenho de Campanhas</CardTitle>
             </CardHeader>
             <CardContent>
               <div className="h-96">
@@ -427,13 +427,13 @@ function Reports() {
         <TabsContent value="agents">
           <Card className="border-0 shadow-sm">
             <CardHeader>
-              <CardTitle>Agent Performance</CardTitle>
+              <CardTitle>Desempenho de Agentes</CardTitle>
             </CardHeader>
             <CardContent>
               {getAgentPerformance().length === 0 ? (
                 <div className="text-center py-12 text-slate-500">
                   <Users className="w-12 h-12 mx-auto mb-3 text-slate-300" />
-                  <p>No agent performance data available</p>
+                  <p>Nenhum dado de desempenho disponível</p>
                 </div>
               ) : (
                 <div className="space-y-4">
@@ -445,17 +445,17 @@ function Reports() {
                         </div>
                         <div>
                           <p className="font-medium text-slate-900">{agent.name}</p>
-                          <p className="text-sm text-slate-500">{agent.leads} leads assigned</p>
+                          <p className="text-sm text-slate-500">{agent.leads} leads atribuídos</p>
                         </div>
                       </div>
                       <div className="flex items-center gap-6">
                         <div className="text-center">
                           <p className="text-2xl font-bold text-slate-900">{agent.conversions}</p>
-                          <p className="text-xs text-slate-500">Conversions</p>
+                          <p className="text-xs text-slate-500">Conversões</p>
                         </div>
                         <div className="text-center">
                           <p className="text-2xl font-bold text-emerald-600">{agent.rate}%</p>
-                          <p className="text-xs text-slate-500">Conv. Rate</p>
+                          <p className="text-xs text-slate-500">Taxa Conv.</p>
                         </div>
                       </div>
                     </div>

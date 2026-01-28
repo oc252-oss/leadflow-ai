@@ -133,7 +133,7 @@ export default function Leads() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-slate-900">Leads</h2>
-          <p className="text-slate-500 mt-1">{filteredLeads.length} leads found</p>
+          <p className="text-slate-500 mt-1">{filteredLeads.length} leads encontrados</p>
         </div>
         <div className="flex items-center gap-3">
           <div className="flex items-center rounded-lg border border-slate-200 p-1">
@@ -156,18 +156,18 @@ export default function Leads() {
           </div>
           <Button variant="outline" size="sm">
             <Upload className="w-4 h-4 mr-2" />
-            Import
+            Importar
           </Button>
           <Button variant="outline" size="sm">
             <Download className="w-4 h-4 mr-2" />
-            Export
+            Exportar
           </Button>
           <Button 
             onClick={() => setShowAddDialog(true)}
             className="bg-indigo-600 hover:bg-indigo-700"
           >
             <Plus className="w-4 h-4 mr-2" />
-            Add Lead
+            Adicionar Lead
           </Button>
         </div>
       </div>
@@ -181,11 +181,11 @@ export default function Leads() {
           <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
             <Plus className="w-8 h-8 text-slate-400" />
           </div>
-          <h3 className="text-lg font-medium text-slate-900 mb-2">No leads found</h3>
-          <p className="text-slate-500 mb-4">Try adjusting your filters or add a new lead</p>
+          <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhum lead encontrado</h3>
+          <p className="text-slate-500 mb-4">Tente ajustar os filtros ou adicione um novo lead</p>
           <Button onClick={() => setShowAddDialog(true)} className="bg-indigo-600 hover:bg-indigo-700">
             <Plus className="w-4 h-4 mr-2" />
-            Add Lead
+            Adicionar Lead
           </Button>
         </div>
       ) : viewMode === 'grid' ? (

@@ -60,6 +60,7 @@ import ConversationFlows from './pages/ConversationFlows';
 import Conversations from './pages/Conversations';
 import Dashboard from './pages/Dashboard';
 import FranchiseDashboard from './pages/FranchiseDashboard';
+import Help from './pages/Help';
 import IntegrationHub from './pages/IntegrationHub';
 import LeadDetail from './pages/LeadDetail';
 import Leads from './pages/Leads';
@@ -79,9 +80,9 @@ import VoiceCampaigns from './pages/VoiceCampaigns';
 import VoiceFunnel from './pages/VoiceFunnel';
 import VoiceSimulator from './pages/VoiceSimulator';
 import WhatsAppChannels from './pages/WhatsAppChannels';
-import WhatsAppIntegration from './pages/WhatsAppIntegration';
-import Help from './pages/Help';
 import WhatsAppConfiguration from './pages/WhatsAppConfiguration';
+import WhatsAppIntegration from './pages/WhatsAppIntegration';
+import WhatsAppServerSetup from './pages/WhatsAppServerSetup';
 import __Layout from './Layout.jsx';
 
 
@@ -99,6 +100,7 @@ export const PAGES = {
     "Conversations": Conversations,
     "Dashboard": Dashboard,
     "FranchiseDashboard": FranchiseDashboard,
+    "Help": Help,
     "IntegrationHub": IntegrationHub,
     "LeadDetail": LeadDetail,
     "Leads": Leads,
@@ -118,9 +120,9 @@ export const PAGES = {
     "VoiceFunnel": VoiceFunnel,
     "VoiceSimulator": VoiceSimulator,
     "WhatsAppChannels": WhatsAppChannels,
-    "WhatsAppIntegration": WhatsAppIntegration,
-    "Help": Help,
     "WhatsAppConfiguration": WhatsAppConfiguration,
+    "WhatsAppIntegration": WhatsAppIntegration,
+    "WhatsAppServerSetup": WhatsAppServerSetup,
 }
 
 export const pagesConfig = {

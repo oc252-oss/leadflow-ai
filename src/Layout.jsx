@@ -106,6 +106,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'SalesFunnel', label: 'Funil de Vendas', href: createPageUrl('SalesFunnel'), icon: GitBranch, roles: ['company_admin', 'brand_manager'] },
     { type: 'divider' },
     { name: 'ChannelsIntegrations', label: 'Canais & Integrações', href: createPageUrl('ChannelsIntegrations'), icon: MessageSquare, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
+    { name: 'WhatsAppServerSetup', label: 'Servidor WhatsApp', href: createPageUrl('WhatsAppServerSetup'), icon: MessageSquare, roles: ['company_admin', 'brand_manager'] },
     { name: 'WhatsAppChannels', label: 'Instâncias WhatsApp', href: createPageUrl('WhatsAppChannels'), icon: MessageSquare, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
     { type: 'divider' },
     { name: 'Campaigns', label: t('campaigns'), href: createPageUrl('Campaigns'), icon: Target, roles: ['company_admin', 'sales_manager', 'unit_admin'] },

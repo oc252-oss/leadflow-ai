@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Pause, Play, RotateCcw, PhoneOff, AlertCircle, Volume2 } from 'lucide-react';
+import { Phone, RotateCcw, PhoneOff, AlertCircle, Volume2 } from 'lucide-react';
 import { toast } from 'sonner';
 
 const CALL_SEQUENCE = [
@@ -160,6 +160,17 @@ export default function VoiceSimulationCall({ assistant, leadName, leadContext, 
 
   return (
     <div className="space-y-6">
+      {/* Aviso de Simulação */}
+      <Card className="bg-amber-50 border-amber-200">
+        <CardContent className="pt-4 pb-4 flex items-start gap-3">
+          <AlertCircle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+          <div>
+            <p className="text-sm font-medium text-amber-900">Simulação de voz — áudio real será ativado na produção</p>
+            <p className="text-xs text-amber-700 mt-1">Você está testando o comportamento e as mensagens do assistente em um cenário de ligação</p>
+          </div>
+        </CardContent>
+      </Card>
+
       {/* Header - Informações da Simulação */}
       <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
         <CardContent className="pt-6">
@@ -176,7 +187,7 @@ export default function VoiceSimulationCall({ assistant, leadName, leadContext, 
         </CardContent>
       </Card>
 
-      {/* Animação de Chamada */}
+      {/* Simulação de Chamada */}
       <Card className="border-2 border-indigo-200">
         <CardContent className="pt-8 pb-8">
           <div className="space-y-6">
@@ -185,7 +196,7 @@ export default function VoiceSimulationCall({ assistant, leadName, leadContext, 
               <div className="flex justify-center mb-4">
                 <div className="relative w-20 h-20 flex items-center justify-center bg-indigo-100 rounded-full">
                   <Phone className="w-10 h-10 text-indigo-600" />
-                  {isPlaying && (
+                  {callStatus !== 'ended' && (
                     <>
                       <div className="absolute inset-0 rounded-full border-2 border-indigo-600 animate-pulse" />
                       <div className="absolute inset-0 rounded-full border-2 border-indigo-600 animate-pulse" style={{animationDelay: '0.5s'}} />
@@ -193,7 +204,7 @@ export default function VoiceSimulationCall({ assistant, leadName, leadContext, 
                   )}
                 </div>
               </div>
-              <p className="text-lg font-semibold text-slate-900">Ligação em Andamento...</p>
+              <p className="text-lg font-semibold text-slate-900">{getStatusText()}</p>
               <p className="text-sm text-slate-600 mt-1">Com {leadName}</p>
             </div>
 
@@ -201,35 +212,39 @@ export default function VoiceSimulationCall({ assistant, leadName, leadContext, 
             <div className="bg-slate-200 h-1 rounded-full overflow-hidden">
               <div 
                 className="bg-indigo-600 h-full transition-all duration-300"
-                style={{width: `${Math.min(((currentStep + 1) / 16) * 100, 100)}%`}}
+                style={{width: `${Math.min(((currentStep + 1) / CALL_SEQUENCE.length) * 100, 100)}%`}}
               />
             </div>
-            <p className="text-xs text-slate-500 text-center">Fala {currentStep + 1} de 16</p>
+            <p className="text-xs text-slate-500 text-center">Fala {currentStep + 1} de {CALL_SEQUENCE.length}</p>
 
-            {/* Mensagem Atual */}
-            <div className="bg-slate-50 rounded-lg p-6 border border-slate-200 min-h-[120px] flex flex-col justify-center">
-              <div className="flex gap-3 items-start">
-                <Badge className="bg-indigo-600 flex-shrink-0">IA</Badge>
-                <div className="flex-1">
-                  <p className="text-slate-900 leading-relaxed">
-                    {currentStep === 0 ? getGreetingMessage() : 'Continuando a conversa...'}
-                  </p>
-                  {isPlaying && (
-                    <div className="mt-3 flex gap-1 items-center">
-                      <span className="text-xs text-slate-500">Ouvir Fala (TTS)</span>
-                      <div className="flex gap-1">
-                        <div className="w-1 h-4 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0s'}} />
-                        <div className="w-1 h-4 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}} />
-                        <div className="w-1 h-4 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}} />
+            {/* Transcrição da Fala */}
+            {getCurrentMessage() && (
+              <div className={`rounded-lg p-6 border-2 min-h-[120px] flex flex-col justify-center transition-all ${
+                CALL_SEQUENCE[currentStep]?.speaker === 'ia'
+                  ? 'bg-indigo-50 border-indigo-200'
+                  : 'bg-slate-50 border-slate-200'
+              }`}>
+                <div className="flex gap-3 items-start">
+                  <Badge className={CALL_SEQUENCE[currentStep]?.speaker === 'ia' ? 'bg-indigo-600' : 'bg-slate-400'}>
+                    {CALL_SEQUENCE[currentStep]?.speaker === 'ia' ? 'IA' : 'LEAD'}
+                  </Badge>
+                  <div className="flex-1">
+                    <p className="text-slate-900 leading-relaxed">
+                      {getCurrentMessage()}
+                    </p>
+                    {callStatus === 'speaking' && (
+                      <div className="mt-3 flex gap-2 items-center text-xs text-indigo-600 font-medium">
+                        <Volume2 className="w-4 h-4" />
+                        <span>Falando ({Math.ceil(speakingDuration)}s)</span>
                       </div>
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Feedback */}
-            {feedback === null && (
+            {/* Feedback para Respostas da IA */}
+            {CALL_SEQUENCE[currentStep]?.speaker === 'ia' && callStatus === 'listening' && feedback === null && (
               <div className="grid grid-cols-2 gap-3">
                 <Button 
                   variant="outline"
@@ -254,7 +269,15 @@ export default function VoiceSimulationCall({ assistant, leadName, leadContext, 
                   ? 'bg-green-50 text-green-700 border border-green-200' 
                   : 'bg-red-50 text-red-700 border border-red-200'
               }`}>
-                {feedback ? 'Resposta adequada! Próximo...' : 'Resposta inadequada. Próximo...'}
+                {feedback ? 'Resposta adequada ✓' : 'Resposta inadequada ✗'}
+              </div>
+            )}
+
+            {/* Mensagem Final */}
+            {currentStep >= CALL_SEQUENCE.length && (
+              <div className="p-4 rounded-lg bg-green-50 border border-green-200 text-center">
+                <p className="font-semibold text-green-700">Simulação concluída!</p>
+                <p className="text-sm text-green-600 mt-1">Duração total: {formatTime(callDuration)}</p>
               </div>
             )}
           </div>
@@ -263,13 +286,6 @@ export default function VoiceSimulationCall({ assistant, leadName, leadContext, 
 
       {/* Controles */}
       <div className="flex gap-2 justify-center">
-        <Button 
-          variant="outline"
-          size="icon"
-          onClick={() => setIsPlaying(!isPlaying)}
-        >
-          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-        </Button>
         <Button 
           variant="outline"
           size="icon"
@@ -283,7 +299,7 @@ export default function VoiceSimulationCall({ assistant, leadName, leadContext, 
           onClick={handleEnd}
         >
           <PhoneOff className="w-4 h-4" />
-          Encerrar Ligação
+          Sair da Simulação
         </Button>
       </div>
     </div>

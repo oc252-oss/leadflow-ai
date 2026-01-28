@@ -1,9 +1,7 @@
 import AIFlows from './pages/AIFlows';
-import AIFlowsSimple from './pages/AIFlowsSimple';
 import AISimulator from './pages/AISimulator';
 import AssistantCentral from './pages/AssistantCentral';
 import Assistants from './pages/Assistants';
-import AIAssistantsSimple from './pages/AIAssistantsSimple';
 import Automations from './pages/Automations';
 import Campaigns from './pages/Campaigns';
 import ChannelsIntegrations from './pages/ChannelsIntegrations';
@@ -26,16 +24,16 @@ import Units from './pages/Units';
 import VoiceCampaigns from './pages/VoiceCampaigns';
 import VoiceFunnel from './pages/VoiceFunnel';
 import VoiceSimulator from './pages/VoiceSimulator';
+import AIFlowsSimple from './pages/AIFlowsSimple';
+import AIAssistantsSimple from './pages/AIAssistantsSimple';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "AIFlows": AIFlowsSimple,
-    "AIFlowsLegacy": AIFlows,
+    "AIFlows": AIFlows,
     "AISimulator": AISimulator,
     "AssistantCentral": AssistantCentral,
-    "Assistants": AIAssistantsSimple,
-    "AssistantsLegacy": Assistants,
+    "Assistants": Assistants,
     "Automations": Automations,
     "Campaigns": Campaigns,
     "ChannelsIntegrations": ChannelsIntegrations,
@@ -58,6 +56,8 @@ export const PAGES = {
     "VoiceCampaigns": VoiceCampaigns,
     "VoiceFunnel": VoiceFunnel,
     "VoiceSimulator": VoiceSimulator,
+    "AIFlowsSimple": AIFlowsSimple,
+    "AIAssistantsSimple": AIAssistantsSimple,
 }
 
 export const pagesConfig = {

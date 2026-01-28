@@ -116,8 +116,8 @@ export default function ChannelsIntegrations() {
           base44.entities.FacebookIntegration ? base44.entities.FacebookIntegration.filter({ organization_id: org.id }).catch(() => []) : Promise.resolve([]),
           base44.entities.FacebookIntegration ? base44.entities.FacebookIntegration.filter({ organization_id: org.id }).catch(() => []) : Promise.resolve([]),
           base44.entities.TeamMember.filter({ organization_id: org.id }).catch(() => []),
-          base44.entities.Assistant.filter({ organization_id: org.id }).catch(() => []),
-          base44.entities.AIConversationFlow.filter({ organization_id: org.id }, '-priority', 100).catch(() => [])
+          base44.entities.AIAssistant.list('-created_date', 100).catch(() => []),
+          base44.entities.AIFlow.list('-created_date', 100).catch(() => [])
         ]);
 
         setWhatsappIntegrations(whatsappData || []);
@@ -152,7 +152,7 @@ export default function ChannelsIntegrations() {
 
   const getQRValidationMessage = () => {
     if (!qrFormData.assistant_id && !qrFormData.flow_id) {
-      return 'Selecione pelo menos um Assistente IA ou Fluxo de IA para gerar o QR Code';
+      return 'Selecione um Assistente IA ou Fluxo de IA (opcional)';
     }
     return '';
   };
@@ -626,28 +626,46 @@ export default function ChannelsIntegrations() {
             <div className="space-y-2">
               <Label>Assistente IA (opcional)</Label>
               <Select
-                value={qrFormData.assistant_id}
-                onValueChange={(value) => setQrFormData({ ...qrFormData, assistant_id: value })}
+                value={qrFormData.assistant_id || ''}
+                onValueChange={(value) => setQrFormData({ ...qrFormData, assistant_id: value || null })}
               >
                 <SelectTrigger>
                   <SelectValue placeholder="Nenhum" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={null}>Nenhum</SelectItem>
-                  {assistants.map(assistant => (
-                    <SelectItem key={assistant.id} value={assistant.id}>{assistant.name}</SelectItem>
-                  ))}
+                  {assistants.length === 0 ? (
+                    <SelectItem disabled value="">Nenhum assistente disponível</SelectItem>
+                  ) : (
+                    assistants.map(assistant => (
+                      <SelectItem key={assistant.id} value={assistant.id}>{assistant.name}</SelectItem>
+                    ))
+                  )}
                 </SelectContent>
               </Select>
             </div>
 
-            <IntegrationFlowSelector 
-              flows={flows}
-              selectedFlowId={qrFormData.flow_id}
-              onFlowChange={(value) => setQrFormData({ ...qrFormData, flow_id: value })}
-              channelType="whatsapp"
-              label="Fluxo de IA (opcional)"
-            />
+            <div className="space-y-2">
+               <Label>Fluxo de IA (opcional)</Label>
+               <Select
+                 value={qrFormData.flow_id || ''}
+                 onValueChange={(value) => setQrFormData({ ...qrFormData, flow_id: value || null })}
+               >
+                 <SelectTrigger>
+                   <SelectValue placeholder="Nenhum" />
+                 </SelectTrigger>
+                 <SelectContent>
+                   <SelectItem value={null}>Nenhum</SelectItem>
+                   {flows.length === 0 ? (
+                     <SelectItem disabled value="">Nenhum fluxo disponível</SelectItem>
+                   ) : (
+                     flows.map(flow => (
+                       <SelectItem key={flow.id} value={flow.id}>{flow.name}</SelectItem>
+                     ))
+                   )}
+                 </SelectContent>
+               </Select>
+             </div>
 
             {/* Priority Info */}
             {(qrFormData.assistant_id || qrFormData.flow_id) && (

@@ -123,7 +123,7 @@ export default function AIFlows() {
       }
       
       const [flowsData, campaignsData] = await Promise.all([
-        base44.entities.AIConversationFlow.filter({ organization_id: org.id }, '-priority', 100).catch(() => []),
+        base44.entities.AIFlow.filter({ organization_id: org.id, unit_id: unitData?.id }, '-priority', 100).catch(() => []),
         base44.entities.Campaign.filter({ organization_id: org.id }).catch(() => [])
       ]);
       setFlows(flowsData);
@@ -148,9 +148,13 @@ export default function AIFlows() {
         return;
       }
 
+      if (!formData.unit_id) {
+        toast.error('Unidade é obrigatória');
+        return;
+      }
+
       const dataToSave = {
         ...formData,
-        unit_id: formData.unit_id || null,
         trigger_sources: formData.trigger_sources.length > 0 ? formData.trigger_sources : null,
         trigger_campaigns: formData.trigger_campaigns.length > 0 ? formData.trigger_campaigns : null,
         trigger_keywords: formData.trigger_keywords.length > 0 ? formData.trigger_keywords : null,
@@ -158,10 +162,10 @@ export default function AIFlows() {
       };
 
       if (editingFlow) {
-        await base44.entities.AIConversationFlow.update(editingFlow.id, dataToSave);
+        await base44.entities.AIFlow.update(editingFlow.id, dataToSave);
         toast.success('Fluxo atualizado com sucesso');
       } else {
-        await base44.entities.AIConversationFlow.create(dataToSave);
+        await base44.entities.AIFlow.create(dataToSave);
         toast.success('Fluxo criado com sucesso');
       }
 
@@ -205,7 +209,7 @@ export default function AIFlows() {
     if (!confirm('Tem certeza que deseja excluir este fluxo?')) return;
     
     try {
-      await base44.entities.AIConversationFlow.delete(id);
+      await base44.entities.AIFlow.delete(id);
       toast.success('Fluxo excluído com sucesso');
       await loadData();
     } catch (error) {

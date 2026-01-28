@@ -639,7 +639,7 @@ export default function ChannelsIntegrations() {
           <DialogHeader>
             <DialogTitle>Gerar QR Code WhatsApp</DialogTitle>
             <DialogDescription>
-              Configure as informações antes de gerar o QR Code
+              Configure e gere um novo QR Code
             </DialogDescription>
           </DialogHeader>
 
@@ -662,17 +662,35 @@ export default function ChannelsIntegrations() {
             </div>
 
             <div className="space-y-2">
+              <Label>Agente Responsável (opcional)</Label>
+              <Select
+                value={qrFormData.assigned_agent_email}
+                onValueChange={(value) => setQrFormData({ ...qrFormData, assigned_agent_email: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>Nenhum</SelectItem>
+                  {filteredTeamMembers.map(tm => (
+                    <SelectItem key={tm.id} value={tm.user_email}>{tm.user_email}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
               <Label>Assistente IA (opcional)</Label>
               <Select
                 value={qrFormData.assistant_id}
                 onValueChange={(value) => setQrFormData({ ...qrFormData, assistant_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um assistente" />
+                  <SelectValue placeholder="Nenhum" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={null}>Nenhum</SelectItem>
-                  {assistants.map(assistant => (
+                  {filteredAssistants.map(assistant => (
                     <SelectItem key={assistant.id} value={assistant.id}>{assistant.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -680,13 +698,13 @@ export default function ChannelsIntegrations() {
             </div>
 
             <div className="space-y-2">
-              <Label>Fluxo de IA Padrão (opcional)</Label>
+              <Label>Fluxo de IA (opcional)</Label>
               <Select
                 value={qrFormData.flow_id}
                 onValueChange={(value) => setQrFormData({ ...qrFormData, flow_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um fluxo" />
+                  <SelectValue placeholder="Nenhum" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={null}>Nenhum</SelectItem>
@@ -698,11 +716,11 @@ export default function ChannelsIntegrations() {
             </div>
 
             <div className="space-y-2">
-              <Label>Identificação (opcional)</Label>
+              <Label>Label (ex: Recepção, Comercial)</Label>
               <Input
                 value={qrFormData.label}
                 onChange={(e) => setQrFormData({ ...qrFormData, label: e.target.value })}
-                placeholder="Ex: Recepção, Atendimento Principal"
+                placeholder="Identificação do QR Code"
               />
             </div>
 
@@ -759,9 +777,7 @@ export default function ChannelsIntegrations() {
                   <SelectContent>
                     <SelectItem value="zapi">Z-API</SelectItem>
                     <SelectItem value="gupshup">Gupshup</SelectItem>
-                    <SelectItem value="zenvia">Zenvia</SelectItem>
                     <SelectItem value="360dialog">360Dialog</SelectItem>
-                    <SelectItem value="other">Outro</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -793,9 +809,27 @@ export default function ChannelsIntegrations() {
               />
             </div>
 
+            <div className="space-y-2">
+              <Label>Agente Responsável (opcional)</Label>
+              <Select
+                value={providerFormData.assigned_agent_email}
+                onValueChange={(value) => setProviderFormData({ ...providerFormData, assigned_agent_email: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>Nenhum</SelectItem>
+                  {filteredTeamMembers.map(tm => (
+                    <SelectItem key={tm.id} value={tm.user_email}>{tm.user_email}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label>Instance ID / Endpoint *</Label>
+                <Label>Instance ID *</Label>
                 <Input
                   value={providerFormData.instance_id}
                   onChange={(e) => setProviderFormData({ ...providerFormData, instance_id: e.target.value })}
@@ -804,7 +838,7 @@ export default function ChannelsIntegrations() {
               </div>
 
               <div className="space-y-2">
-                <Label>API Key / Token *</Label>
+                <Label>API Key *</Label>
                 <Input
                   value={providerFormData.api_key}
                   onChange={(e) => setProviderFormData({ ...providerFormData, api_key: e.target.value })}
@@ -825,17 +859,17 @@ export default function ChannelsIntegrations() {
             </div>
 
             <div className="space-y-2">
-              <Label>Assistente IA (opcional)</Label>
+              <Label>Assistente IA</Label>
               <Select
                 value={providerFormData.assistant_id}
                 onValueChange={(value) => setProviderFormData({ ...providerFormData, assistant_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um assistente" />
+                  <SelectValue placeholder="Nenhum" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={null}>Nenhum</SelectItem>
-                  {assistants.map(assistant => (
+                  {filteredAssistants.map(assistant => (
                     <SelectItem key={assistant.id} value={assistant.id}>{assistant.name}</SelectItem>
                   ))}
                 </SelectContent>
@@ -843,13 +877,13 @@ export default function ChannelsIntegrations() {
             </div>
 
             <div className="space-y-2">
-              <Label>Fluxo de IA Padrão (opcional)</Label>
+              <Label>Fluxo de IA</Label>
               <Select
                 value={providerFormData.flow_id}
                 onValueChange={(value) => setProviderFormData({ ...providerFormData, flow_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Selecione um fluxo" />
+                  <SelectValue placeholder="Nenhum" />
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value={null}>Nenhum</SelectItem>
@@ -861,11 +895,11 @@ export default function ChannelsIntegrations() {
             </div>
 
             <div className="space-y-2">
-              <Label>Identificação (opcional)</Label>
+              <Label>Label (ex: Comercial, Pós-venda)</Label>
               <Input
                 value={providerFormData.label}
                 onChange={(e) => setProviderFormData({ ...providerFormData, label: e.target.value })}
-                placeholder="Ex: WhatsApp Comercial"
+                placeholder="Identificação"
               />
             </div>
           </div>

@@ -26,6 +26,7 @@ import VoiceFunnel from './pages/VoiceFunnel';
 import VoiceSimulator from './pages/VoiceSimulator';
 import IntegrationHub from './pages/IntegrationHub';
 import AIFlows from './pages/AIFlows';
+import AIAssistants from './pages/AIAssistants';
 import __Layout from './Layout.jsx';
 
 
@@ -58,6 +59,7 @@ export const PAGES = {
     "VoiceSimulator": VoiceSimulator,
     "IntegrationHub": IntegrationHub,
     "AIFlows": AIFlows,
+    "AIAssistants": AIAssistants,
 }
 
 export const pagesConfig = {

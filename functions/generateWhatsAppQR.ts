@@ -3,22 +3,21 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 const WHATSAPP_SERVER_URL = Deno.env.get('WHATSAPP_SERVER_URL') || 'http://localhost:3001';
 
 async function callWhatsAppServer(endpoint, method = 'GET', body = null) {
-  const controller = new AbortController();
-  const timeout = setTimeout(() => controller.abort(), 8000); // 8 segundos timeout
+  const url = `${WHATSAPP_SERVER_URL}${endpoint}`;
+  console.log(`[WhatsApp] ${method} ${url}`);
 
   try {
-    const response = await fetch(`${WHATSAPP_SERVER_URL}${endpoint}`, {
+    const response = await fetch(url, {
       method,
       headers: { 'Content-Type': 'application/json' },
-      body: body ? JSON.stringify(body) : undefined,
-      signal: controller.signal
+      body: body ? JSON.stringify(body) : undefined
     });
 
-    clearTimeout(timeout);
+    console.log(`[WhatsApp] Response status: ${response.status}`);
     return response;
   } catch (error) {
-    clearTimeout(timeout);
-    throw new Error(`Servidor WhatsApp indisponível: ${error.message}`);
+    console.error(`[WhatsApp] Erro de conexão em ${url}:`, error.message);
+    throw new Error(`Falha ao conectar em ${WHATSAPP_SERVER_URL}: ${error.message}`);
   }
 }
 

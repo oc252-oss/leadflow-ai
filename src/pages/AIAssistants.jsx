@@ -11,8 +11,6 @@ import { toast } from 'sonner';
 
 export default function AIAssistants() {
   const [assistants, setAssistants] = useState([]);
-  const [flows, setFlows] = useState([]);
-  const [approvedScripts, setApprovedScripts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [defaultBrand, setDefaultBrand] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -21,8 +19,6 @@ export default function AIAssistants() {
     name: '',
     channel: 'whatsapp',
     tone: 'elegante',
-    ai_flow_id: '',
-    approved_script_id: '',
     greeting_message: '',
     system_prompt: ''
   });
@@ -40,14 +36,8 @@ export default function AIAssistants() {
         setDefaultBrand(brands[0]);
       }
 
-      const [assistantsData, flowsData, scriptsData] = await Promise.all([
-        base44.entities.AIAssistant.list('-updated_date', 100),
-        base44.entities.AIFlow.filter({ is_active: true }, '-updated_date', 100),
-        base44.entities.AIScript.filter({ is_approved: true }, '-created_date', 100)
-      ]);
+      const assistantsData = await base44.entities.Assistant.list('-updated_date', 100);
       setAssistants(assistantsData || []);
-      setFlows(flowsData || []);
-      setApprovedScripts(scriptsData || []);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       toast.error('Erro ao carregar dados');
@@ -63,8 +53,6 @@ export default function AIAssistants() {
         name: assistant.name,
         channel: assistant.channel,
         tone: assistant.tone,
-        ai_flow_id: assistant.ai_flow_id,
-        approved_script_id: assistant.approved_script_id || '',
         greeting_message: assistant.greeting_message || '',
         system_prompt: assistant.system_prompt || ''
       });
@@ -74,8 +62,6 @@ export default function AIAssistants() {
         name: '',
         channel: 'whatsapp',
         tone: 'elegante',
-        ai_flow_id: '',
-        approved_script_id: '',
         greeting_message: '',
         system_prompt: ''
       });
@@ -83,7 +69,7 @@ export default function AIAssistants() {
     setShowDialog(true);
   };
 
-  const isFormValid = formData.name.trim() && formData.channel && formData.approved_script_id;
+  const isFormValid = formData.name.trim() && formData.channel;
 
   const handleSave = async () => {
     if (!isFormValid) return;
@@ -96,13 +82,13 @@ export default function AIAssistants() {
       };
 
       if (editingAssistant) {
-        await base44.entities.AIAssistant.update(editingAssistant.id, dataToSave);
+        await base44.entities.Assistant.update(editingAssistant.id, dataToSave);
       } else {
         if (!defaultBrand?.id) {
           alert('Erro: Marca não foi carregada');
           return;
         }
-        await base44.entities.AIAssistant.create(dataToSave);
+        await base44.entities.Assistant.create(dataToSave);
       }
       await loadData();
       setShowDialog(false);
@@ -117,7 +103,7 @@ export default function AIAssistants() {
   const handleDelete = async (id) => {
     if (confirm('Tem certeza que deseja deletar este assistente?')) {
       try {
-        await base44.entities.AIAssistant.delete(id);
+        await base44.entities.Assistant.delete(id);
         await loadData();
       } catch (error) {
         console.error('Erro ao deletar assistente:', error);
@@ -127,16 +113,11 @@ export default function AIAssistants() {
 
   const handleToggleActive = async (assistant) => {
     try {
-      await base44.entities.AIAssistant.update(assistant.id, { is_active: !assistant.is_active });
+      await base44.entities.Assistant.update(assistant.id, { is_active: !assistant.is_active });
       await loadData();
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
     }
-  };
-
-  const getFlowName = (flowId) => {
-    const flow = flows.find(f => f.id === flowId);
-    return flow?.name || 'Fluxo não encontrado';
   };
 
   if (loading) {
@@ -171,9 +152,6 @@ export default function AIAssistants() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <h3 className="font-semibold text-slate-900">{assistant.name}</h3>
-                    {assistant.approved_script_id && (
-                      <p className="text-sm text-slate-600 mt-1">Script: {approvedScripts.find(s => s.id === assistant.approved_script_id)?.name || 'Script não encontrado'}</p>
-                    )}
                     {assistant.greeting_message && (
                       <p className="text-sm text-slate-600 mt-1">"{assistant.greeting_message}"</p>
                     )}
@@ -247,26 +225,7 @@ export default function AIAssistants() {
                 <option value="instagram">Instagram</option>
               </select>
             </div>
-            <div>
-              <label className="text-sm font-medium text-slate-700">Script Aprovado *</label>
-              {approvedScripts.length === 0 ? (
-                <div className="mt-1 p-3 bg-amber-50 border border-amber-200 rounded-md flex gap-2">
-                  <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
-                  <p className="text-sm text-amber-700">Nenhum script aprovado disponível. Crie um na Biblioteca de Scripts.</p>
-                </div>
-              ) : (
-                <select 
-                  value={formData.approved_script_id}
-                  onChange={(e) => setFormData({...formData, approved_script_id: e.target.value})}
-                  className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
-                >
-                  <option value="">Selecione um script</option>
-                  {approvedScripts.map(script => (
-                    <option key={script.id} value={script.id}>{script.name} ({script.channel})</option>
-                  ))}
-                </select>
-              )}
-            </div>
+
             <div>
               <label className="text-sm font-medium text-slate-700">Tom de Voz</label>
               <select 

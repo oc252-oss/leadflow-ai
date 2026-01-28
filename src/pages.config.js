@@ -27,8 +27,8 @@ import Units from './pages/Units';
 import VoiceCampaigns from './pages/VoiceCampaigns';
 import VoiceFunnel from './pages/VoiceFunnel';
 import VoiceSimulator from './pages/VoiceSimulator';
-import WhatsAppIntegration from './pages/WhatsAppIntegration';
 import WhatsAppChannels from './pages/WhatsAppChannels';
+import WhatsAppIntegration from './pages/WhatsAppIntegration';
 import __Layout from './Layout.jsx';
 
 
@@ -62,8 +62,8 @@ export const PAGES = {
     "VoiceCampaigns": VoiceCampaigns,
     "VoiceFunnel": VoiceFunnel,
     "VoiceSimulator": VoiceSimulator,
-    "WhatsAppIntegration": WhatsAppIntegration,
     "WhatsAppChannels": WhatsAppChannels,
+    "WhatsAppIntegration": WhatsAppIntegration,
 }
 
 export const pagesConfig = {

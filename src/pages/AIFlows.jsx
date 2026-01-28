@@ -13,6 +13,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bot, Plus, Pencil, Trash2, Star, Check, X, Search, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { cn } from '@/lib/utils';
 import { hasFeature, getLimit, FEATURES } from '@/components/featureGates';
 import UpgradeCTA from '@/components/UpgradeCTA';
 import { getDefaultOrganization, getDefaultUnit, isSingleCompanyMode } from '@/components/singleCompanyMode';

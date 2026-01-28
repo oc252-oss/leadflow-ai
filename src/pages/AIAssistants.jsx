@@ -5,11 +5,14 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Plus, Edit2, Trash2, Loader } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Plus, Edit2, Trash2, Loader, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function AIAssistants() {
   const [assistants, setAssistants] = useState([]);
   const [flows, setFlows] = useState([]);
+  const [approvedScripts, setApprovedScripts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [defaultBrand, setDefaultBrand] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -19,6 +22,7 @@ export default function AIAssistants() {
     channel: 'whatsapp',
     tone: 'elegante',
     ai_flow_id: '',
+    approved_script_id: '',
     greeting_message: '',
     system_prompt: ''
   });
@@ -36,14 +40,17 @@ export default function AIAssistants() {
         setDefaultBrand(brands[0]);
       }
 
-      const [assistantsData, flowsData] = await Promise.all([
+      const [assistantsData, flowsData, scriptsData] = await Promise.all([
         base44.entities.AIAssistant.list('-updated_date', 100),
-        base44.entities.AIFlow.filter({ is_active: true }, '-updated_date', 100)
+        base44.entities.AIFlow.filter({ is_active: true }, '-updated_date', 100),
+        base44.entities.AIScript.filter({ is_approved: true }, '-created_date', 100)
       ]);
       setAssistants(assistantsData || []);
       setFlows(flowsData || []);
+      setApprovedScripts(scriptsData || []);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
+      toast.error('Erro ao carregar dados');
     } finally {
       setLoading(false);
     }
@@ -57,6 +64,7 @@ export default function AIAssistants() {
         channel: assistant.channel,
         tone: assistant.tone,
         ai_flow_id: assistant.ai_flow_id,
+        approved_script_id: assistant.approved_script_id || '',
         greeting_message: assistant.greeting_message || '',
         system_prompt: assistant.system_prompt || ''
       });
@@ -67,6 +75,7 @@ export default function AIAssistants() {
         channel: 'whatsapp',
         tone: 'elegante',
         ai_flow_id: '',
+        approved_script_id: '',
         greeting_message: '',
         system_prompt: ''
       });
@@ -74,7 +83,7 @@ export default function AIAssistants() {
     setShowDialog(true);
   };
 
-  const isFormValid = formData.name.trim() && formData.channel && formData.ai_flow_id;
+  const isFormValid = formData.name.trim() && formData.channel && formData.approved_script_id;
 
   const handleSave = async () => {
     if (!isFormValid) return;
@@ -162,7 +171,9 @@ export default function AIAssistants() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <h3 className="font-semibold text-slate-900">{assistant.name}</h3>
-                    <p className="text-sm text-slate-600 mt-1">Fluxo: {getFlowName(assistant.ai_flow_id)}</p>
+                    {assistant.approved_script_id && (
+                      <p className="text-sm text-slate-600 mt-1">Script: {approvedScripts.find(s => s.id === assistant.approved_script_id)?.name || 'Script não encontrado'}</p>
+                    )}
                     {assistant.greeting_message && (
                       <p className="text-sm text-slate-600 mt-1">"{assistant.greeting_message}"</p>
                     )}
@@ -237,17 +248,24 @@ export default function AIAssistants() {
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium text-slate-700">Fluxo de IA *</label>
-              <select 
-                value={formData.ai_flow_id}
-                onChange={(e) => setFormData({...formData, ai_flow_id: e.target.value})}
-                className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
-              >
-                <option value="">Selecione um fluxo</option>
-                {flows.map(flow => (
-                  <option key={flow.id} value={flow.id}>{flow.name}</option>
-                ))}
-              </select>
+              <label className="text-sm font-medium text-slate-700">Script Aprovado *</label>
+              {approvedScripts.length === 0 ? (
+                <div className="mt-1 p-3 bg-amber-50 border border-amber-200 rounded-md flex gap-2">
+                  <AlertCircle className="w-4 h-4 text-amber-600 mt-0.5 flex-shrink-0" />
+                  <p className="text-sm text-amber-700">Nenhum script aprovado disponível. Crie um na Biblioteca de Scripts.</p>
+                </div>
+              ) : (
+                <select 
+                  value={formData.approved_script_id}
+                  onChange={(e) => setFormData({...formData, approved_script_id: e.target.value})}
+                  className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
+                >
+                  <option value="">Selecione um script</option>
+                  {approvedScripts.map(script => (
+                    <option key={script.id} value={script.id}>{script.name} ({script.channel})</option>
+                  ))}
+                </select>
+              )}
             </div>
             <div>
               <label className="text-sm font-medium text-slate-700">Tom de Voz</label>

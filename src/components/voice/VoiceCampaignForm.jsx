@@ -88,23 +88,38 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
       </div>
 
       <div className="space-y-2">
-        <Label>Tipo de Campanha</Label>
-        <div className="space-y-2">
-          <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer hover:bg-slate-50 bg-blue-50 border-blue-300">
-            <input type="radio" name="campaign_type" value="reengagement" defaultChecked className="w-4 h-4" />
-            <div>
-              <p className="font-medium text-sm text-slate-900">Reengajamento de Leads</p>
-              <p className="text-xs text-slate-500">Para leads que já tiveram contato com a clínica</p>
-            </div>
-          </label>
-          <label className="flex items-center gap-3 p-3 border border-slate-200 rounded-lg cursor-pointer opacity-50">
-            <input type="radio" name="campaign_type" value="prospecting" disabled className="w-4 h-4" />
-            <div>
-              <p className="font-medium text-sm text-slate-900">Prospecção Ativa <span className="text-xs bg-amber-100 text-amber-700 px-2 py-0.5 rounded ml-2">Em Breve</span></p>
-              <p className="text-xs text-slate-500">No momento, as campanhas de voz são para reengajar leads</p>
-            </div>
-          </label>
-        </div>
+        <Label>Tipo de Campanha*</Label>
+        <Select value={data.type} onValueChange={(val) => setData({ 
+          ...data, 
+          type: val,
+          target_funnel_stages: val === 'active_prospecting' 
+            ? ['Atendimento Iniciado', 'Qualificado', 'Avaliação Realizada']
+            : ['Atendimento Iniciado', 'Qualificado'],
+          days_inactive: val === 'active_prospecting' ? 60 : 7
+        })}>
+          <SelectTrigger>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="reengagement">
+              <div className="flex flex-col items-start py-1">
+                <span className="font-medium">Reengajamento</span>
+                <span className="text-xs text-slate-500">Para leads recentes que pararam de responder</span>
+              </div>
+            </SelectItem>
+            <SelectItem value="active_prospecting">
+              <div className="flex flex-col items-start py-1">
+                <span className="font-medium">Prospecção Ativa</span>
+                <span className="text-xs text-slate-500">Reativar leads inativos há muito tempo</span>
+              </div>
+            </SelectItem>
+          </SelectContent>
+        </Select>
+        <p className="text-xs text-slate-500">
+          {isProspecting 
+            ? '🎯 Reativa leads com relacionamento prévio que estão inativos há mais tempo.' 
+            : '⚡ Recupera leads recentes que pararam de responder no processo de vendas.'}
+        </p>
       </div>
       </div>
 

@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Phone } from 'lucide-react';
-import VoiceSimulationCall from './VoiceSimulationCall';
+import VoiceSimulationCallInteractive from './VoiceSimulationCallInteractive';
 
 export default function VoiceSimulationSetup({ assistants }) {
   const [selectedAssistant, setSelectedAssistant] = useState(null);
@@ -22,7 +22,7 @@ export default function VoiceSimulationSetup({ assistants }) {
 
   if (isSimulating && selectedAssistant) {
     return (
-      <VoiceSimulationCall 
+      <VoiceSimulationCallInteractive 
         assistant={selectedAssistant}
         leadName={leadName || 'Cliente'}
         leadContext={leadContext}

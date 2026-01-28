@@ -80,6 +80,7 @@ import VoiceSimulator from './pages/VoiceSimulator';
 import WhatsAppChannels from './pages/WhatsAppChannels';
 import WhatsAppIntegration from './pages/WhatsAppIntegration';
 import Scripts from './pages/Scripts';
+import WhatsAppProduction from './pages/WhatsAppProduction';
 import __Layout from './Layout.jsx';
 
 
@@ -117,6 +118,7 @@ export const PAGES = {
     "WhatsAppChannels": WhatsAppChannels,
     "WhatsAppIntegration": WhatsAppIntegration,
     "Scripts": Scripts,
+    "WhatsAppProduction": WhatsAppProduction,
 }
 
 export const pagesConfig = {

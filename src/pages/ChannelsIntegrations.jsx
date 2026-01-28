@@ -357,17 +357,17 @@ export default function ChannelsIntegrations() {
         </div>
 
         <div className="space-y-3">
-          <Button 
-            onClick={() => setShowInstagramDialog(true)}
-            className="w-full bg-pink-600 hover:bg-pink-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Conectar Conta Instagram
-          </Button>
+           <Button 
+             onClick={() => setShowInstagramDialog(true)}
+             className="w-full bg-pink-600 hover:bg-pink-700"
+           >
+             <Plus className="w-4 h-4 mr-2" />
+             Conectar Conta Instagram
+           </Button>
 
-          {filteredInstagram.length > 0 && (
-            <div className="space-y-2">
-              {filteredInstagram.map(ig => (
+           {instagramIntegrations.length > 0 && (
+             <div className="space-y-2">
+               {instagramIntegrations.map(ig => (
                 <Card key={ig.id}>
                   <CardContent className="pt-6">
                     <div className="flex items-start justify-between">
@@ -399,17 +399,17 @@ export default function ChannelsIntegrations() {
         </div>
 
         <div className="space-y-3">
-          <Button 
-            onClick={() => setShowFacebookDialog(true)}
-            className="w-full bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Conectar Página Facebook
-          </Button>
+           <Button 
+             onClick={() => setShowFacebookDialog(true)}
+             className="w-full bg-blue-600 hover:bg-blue-700"
+           >
+             <Plus className="w-4 h-4 mr-2" />
+             Conectar Página Facebook
+           </Button>
 
-          {filteredFacebook.length > 0 && (
-            <div className="space-y-2">
-              {filteredFacebook.map(fb => (
+           {facebookIntegrations.length > 0 && (
+             <div className="space-y-2">
+               {facebookIntegrations.map(fb => (
                 <Card key={fb.id}>
                   <CardContent className="pt-6">
                     <div className="flex items-start justify-between">

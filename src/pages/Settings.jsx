@@ -9,8 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Building2, Users, Zap, Clock, Globe, Save, Plus, Trash2, Loader2, MapPin, Mail, Phone, Edit2 } from 'lucide-react';
+import { Building2, Users, Zap, Clock, Globe, Save, Plus, Trash2, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { cn } from "@/lib/utils";
 
@@ -21,11 +20,6 @@ export default function Settings() {
   const [teamMembers, setTeamMembers] = useState([]);
   const [teamMember, setTeamMember] = useState(null);
   const [showInviteDialog, setShowInviteDialog] = useState(false);
-  const [units, setUnits] = useState([]);
-  const [brands, setBrands] = useState([]);
-  const [showUnitDialog, setShowUnitDialog] = useState(false);
-  const [editingUnit, setEditingUnit] = useState(null);
-  const [activeTab, setActiveTab] = useState('company');
 
   const [companyForm, setCompanyForm] = useState({
     name: '',
@@ -40,24 +34,6 @@ export default function Settings() {
   });
 
   const [inviteForm, setInviteForm] = useState({ email: '', role: 'sales_agent' });
-  
-  const [unitForm, setUnitForm] = useState({
-    name: '',
-    code: '',
-    type: 'clinic',
-    brand_id: '',
-    address: '',
-    city: '',
-    state: '',
-    postal_code: '',
-    phone: '',
-    email: '',
-    manager_name: '',
-    business_hours_start: '09:00',
-    business_hours_end: '18:00',
-    timezone: 'America/Sao_Paulo',
-    status: 'active'
-  });
 
   const industries = [
     { value: 'healthcare', label: 'Saúde' },
@@ -103,11 +79,9 @@ export default function Settings() {
       setTeamMember(members[0]);
       const companyId = members[0].company_id;
 
-      const [companyData, teamData, unitsData, brandsData] = await Promise.all([
+      const [companyData, teamData] = await Promise.all([
         base44.entities.Company.filter({ id: companyId }),
-        base44.entities.TeamMember.filter({ company_id: companyId }),
-        base44.entities.Unit.filter({ organization_id: members[0].organization_id }),
-        base44.entities.Brand.filter({ organization_id: members[0].organization_id })
+        base44.entities.TeamMember.filter({ company_id: companyId })
       ]);
 
       if (companyData.length > 0) {
@@ -127,8 +101,6 @@ export default function Settings() {
       }
 
       setTeamMembers(teamData);
-      setUnits(unitsData);
-      setBrands(brandsData);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
       toast.error('Erro ao carregar configurações');
@@ -212,129 +184,7 @@ export default function Settings() {
     }
   };
 
-  const handleOpenUnitDialog = (unit = null) => {
-    if (unit) {
-      setEditingUnit(unit);
-      setUnitForm({
-        name: unit.name || '',
-        code: unit.code || '',
-        type: unit.type || 'clinic',
-        brand_id: unit.brand_id || '',
-        address: unit.address || '',
-        city: unit.city || '',
-        state: unit.state || '',
-        postal_code: unit.postal_code || '',
-        phone: unit.phone || '',
-        email: unit.email || '',
-        manager_name: unit.manager_name || '',
-        business_hours_start: unit.business_hours_start || '09:00',
-        business_hours_end: unit.business_hours_end || '18:00',
-        timezone: unit.timezone || 'America/Sao_Paulo',
-        status: unit.status || 'active'
-      });
-    } else {
-      setEditingUnit(null);
-      setUnitForm({
-        name: '',
-        code: '',
-        type: 'clinic',
-        brand_id: '',
-        address: '',
-        city: '',
-        state: '',
-        postal_code: '',
-        phone: '',
-        email: '',
-        manager_name: '',
-        business_hours_start: '09:00',
-        business_hours_end: '18:00',
-        timezone: 'America/Sao_Paulo',
-        status: 'active'
-      });
-    }
-    setShowUnitDialog(true);
-  };
 
-  const handleCloseUnitDialog = () => {
-    setShowUnitDialog(false);
-    setEditingUnit(null);
-  };
-
-  const handleSaveUnit = async () => {
-    if (!unitForm.name) {
-      toast.error('Nome é obrigatório');
-      return;
-    }
-
-    setSaving(true);
-    try {
-      const dataToSave = {
-        name: unitForm.name,
-        organization_id: teamMember.organization_id,
-        code: unitForm.code,
-        type: unitForm.type,
-        address: unitForm.address,
-        city: unitForm.city,
-        state: unitForm.state,
-        postal_code: unitForm.postal_code,
-        phone: unitForm.phone,
-        email: unitForm.email,
-        manager_name: unitForm.manager_name,
-        business_hours_start: unitForm.business_hours_start,
-        business_hours_end: unitForm.business_hours_end,
-        timezone: unitForm.timezone,
-        status: unitForm.status
-      };
-
-      if (unitForm.brand_id && unitForm.brand_id !== '') {
-        dataToSave.brand_id = unitForm.brand_id;
-      }
-
-      if (editingUnit) {
-        await base44.entities.Unit.update(editingUnit.id, dataToSave);
-        toast.success('Empresa atualizada com sucesso');
-      } else {
-        await base44.entities.Unit.create(dataToSave);
-        toast.success('Empresa criada com sucesso');
-      }
-
-      await loadData();
-      handleCloseUnitDialog();
-    } catch (error) {
-      console.error('Erro ao salvar empresa:', error);
-      toast.error(`Erro ao salvar: ${error.message || 'Tente novamente'}`);
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDeleteUnit = async (unitId) => {
-    if (!confirm('Tem certeza que deseja excluir esta empresa?')) return;
-
-    try {
-      await base44.entities.Unit.delete(unitId);
-      toast.success('Empresa excluída com sucesso');
-      await loadData();
-    } catch (error) {
-      console.error('Erro ao excluir empresa:', error);
-      toast.error('Erro ao excluir empresa');
-    }
-  };
-
-  const getBrandName = (brandId) => {
-    if (!brandId) return 'Nenhuma';
-    const brand = brands.find(b => b.id === brandId);
-    return brand ? brand.name : 'Marca não encontrada';
-  };
-
-  const formatUnitType = (type) => {
-    const types = {
-      clinic: 'Clínica',
-      franchise: 'Franquia',
-      headquarters: 'Matriz'
-    };
-    return types[type] || type;
-  };
 
   if (loading) {
     return (
@@ -347,26 +197,16 @@ export default function Settings() {
   return (
     <div className="space-y-6 max-w-5xl">
       {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Configurações</h1>
-        <p className="text-slate-500 mt-1">Gerencie empresa, equipe e preferências</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Configurações</h1>
+          <p className="text-slate-500 mt-1">Gerencie empresa, equipe e preferências</p>
+        </div>
+        <Button onClick={handleSave} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700">
+          {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+          Salvar
+        </Button>
       </div>
-
-      <Tabs value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-3">
-          <TabsTrigger value="company">Informações</TabsTrigger>
-          <TabsTrigger value="team">Equipe</TabsTrigger>
-          <TabsTrigger value="units">Empresas</TabsTrigger>
-        </TabsList>
-
-        {/* Company Tab */}
-        <TabsContent value="company" className="space-y-6 mt-6">
-          <div className="flex justify-end">
-            <Button onClick={handleSave} disabled={saving} className="bg-indigo-600 hover:bg-indigo-700">
-              {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-              Salvar
-            </Button>
-          </div>
 
       {/* Company Info */}
       <Card>
@@ -505,10 +345,7 @@ export default function Settings() {
           </div>
         </CardContent>
       </Card>
-        </TabsContent>
 
-        {/* Team Tab */}
-        <TabsContent value="team" className="space-y-6 mt-6">
       {/* Team */}
       <Card>
         <CardHeader className="flex flex-row items-center justify-between">
@@ -566,106 +403,6 @@ export default function Settings() {
           </Table>
         </CardContent>
       </Card>
-        </TabsContent>
-
-        {/* Units Tab */}
-        <TabsContent value="units" className="space-y-6 mt-6">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between">
-              <div>
-                <CardTitle className="flex items-center gap-2">
-                  <Building2 className="w-5 h-5 text-indigo-600" />
-                  Empresas Cadastradas
-                </CardTitle>
-                <CardDescription>Gerencie as empresas da organização</CardDescription>
-              </div>
-              <Button onClick={() => handleOpenUnitDialog()} className="bg-indigo-600 hover:bg-indigo-700">
-                <Plus className="w-4 h-4 mr-2" />
-                Nova Empresa
-              </Button>
-            </CardHeader>
-            <CardContent>
-              {units.length === 0 ? (
-                <div className="text-center py-12">
-                  <Building2 className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-                  <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhuma empresa cadastrada</h3>
-                  <p className="text-slate-500 mb-4">Cadastre a primeira empresa para começar</p>
-                  <Button onClick={() => handleOpenUnitDialog()} className="bg-indigo-600 hover:bg-indigo-700">
-                    <Plus className="w-4 h-4 mr-2" />
-                    Nova Empresa
-                  </Button>
-                </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {units.map((unit) => (
-                    <Card key={unit.id} className="hover:shadow-md transition-shadow">
-                      <CardHeader className="pb-3">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <CardTitle className="text-lg">{unit.name}</CardTitle>
-                            <div className="flex gap-2 mt-2">
-                              <Badge variant="secondary">{formatUnitType(unit.type)}</Badge>
-                              {unit.code && <Badge variant="outline">{unit.code}</Badge>}
-                              <Badge className={cn(
-                                unit.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-slate-100 text-slate-700'
-                              )}>
-                                {unit.status === 'active' ? 'Ativa' : 'Inativa'}
-                              </Badge>
-                            </div>
-                          </div>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleOpenUnitDialog(unit)}
-                            >
-                              <Edit2 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDeleteUnit(unit.id)}
-                              className="text-red-600 hover:text-red-700"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </div>
-                      </CardHeader>
-                      <CardContent className="space-y-2 text-sm text-slate-600">
-                        {unit.manager_name && (
-                          <div className="flex items-center gap-2">
-                            <Users className="w-4 h-4" />
-                            <span>{unit.manager_name}</span>
-                          </div>
-                        )}
-                        {unit.city && unit.state && (
-                          <div className="flex items-center gap-2">
-                            <MapPin className="w-4 h-4" />
-                            <span>{unit.city}, {unit.state}</span>
-                          </div>
-                        )}
-                        {unit.phone && (
-                          <div className="flex items-center gap-2">
-                            <Phone className="w-4 h-4" />
-                            <span>{unit.phone}</span>
-                          </div>
-                        )}
-                        {unit.email && (
-                          <div className="flex items-center gap-2">
-                            <Mail className="w-4 h-4" />
-                            <span>{unit.email}</span>
-                          </div>
-                        )}
-                      </CardContent>
-                    </Card>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
 
       {/* Invite Dialog */}
       <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>

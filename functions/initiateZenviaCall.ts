@@ -1,16 +1,47 @@
 import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
+// Process script variables with lead context
+function processScriptVariables(script, lead, company) {
+  if (!script) return '';
+
+  let processedScript = script;
+
+  // Replace variables with actual values or remove gracefully
+  processedScript = processedScript.replace(/\{\{lead_name\}\}/gi, lead.name || '');
+  processedScript = processedScript.replace(/\{\{clinic_name\}\}/gi, company?.name || 'clínica');
+  processedScript = processedScript.replace(/\{\{interest_type\}\}/gi, lead.interest_type || '');
+  
+  // Calculate days since last contact
+  if (lead.last_interaction_at) {
+    const daysSince = Math.floor((Date.now() - new Date(lead.last_interaction_at).getTime()) / (1000 * 60 * 60 * 24));
+    processedScript = processedScript.replace(/\{\{last_contact_days\}\}/gi, String(daysSince));
+  } else {
+    processedScript = processedScript.replace(/\{\{last_contact_days\}\}/gi, '');
+  }
+
+  // Clean up any empty phrases caused by missing variables
+  processedScript = processedScript
+    .replace(/\s{2,}/g, ' ')
+    .replace(/\.\s+\./g, '.')
+    .trim();
+
+  return processedScript;
+}
+
 Deno.serve(async (req) => {
   try {
     const base44 = createClientFromRequest(req);
 
-    const { voice_call_id, phone_number, script_text } = await req.json();
+    const { voice_call_id, phone_number, script_text, lead_context, company_context } = await req.json();
 
     if (!voice_call_id || !phone_number || !script_text) {
       return Response.json({ 
         error: 'voice_call_id, phone_number, and script_text are required' 
       }, { status: 400 });
     }
+
+    // Process script with context variables
+    const finalScript = processScriptVariables(script_text, lead_context || {}, company_context || {});
 
     const zenviaApiKey = Deno.env.get('ZENVIA_API_KEY');
     const zenviaWebhookUrl = Deno.env.get('ZENVIA_WEBHOOK_URL');
@@ -33,7 +64,7 @@ Deno.serve(async (req) => {
       body: JSON.stringify({
         callerId: Deno.env.get('ZENVIA_CALLER_ID') || '+5511999999999',
         destination: formattedPhone,
-        messageToPlay: script_text,
+        messageToPlay: finalScript,
         detectVoicemail: true,
         recordCall: true,
         webhookUrl: zenviaWebhookUrl || `${Deno.env.get('BASE44_APP_URL')}/functions/zenviaVoiceWebhook`,

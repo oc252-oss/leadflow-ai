@@ -2,7 +2,7 @@ import { createClientFromRequest } from 'npm:@base44/sdk@0.8.6';
 
 // Intent detection helper
 function detectIntent(transcript) {
-  if (!transcript) return { intent: 'unknown', confidence: 0 };
+  if (!transcript) return { intent: 'unknown', confidence: 0, objection: null };
 
   const text = transcript.toLowerCase();
 
@@ -18,20 +18,41 @@ function detectIntent(transcript) {
   const noKeywords = ['não', 'sem interesse', 'não quero', 'nao tenho', 'remover', 'tirar'];
   const noScore = noKeywords.filter(keyword => text.includes(keyword)).length;
 
+  // Detect objection categories
+  let objection = null;
+  
+  // Timing objection
+  const timingKeywords = ['agora não', 'depois', 'mais tarde', 'outro momento', 'não é bom momento'];
+  if (timingKeywords.some(keyword => text.includes(keyword))) {
+    objection = 'timing';
+  }
+  
+  // Financial objection
+  const financialKeywords = ['caro', 'sem dinheiro', 'não posso pagar', 'muito caro', 'não tenho grana'];
+  if (financialKeywords.some(keyword => text.includes(keyword))) {
+    objection = 'financial';
+  }
+  
+  // Research objection
+  const researchKeywords = ['estou pesquisando', 'comparando', 'pensando', 'vou ver', 'estudando'];
+  if (researchKeywords.some(keyword => text.includes(keyword))) {
+    objection = 'research';
+  }
+
   // Determine intent based on highest score
   if (noScore > yesScore && noScore > maybeScore) {
-    return { intent: 'no', confidence: Math.min(noScore * 30, 90) };
+    return { intent: 'no', confidence: Math.min(noScore * 30, 90), objection };
   }
   
   if (yesScore > maybeScore && yesScore > noScore) {
-    return { intent: 'yes', confidence: Math.min(yesScore * 30, 90) };
+    return { intent: 'yes', confidence: Math.min(yesScore * 30, 90), objection };
   }
   
   if (maybeScore > 0) {
-    return { intent: 'maybe', confidence: Math.min(maybeScore * 25, 75) };
+    return { intent: 'maybe', confidence: Math.min(maybeScore * 25, 75), objection };
   }
 
-  return { intent: 'unknown', confidence: 0 };
+  return { intent: 'unknown', confidence: 0, objection };
 }
 
 Deno.serve(async (req) => {
@@ -63,8 +84,8 @@ Deno.serve(async (req) => {
 
     const voiceCall = voiceCalls[0];
 
-    // Detect intent from transcript
-    const { intent, confidence } = detectIntent(transcript);
+    // Detect intent and objections from transcript
+    const { intent, confidence, objection } = detectIntent(transcript);
 
     // Update VoiceCall
     const updateData = {
@@ -113,20 +134,42 @@ Deno.serve(async (req) => {
         last_interaction_at: new Date().toISOString()
       });
 
-      // Create task with context-aware description
+      // Create enriched task with full context
       const taskTitle = isProspecting 
         ? '🎯 Lead reativado com interesse (Prospecção)'
         : '🎙️ Lead demonstrou interesse (Reengajamento)';
       
-      const taskDescription = isProspecting
-        ? `Lead ${lead.name} demonstrou interesse em retomar contato.\n\nCampanha: ${campaign.name}\nInteresse original: ${lead.interest_type || 'Não especificado'}\n\nTranscrição: "${transcript}"\n\nOferecer avaliação gratuita e agendar.`
-        : `Lead ${lead.name} demonstrou interesse durante ligação automática.\n\nCampanha: ${campaign.name}\n\nTranscrição: "${transcript}"\n\nSugerir avaliação e próximos passos.`;
+      // Build enriched description with detected context
+      let enrichedDescription = `Lead ${lead.name} demonstrou interesse durante ligação automática.\n\n`;
+      enrichedDescription += `📋 **Contexto:**\n`;
+      enrichedDescription += `- Campanha: ${campaign.name}\n`;
+      enrichedDescription += `- Intent detectado: SIM (confiança: ${confidence}%)\n`;
+      if (lead.interest_type) {
+        enrichedDescription += `- Interesse: ${lead.interest_type}\n`;
+      }
+      enrichedDescription += `- Fonte original: ${lead.source}\n`;
+      enrichedDescription += `- Etapa atual: ${lead.funnel_stage}\n\n`;
+      
+      if (objection) {
+        const objectionLabels = {
+          timing: 'Mencionou questão de horário/timing',
+          financial: 'Mencionou preocupação financeira',
+          research: 'Está pesquisando/comparando'
+        };
+        enrichedDescription += `⚠️ Observação: ${objectionLabels[objection]}\n\n`;
+      }
+      
+      enrichedDescription += `💬 **Transcrição:**\n"${transcript}"\n\n`;
+      enrichedDescription += `✅ **Próximos passos sugeridos:**\n`;
+      enrichedDescription += isProspecting 
+        ? `- Oferecer avaliação gratuita\n- Entender necessidades atuais\n- Agendar visita`
+        : `- Confirmar interesse em ${lead.interest_type || 'tratamento'}\n- Agendar avaliação\n- Enviar informações`;
 
       const taskData = {
         company_id: campaign.company_id,
         lead_id: lead.id,
         title: taskTitle,
-        description: taskDescription,
+        description: enrichedDescription,
         type: 'voice_campaign',
         priority: 'high',
         status: 'open',
@@ -147,20 +190,51 @@ Deno.serve(async (req) => {
       });
 
     } else if (intent === 'maybe') {
-      // Keep current funnel stage, create follow-up with adjusted timeline
+      // Keep current funnel stage, create follow-up with context
       await base44.asServiceRole.entities.Lead.update(lead.id, {
         last_interaction_at: new Date().toISOString()
       });
 
-      const followUpDays = isProspecting ? 10 : 5;
+      // Adjust follow-up timing based on objection type
+      let followUpDays = isProspecting ? 10 : 5;
+      let suggestedAction = 'Retomar contato';
+      
+      if (objection === 'timing') {
+        followUpDays = 3; // Shorter follow-up for timing objections
+        suggestedAction = 'Lead pediu contato em melhor horário - tentar à tarde ou fim de semana';
+      } else if (objection === 'financial') {
+        followUpDays = 7;
+        suggestedAction = 'Lead mencionou preço - oferecer consulta para entender necessidades e opções';
+      } else if (objection === 'research') {
+        followUpDays = 5;
+        suggestedAction = 'Lead está comparando - enviar diferenciais e cases de sucesso';
+      }
+
+      let maybeDescription = `Lead ${lead.name} demonstrou interesse moderado.\n\n`;
+      maybeDescription += `📋 **Contexto:**\n`;
+      maybeDescription += `- Campanha: ${campaign.name}\n`;
+      maybeDescription += `- Intent detectado: TALVEZ (confiança: ${confidence}%)\n`;
+      if (objection) {
+        const objectionLabels = {
+          timing: 'Questão de horário/timing',
+          financial: 'Preocupação financeira',
+          research: 'Em fase de pesquisa'
+        };
+        maybeDescription += `- Objeção: ${objectionLabels[objection]}\n`;
+      }
+      if (lead.interest_type) {
+        maybeDescription += `- Interesse: ${lead.interest_type}\n`;
+      }
+      maybeDescription += `\n💬 **Transcrição:**\n"${transcript}"\n\n`;
+      maybeDescription += `✅ **Ação sugerida:**\n${suggestedAction}`;
 
       await base44.asServiceRole.entities.Task.create({
         company_id: campaign.company_id,
         lead_id: lead.id,
-        title: `Follow-up: Lead pediu contato posterior${isProspecting ? ' (Prospecção)' : ''}`,
-        description: `Lead ${lead.name} pediu para entrar em contato mais tarde.\n\nCampanha: ${campaign.name}\nTranscrição: "${transcript}"`,
+        title: `Follow-up: ${objection ? objectionLabels[objection] : 'Lead pediu contato posterior'}`,
+        description: maybeDescription,
         type: 'call_back',
-        priority: 'medium',
+        priority: objection === 'timing' ? 'high' : 'medium',
         status: 'open',
         source: 'voice_campaign',
         source_id: voiceCall.id,

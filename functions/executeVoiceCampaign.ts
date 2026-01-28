@@ -145,12 +145,25 @@ Deno.serve(async (req) => {
         })).length + 1
       });
 
-      // Initiate call via Zenvia
+      // Initiate call via Zenvia with lead context
       try {
+        const companies = await base44.asServiceRole.entities.Company.filter({ id: campaign.company_id });
+        const company = companies[0];
+
         const callResult = await base44.asServiceRole.functions.invoke('initiateZenviaCall', {
           voice_call_id: voiceCall.id,
           phone_number: lead.phone,
-          script_text: campaign.script
+          script_text: campaign.script,
+          lead_context: {
+            name: lead.name,
+            interest_type: lead.interest_type,
+            funnel_stage: lead.funnel_stage,
+            source: lead.source,
+            last_interaction_at: lead.last_interaction_at
+          },
+          company_context: {
+            name: company?.name || 'clínica'
+          }
         });
 
         callsInitiated.push({

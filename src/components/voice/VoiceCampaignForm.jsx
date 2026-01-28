@@ -265,20 +265,32 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
           value={data.script}
           onChange={(e) => setData({ ...data, script: e.target.value })}
           placeholder={isProspecting 
-            ? `Olá, tudo bem?
-Aqui é a assistente virtual da Royal Face Ji-Paraná.
+            ? `Olá {{lead_name}}, tudo bem?
+Aqui é a assistente virtual da {{clinic_name}}.
 
 Você teve contato conosco há algum tempo e estou ligando para saber se ainda tem interesse em conhecer nossos tratamentos.
 
 Podemos agendar uma avaliação gratuita para você?`
-            : `Olá, tudo bem?
-Aqui é a assistente virtual da Royal Face Ji-Paraná.
+            : `Olá {{lead_name}}, tudo bem?
+Aqui é a assistente virtual da {{clinic_name}}.
 
-Você teve contato conosco recentemente e estou ligando para saber se posso te ajudar a agendar uma avaliação estética sem custo.
+Você demonstrou interesse em {{interest_type}} e estou ligando para saber se posso te ajudar a agendar uma avaliação sem custo.
 
 Posso seguir?`}
           className="min-h-32"
         />
+        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+          <p className="text-xs font-medium text-blue-900 mb-1">💡 Variáveis disponíveis:</p>
+          <p className="text-xs text-blue-700">
+            <code className="bg-blue-100 px-1 rounded">{'{{lead_name}}'}</code>{' '}
+            <code className="bg-blue-100 px-1 rounded">{'{{clinic_name}}'}</code>{' '}
+            <code className="bg-blue-100 px-1 rounded">{'{{interest_type}}'}</code>{' '}
+            <code className="bg-blue-100 px-1 rounded">{'{{last_contact_days}}'}</code>
+          </p>
+          <p className="text-xs text-blue-600 mt-1">
+            A IA personaliza automaticamente a mensagem com os dados do lead.
+          </p>
+        </div>
         <p className="text-xs text-slate-500">
           {isProspecting 
             ? '🎯 Use tom consultivo e natural. Foco em retomar conversa, não em vender diretamente.' 

@@ -1,6 +1,7 @@
 import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Phone, CheckCircle, XCircle, HelpCircle, TrendingUp } from 'lucide-react';
+import { cn } from "@/lib/utils";
 
 export default function VoiceCampaignStats({ campaign }) {
   const totalResponses = (campaign.total_yes_responses || 0) + 

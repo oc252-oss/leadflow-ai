@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CheckCircle2, Clock, User, Users, ArrowRight } from 'lucide-react';
+import { CheckCircle2, Clock, User, Users, ArrowRight, Phone } from 'lucide-react';
 import { cn } from "@/lib/utils";
 import { format } from 'date-fns';
 

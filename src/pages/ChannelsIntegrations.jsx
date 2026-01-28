@@ -117,26 +117,26 @@ export default function ChannelsIntegrations() {
           base44.entities.FacebookIntegration ? base44.entities.FacebookIntegration.filter({ organization_id: org.id }).catch(() => []) : Promise.resolve([]),
           base44.entities.TeamMember.filter({ organization_id: org.id }).catch(() => []),
           base44.entities.Assistant.filter({ organization_id: org.id }).catch(() => []),
-          base44.entities.AIConversationFlow.filter({ organization_id: org.id }).catch(() => [])
+          base44.entities.AIConversationFlow.filter({ organization_id: org.id }, '-priority', 100).catch(() => [])
         ]);
 
-        setWhatsappIntegrations(whatsappData);
-        setInstagramIntegrations(instagramData);
-        setFacebookIntegrations(facebookData);
-        setTeamMembers(allTeamMembers);
-        setAssistants(assistantsData);
-        setFlows(flowsData);
+        setWhatsappIntegrations(whatsappData || []);
+          setInstagramIntegrations(instagramData || []);
+          setFacebookIntegrations(facebookData || []);
+          setTeamMembers(allTeamMembers || []);
+          setAssistants(assistantsData || []);
+          setFlows(flowsData || []);
 
-        // Auto-select if only one assistant or flow available
-        if (!qrAutoSelected && (assistantsData.length === 1 || flowsData.length === 1)) {
-          if (assistantsData.length === 1) {
-            setQrFormData(prev => ({ ...prev, assistant_id: assistantsData[0].id }));
+          // Auto-select if only one assistant or flow available
+          if (!qrAutoSelected && ((assistantsData?.length === 1) || (flowsData?.length === 1))) {
+            if (assistantsData?.length === 1) {
+              setQrFormData(prev => ({ ...prev, assistant_id: assistantsData[0].id }));
+            }
+            if (flowsData?.length === 1) {
+              setQrFormData(prev => ({ ...prev, flow_id: flowsData[0].id }));
+            }
+            setQrAutoSelected(true);
           }
-          if (flowsData.length === 1) {
-            setQrFormData(prev => ({ ...prev, flow_id: flowsData[0].id }));
-          }
-          setQrAutoSelected(true);
-        }
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);

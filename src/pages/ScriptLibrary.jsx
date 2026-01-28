@@ -10,6 +10,7 @@ import ScriptLibraryFilters from '@/components/scriptLibrary/ScriptLibraryFilter
 import ScriptCard from '@/components/scriptLibrary/ScriptCard';
 import ScriptDetailModal from '@/components/scriptLibrary/ScriptDetailModal';
 import ScriptAssignmentModal from '@/components/scriptLibrary/ScriptAssignmentModal';
+import ScriptActionsModal from '@/components/scriptLibrary/ScriptActionsModal';
 import NewScriptModal from '@/components/scriptLibrary/NewScriptModal';
 
 export default function ScriptLibrary() {
@@ -29,6 +30,9 @@ export default function ScriptLibrary() {
   const [approving, setApproving] = useState(false);
   const [assigning, setAssigning] = useState(false);
   const [newScriptModalOpen, setNewScriptModalOpen] = useState(false);
+  const [actionsModalOpen, setActionsModalOpen] = useState(false);
+  const [actionsModalScript, setActionsModalScript] = useState(null);
+  const [actionsModalAction, setActionsModalAction] = useState(null);
 
   useEffect(() => {
     loadScripts();
@@ -122,10 +126,17 @@ export default function ScriptLibrary() {
     setAssignModalOpen(true);
   };
 
+  const openActionsModal = (script, action) => {
+    setActionsModalScript(script);
+    setActionsModalAction(action);
+    setActionsModalOpen(true);
+  };
+
   const stats = {
     total: scripts.length,
     approved: scripts.filter(s => s.is_approved).length,
-    draft: scripts.filter(s => s.status === 'draft').length
+    draft: scripts.filter(s => s.status === 'draft').length,
+    review: scripts.filter(s => s.status === 'testing').length
   };
 
   if (loading) {
@@ -157,23 +168,29 @@ export default function ScriptLibrary() {
       </div>
 
       {/* Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="pt-6">
-            <p className="text-sm text-slate-600 mb-1">Total de Scripts</p>
+            <p className="text-sm text-slate-600 mb-1">Total</p>
             <p className="text-3xl font-bold text-slate-900">{stats.total}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-slate-600 mb-1">Rascunho</p>
+            <p className="text-3xl font-bold text-slate-600">{stats.draft}</p>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="pt-6">
+            <p className="text-sm text-slate-600 mb-1">Em Revisão</p>
+            <p className="text-3xl font-bold text-yellow-600">{stats.review}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="pt-6">
             <p className="text-sm text-slate-600 mb-1">Aprovados</p>
             <p className="text-3xl font-bold text-green-600">{stats.approved}</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-6">
-            <p className="text-sm text-slate-600 mb-1">Em Draft</p>
-            <p className="text-3xl font-bold text-amber-600">{stats.draft}</p>
           </CardContent>
         </Card>
       </div>
@@ -210,6 +227,10 @@ export default function ScriptLibrary() {
               onView={handleViewDetails}
               onApprove={handleApproveScript}
               onAssign={handleOpenAssignModal}
+              onClone={(s) => openActionsModal(s, 'clone')}
+              onVersion={(s) => openActionsModal(s, 'version')}
+              onSubmit={(s) => openActionsModal(s, 'submit')}
+              onReject={(s) => openActionsModal(s, 'reject')}
             />
           ))}
         </div>
@@ -236,6 +257,14 @@ export default function ScriptLibrary() {
         open={newScriptModalOpen}
         onOpenChange={setNewScriptModalOpen}
         onScriptCreated={loadScripts}
+      />
+
+      <ScriptActionsModal
+        script={actionsModalScript}
+        action={actionsModalAction}
+        open={actionsModalOpen}
+        onOpenChange={setActionsModalOpen}
+        onSuccess={loadScripts}
       />
     </div>
   );

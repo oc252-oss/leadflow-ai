@@ -111,6 +111,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'Reengagement', label: 'Reengajamento', href: createPageUrl('Reengagement'), icon: RefreshCw, roles: ['company_admin', 'sales_manager', 'unit_admin'] },
     { type: 'divider' },
     { type: 'header', label: 'Inteligência Artificial', roles: ['company_admin', 'unit_admin', 'brand_manager', 'sales_manager', 'sales_agent'] },
+    { name: 'AssistantCentral', label: 'Central de Assistentes', href: createPageUrl('AssistantCentral'), icon: Bot, roles: ['company_admin', 'brand_manager'] },
     { name: 'Assistants', label: 'Assistentes IA', href: createPageUrl('Assistants'), icon: Bot, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
     { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Bot, roles: ['company_admin', 'brand_manager'] },
     { name: 'SimulationTraining', label: 'Simulação & Treinamento', href: createPageUrl('SimulationTraining'), icon: Bot, roles: ['company_admin', 'sales_manager', 'sales_agent', 'unit_admin'] },

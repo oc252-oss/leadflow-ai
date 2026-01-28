@@ -1,10 +1,8 @@
 import AIAssistantsSimple from './pages/AIAssistantsSimple';
 import AIFlowEditor from './pages/AIFlowEditor';
-import AIFlows from './pages/AIFlows';
 import AIFlowsSimple from './pages/AIFlowsSimple';
 import AISimulator from './pages/AISimulator';
 import AssistantCentral from './pages/AssistantCentral';
-import Assistants from './pages/Assistants';
 import Automations from './pages/Automations';
 import Campaigns from './pages/Campaigns';
 import ChannelsIntegrations from './pages/ChannelsIntegrations';
@@ -34,11 +32,9 @@ import __Layout from './Layout.jsx';
 export const PAGES = {
     "AIAssistantsSimple": AIAssistantsSimple,
     "AIFlowEditor": AIFlowEditor,
-    "AIFlows": AIFlows,
     "AIFlowsSimple": AIFlowsSimple,
     "AISimulator": AISimulator,
     "AssistantCentral": AssistantCentral,
-    "Assistants": Assistants,
     "Automations": Automations,
     "Campaigns": Campaigns,
     "ChannelsIntegrations": ChannelsIntegrations,

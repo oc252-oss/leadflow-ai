@@ -7,17 +7,34 @@ function generateQRToken() {
 }
 
 function generateQRCodeSVG(token) {
-  // SVG simplificado que representa um QR code
-  // Em produção, usar uma lib como qrcode
   const size = 200;
-  const padding = 10;
+  const padding = 20;
+  const blockSize = 8;
+  
+  // Gerar padrão pseudo-QR baseado no token
+  let pattern = '';
+  const tokenHash = token.split('').reduce((a, b) => {
+    const num = a + b.charCodeAt(0);
+    return ((num << 5) - num) + b.charCodeAt(0);
+  }, 0);
+  
+  const seed = Math.abs(tokenHash);
+  const blocks = Math.floor((size - padding * 2) / blockSize);
+  
+  for (let y = 0; y < blocks; y++) {
+    for (let x = 0; x < blocks; x++) {
+      const idx = (y * blocks + x) % 32;
+      const bit = (seed >> idx) & 1;
+      if (bit) {
+        pattern += `<rect x="${padding + x * blockSize}" y="${padding + y * blockSize}" width="${blockSize - 1}" height="${blockSize - 1}" fill="black"/>`;
+      }
+    }
+  }
   
   return `<svg width="${size}" height="${size}" xmlns="http://www.w3.org/2000/svg">
     <rect width="${size}" height="${size}" fill="white"/>
-    <rect x="${padding}" y="${padding}" width="${size - padding * 2}" height="${size - padding * 2}" fill="white" stroke="black" stroke-width="2"/>
-    <text x="${size / 2}" y="${size / 2 - 10}" text-anchor="middle" font-size="12" font-family="monospace">${token.substring(0, 8)}</text>
-    <text x="${size / 2}" y="${size / 2 + 10}" text-anchor="middle" font-size="12" font-family="monospace">${token.substring(8, 16)}</text>
-    <text x="${size / 2}" y="${size / 2 + 30}" text-anchor="middle" font-size="10" fill="#666">MODO TESTE</text>
+    ${pattern}
+    <text x="${size / 2}" y="${size - 10}" text-anchor="middle" font-size="10" fill="#666">TESTE</text>
   </svg>`;
 }
 

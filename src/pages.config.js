@@ -20,15 +20,15 @@ import Reengagement from './pages/Reengagement';
 import Reports from './pages/Reports';
 import SalesFunnel from './pages/SalesFunnel';
 import Settings from './pages/Settings';
-import SimulationTraining from './pages/SimulationTraining';
 import Tasks from './pages/Tasks';
 import TreinarAssistente from './pages/TreinarAssistente';
 import Units from './pages/Units';
 import VoiceCampaigns from './pages/VoiceCampaigns';
 import VoiceFunnel from './pages/VoiceFunnel';
 import VoiceSimulator from './pages/VoiceSimulator';
-import WhatsAppIntegration from './pages/WhatsAppIntegration';
 import WhatsAppChannels from './pages/WhatsAppChannels';
+import WhatsAppIntegration from './pages/WhatsAppIntegration';
+import SimulationTraining from './pages/SimulationTraining';
 import __Layout from './Layout.jsx';
 
 
@@ -55,15 +55,15 @@ export const PAGES = {
     "Reports": Reports,
     "SalesFunnel": SalesFunnel,
     "Settings": Settings,
-    "SimulationTraining": SimulationTraining,
     "Tasks": Tasks,
     "TreinarAssistente": TreinarAssistente,
     "Units": Units,
     "VoiceCampaigns": VoiceCampaigns,
     "VoiceFunnel": VoiceFunnel,
     "VoiceSimulator": VoiceSimulator,
-    "WhatsAppIntegration": WhatsAppIntegration,
     "WhatsAppChannels": WhatsAppChannels,
+    "WhatsAppIntegration": WhatsAppIntegration,
+    "SimulationTraining": SimulationTraining,
 }
 
 export const pagesConfig = {

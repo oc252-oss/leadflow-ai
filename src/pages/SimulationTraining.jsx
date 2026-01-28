@@ -13,6 +13,7 @@ import AdjustmentsPanel from '@/components/simulation/AdjustmentsPanel';
 import VoiceSimulationSetup from '@/components/simulation/VoiceSimulationSetup';
 import VoiceSimulationCall from '@/components/simulation/VoiceSimulationCall';
 import VoiceScriptEditor from '@/components/simulation/VoiceScriptEditor';
+import ScriptApprovalPanel from '@/components/simulation/ScriptApprovalPanel';
 
 export default function SimulationTraining() {
   const [assistants, setAssistants] = useState([]);
@@ -184,11 +185,21 @@ export default function SimulationTraining() {
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Chat */}
-          <div className="lg:col-span-2">
+          <div className="lg:col-span-2 space-y-4">
             <SimulationChat
               conversationId={activeConversation.id}
               assistantId={selectedAssistant}
               systemPrompt={assistant?.system_prompt}
+            />
+
+            <ScriptApprovalPanel
+              assistantId={selectedAssistant}
+              usageType={selectedAssistant}
+              channel="webchat"
+              systemPrompt={assistant?.system_prompt}
+              greetingMessage={assistant?.greeting_message}
+              tone={assistant?.tone}
+              behaviorRules={assistant?.behavior_rules}
             />
           </div>
 
@@ -283,11 +294,23 @@ export default function SimulationTraining() {
             />
           </TabsContent>
 
-          <TabsContent value="script" className="mt-6">
+          <TabsContent value="script" className="mt-6 space-y-4">
             <VoiceScriptEditor
               script={voiceScript}
               assistantId={voiceSimulation.assistantId}
               callType={voiceSimulation.callType}
+            />
+
+            <ScriptApprovalPanel
+              assistantId={voiceSimulation.assistantId}
+              usageType={voiceSimulation.callType}
+              channel="voice"
+              systemPrompt={assistants.find(a => a.id === voiceSimulation.assistantId)?.system_prompt}
+              greetingMessage={assistants.find(a => a.id === voiceSimulation.assistantId)?.greeting_message}
+              tone={assistants.find(a => a.id === voiceSimulation.assistantId)?.tone}
+              behaviorRules={assistants.find(a => a.id === voiceSimulation.assistantId)?.behavior_rules}
+              voiceSettings={voiceSettings}
+              conversationHistory={voiceScript}
             />
           </TabsContent>
         </Tabs>

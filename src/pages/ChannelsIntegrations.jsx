@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
 import { Loader } from 'lucide-react';
 import WhatsAppConnect from '../components/WhatsAppConnect';
+import WhatsAppServerConfig from '../components/channels/WhatsAppServerConfig';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -42,6 +43,12 @@ export default function ChannelsIntegrations() {
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Canais & Integrações</h1>
         <p className="text-slate-600 mt-2">Conecte seus canais de comunicação para gerenciar leads</p>
+      </div>
+
+      {/* Configuração do Servidor WhatsApp */}
+      <div className="max-w-2xl">
+        <h2 className="text-xl font-semibold text-slate-900 mb-4">Conexões → WhatsApp</h2>
+        <WhatsAppServerConfig />
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

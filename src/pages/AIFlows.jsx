@@ -17,6 +17,7 @@ import { cn } from '@/lib/utils';
 import { hasFeature, getLimit, FEATURES } from '@/components/featureGates';
 import UpgradeCTA from '@/components/UpgradeCTA';
 import { getDefaultOrganization, getDefaultUnit, isSingleCompanyMode } from '@/components/singleCompanyMode';
+import ConditionalLogicBuilder from '@/components/flowBuilder/ConditionalLogicBuilder';
 
 export default function AIFlows() {
   const [flows, setFlows] = useState([]);
@@ -66,7 +67,8 @@ export default function AIFlows() {
     field_to_update: '',
     expected_answers: [],
     score_impact: 0,
-    next_step: 'handoff'
+    next_step: 'handoff',
+    conditions: []
   });
 
   const industries = [
@@ -249,7 +251,8 @@ export default function AIFlows() {
       field_to_update: '',
       expected_answers: [],
       score_impact: 0,
-      next_step: 'handoff'
+      next_step: 'handoff',
+      conditions: []
     });
   };
 
@@ -820,6 +823,13 @@ export default function AIFlows() {
                       placeholder="Próximo Passo (ex: q2_urgency)"
                       value={newQuestion.next_step}
                       onChange={(e) => setNewQuestion({ ...newQuestion, next_step: e.target.value })}
+                    />
+                  </div>
+
+                  <div className="border-t pt-3">
+                    <ConditionalLogicBuilder 
+                      conditions={newQuestion.conditions || []}
+                      onChange={(conditions) => setNewQuestion({ ...newQuestion, conditions })}
                     />
                   </div>
 

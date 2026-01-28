@@ -42,6 +42,8 @@ import {
 import { cn } from "@/lib/utils";
 import VoiceCampaignsList from '@/components/voice/VoiceCampaignsList';
 import VoiceCampaignForm from '@/components/voice/VoiceCampaignForm';
+import { hasFeature, FEATURES } from '@/components/featureGates';
+import UpgradeCTA from '@/components/UpgradeCTA';
 
 const triggerConfig = {
   new_lead: { icon: User, color: 'bg-blue-100 text-blue-600', label: 'New Lead' },
@@ -278,10 +280,12 @@ function Automations() {
             <Zap className="w-4 h-4" />
             Automation Rules
           </TabsTrigger>
-          <TabsTrigger value="voice" className="flex items-center gap-2">
-            <Phone className="w-4 h-4" />
-            Voice Campaigns
-          </TabsTrigger>
+          {hasFeature(company?.plan, FEATURES.VOICE_CAMPAIGNS) && (
+            <TabsTrigger value="voice" className="flex items-center gap-2">
+              <Phone className="w-4 h-4" />
+              Voice Campaigns
+            </TabsTrigger>
+          )}
         </TabsList>
 
         {/* RULES TAB */}
@@ -374,17 +378,25 @@ function Automations() {
 
         {/* VOICE CAMPAIGNS TAB */}
         <TabsContent value="voice" className="space-y-4">
-          <div className="flex justify-end">
-            <Button onClick={() => {
-              setEditingVoiceCampaign(null);
-              setShowVoiceDialog(true);
-            }} className="bg-indigo-600 hover:bg-indigo-700">
-              <Plus className="w-4 h-4 mr-2" />
-              Create Voice Campaign
-            </Button>
-          </div>
+          {!hasFeature(company?.plan, FEATURES.VOICE_CAMPAIGNS) ? (
+            <UpgradeCTA 
+              feature={FEATURES.VOICE_CAMPAIGNS}
+              message="Campanhas de voz estão disponíveis no plano Premium"
+              currentPlan={company?.plan}
+            />
+          ) : (
+            <>
+              <div className="flex justify-end">
+                <Button onClick={() => {
+                  setEditingVoiceCampaign(null);
+                  setShowVoiceDialog(true);
+                }} className="bg-indigo-600 hover:bg-indigo-700">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create Voice Campaign
+                </Button>
+              </div>
 
-          <VoiceCampaignsList
+              <VoiceCampaignsList
             campaigns={voiceCampaigns}
             teamMembers={teamMembers}
             onEdit={handleVoiceCampaignEdit}
@@ -396,6 +408,8 @@ function Automations() {
               setShowVoiceDialog(true);
             }}
           />
+            </>
+          )}
         </TabsContent>
       </Tabs>
 

@@ -13,11 +13,14 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bot, Plus, Pencil, Trash2, Star, Check, X, Search, GripVertical, ChevronDown, ChevronUp } from 'lucide-react';
 import { toast } from 'sonner';
+import { hasFeature, getLimit, FEATURES } from '@/components/featureGates';
+import UpgradeCTA from '@/components/UpgradeCTA';
 
 export default function AIFlows() {
   const [flows, setFlows] = useState([]);
   const [companies, setCompanies] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
+  const [company, setCompany] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
   const [editingFlow, setEditingFlow] = useState(null);
@@ -97,6 +100,16 @@ export default function AIFlows() {
   const loadData = async () => {
     try {
       setLoading(true);
+      const user = await base44.auth.me();
+      const teamMembers = await base44.entities.TeamMember.filter({ user_email: user.email });
+      
+      let currentCompany = null;
+      if (teamMembers.length > 0) {
+        const companiesData = await base44.entities.Company.filter({ id: teamMembers[0].company_id });
+        currentCompany = companiesData[0];
+        setCompany(currentCompany);
+      }
+      
       const [flowsData, companiesData, campaignsData] = await Promise.all([
         base44.entities.AIConversationFlow.list('-priority', 100),
         base44.entities.Company.list(),
@@ -358,7 +371,18 @@ export default function AIFlows() {
             <Bot className="w-4 h-4 mr-2" />
             Testar Simulador
           </Button>
-          <Button onClick={() => setShowDialog(true)} className="bg-indigo-600 hover:bg-indigo-700">
+          <Button 
+            onClick={() => {
+              const plan = company?.plan || 'free';
+              const canCreate = flows.length < getLimit(plan, 'ai_flows');
+              if (!canCreate) {
+                toast.error('Você atingiu o limite de fluxos do seu plano');
+                return;
+              }
+              setShowDialog(true);
+            }} 
+            className="bg-indigo-600 hover:bg-indigo-700"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Novo Fluxo
           </Button>
@@ -415,6 +439,16 @@ export default function AIFlows() {
           </div>
         </CardContent>
       </Card>
+
+      {/* Upgrade CTA if at limit */}
+      {company && flows.length >= getLimit(company.plan || 'free', 'ai_flows') && !hasFeature(company.plan, FEATURES.MULTIPLE_AI_FLOWS) && (
+        <UpgradeCTA 
+          feature={FEATURES.MULTIPLE_AI_FLOWS}
+          message="Você atingiu o limite de fluxos de IA"
+          inline={true}
+          currentPlan={company.plan}
+        />
+      )}
 
       {/* Table */}
       <Card>

@@ -483,7 +483,9 @@ export default function AIFlows() {
                   </TableCell>
                   <TableCell>{getCompanyName(flow.company_id)}</TableCell>
                   <TableCell>{flow.unit_id || '-'}</TableCell>
-                  <TableCell className="capitalize">{flow.industry}</TableCell>
+                  <TableCell className="capitalize">
+                    {industries.find(i => i.value === flow.industry)?.label || flow.industry || '-'}
+                  </TableCell>
                   <TableCell>
                     <Badge variant="outline">{flow.priority || 0}</Badge>
                   </TableCell>

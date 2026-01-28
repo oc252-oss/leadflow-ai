@@ -56,6 +56,21 @@ export default function ScriptDetailModal({ script, open, onOpenChange, onApprov
             </div>
           </div>
 
+          {/* Approval Info */}
+          {script.is_approved && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2">
+              <div className="flex items-start justify-between">
+                <div>
+                  <p className="text-xs text-green-600 font-medium">✓ Aprovado</p>
+                  <p className="text-xs text-slate-600 mt-1">Aprovado por: {script.approved_by}</p>
+                  {script.approved_at && (
+                    <p className="text-xs text-slate-600">Em: {new Date(script.approved_at).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Tabs */}
           <Tabs defaultValue="prompt" className="w-full">
             <TabsList className="grid w-full grid-cols-4">

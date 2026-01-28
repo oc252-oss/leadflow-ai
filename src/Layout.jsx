@@ -115,7 +115,7 @@ export default function Layout({ children, currentPageName }) {
   ];
 
   const filteredNav = navigation.filter(item => 
-    (!teamMember?.role || item.roles.includes(teamMember.role)) && canAccessPage(item.name)
+    item && item.label && (!teamMember?.role || item.roles.includes(teamMember.role)) && canAccessPage(item.name)
   );
 
   return (
@@ -165,6 +165,7 @@ export default function Layout({ children, currentPageName }) {
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
             {filteredNav.map((item) => {
+              if (!item || !item.label) return null;
               const isActive = currentPageName === item.name;
               return (
                 <Link

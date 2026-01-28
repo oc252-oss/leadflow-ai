@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Play, RotateCcw, CheckCircle2, MessageSquare, Phone } from 'lucide-react';
+import { Loader2, Play, RotateCcw, CheckCircle2, MessageSquare, Phone, Plus } from 'lucide-react';
 import { toast } from 'sonner';
 import SimulationChat from '@/components/simulation/SimulationChat';
 import AdjustmentsPanel from '@/components/simulation/AdjustmentsPanel';

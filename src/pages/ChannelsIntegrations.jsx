@@ -341,35 +341,19 @@ export default function ChannelsIntegrations() {
                 <QrCode className="w-4 h-4" />
                 WhatsApp QR Code
               </CardTitle>
-              <CardDescription>Conexão via WhatsApp Web</CardDescription>
+              <CardDescription>WebChat via WhatsApp Web</CardDescription>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg">
                 <p className="text-xs text-amber-800">
-                  ⚠️ Modo experimental – indicado apenas para testes
+                  ⚠️ Experimental – indicado para testes
                 </p>
               </div>
               {units.length === 0 ? (
                 <div className="p-3 bg-slate-50 border border-slate-200 rounded-lg">
                   <p className="text-xs text-slate-600 text-center">
-                    Cadastre uma unidade antes de conectar canais
+                    Cadastre uma unidade antes
                   </p>
-                </div>
-              ) : !hasAssistants ? (
-                <div className="space-y-2">
-                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                    <p className="text-xs text-blue-700 text-center">
-                      Crie um assistente primeiro para conectar o WhatsApp
-                    </p>
-                  </div>
-                  <Button 
-                    onClick={() => window.location.href = '/Assistants'} 
-                    variant="outline" 
-                    className="w-full"
-                    size="sm"
-                  >
-                    Criar Assistente
-                  </Button>
                 </div>
               ) : (
                 <Button 
@@ -380,9 +364,19 @@ export default function ChannelsIntegrations() {
                   variant="outline" 
                   className="w-full"
                 >
-                  <QrCode className="w-4 h-4 mr-2" />
-                  Gerar QR Code
+                  <Plus className="w-4 h-4 mr-2" />
+                  Novo QR Code
                 </Button>
+              )}
+              {filteredWhatsapp.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs font-medium text-slate-600">QR Codes conectados:</p>
+                  {filteredWhatsapp.filter(w => w.integration_type === 'web').map(wa => (
+                    <Badge key={wa.id} variant="outline" className="block w-full text-left p-2">
+                      {wa.label || 'WhatsApp Web'} - {wa.status}
+                    </Badge>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>
@@ -408,26 +402,15 @@ export default function ChannelsIntegrations() {
           {/* WhatsApp Provider */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">WhatsApp via Provider</CardTitle>
-              <CardDescription>Z-API, Gupshup, Zenvia</CardDescription>
+              <CardTitle className="text-base">WhatsApp Provider</CardTitle>
+              <CardDescription>Z-API, Gupshup, 360Dialog</CardDescription>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-3">
               {units.length === 0 ? (
                 <Button disabled className="w-full" variant="outline">
                   <MessageSquare className="w-4 h-4 mr-2" />
-                  Cadastre uma Unidade
+                  Cadastre unidade
                 </Button>
-              ) : !hasAssistants ? (
-                <div className="space-y-2">
-                  <Button 
-                    onClick={() => window.location.href = '/Assistants'} 
-                    variant="outline" 
-                    className="w-full"
-                    size="sm"
-                  >
-                    Criar Assistente Primeiro
-                  </Button>
-                </div>
               ) : (
                 <Button 
                   onClick={() => {
@@ -436,9 +419,19 @@ export default function ChannelsIntegrations() {
                   }}
                   className="w-full bg-green-600 hover:bg-green-700"
                 >
-                  <MessageSquare className="w-4 h-4 mr-2" />
+                  <Plus className="w-4 h-4 mr-2" />
                   Conectar Provider
                 </Button>
+              )}
+              {filteredWhatsapp.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs font-medium text-slate-600">Providers conectados:</p>
+                  {filteredWhatsapp.filter(w => w.integration_type === 'provider').map(wa => (
+                    <Badge key={wa.id} variant="secondary" className="block w-full text-left p-2 text-xs">
+                      <span className="font-medium">{wa.provider?.toUpperCase()}</span> - {wa.phone_number}
+                    </Badge>
+                  ))}
+                </div>
               )}
             </CardContent>
           </Card>

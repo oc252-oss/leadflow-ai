@@ -13,11 +13,12 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bot, Plus, Pencil, Trash2, MessageSquare, Phone, Zap, Search } from 'lucide-react';
 import { toast } from 'sonner';
-import { getDefaultOrganization } from '@/components/singleCompanyMode';
+import { getDefaultOrganization, getDefaultUnit } from '@/components/singleCompanyMode';
 
 export default function Assistants() {
   const [assistants, setAssistants] = useState([]);
   const [organization, setOrganization] = useState(null);
+  const [unit, setUnit] = useState(null);
   const [flows, setFlows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
@@ -62,16 +63,19 @@ export default function Assistants() {
       setLoading(true);
 
       const org = await getDefaultOrganization();
-      setOrganization(org);
+      const unitData = org ? await getDefaultUnit(org.id) : null;
 
-      if (!org) {
-        toast.error('Organização não encontrada');
+      setOrganization(org);
+      setUnit(unitData);
+
+      if (!org || !unitData) {
+        toast.error('Organização ou unidade não encontrada');
         return;
       }
 
       const [assistantsData, flowsData] = await Promise.all([
-        base44.entities.Assistant.filter({ organization_id: org.id }),
-        base44.entities.AIConversationFlow.list() // 🔥 CORREÇÃO AQUI
+        base44.entities.AIAssistant.filter({ organization_id: org.id, unit_id: unitData.id }),
+        base44.entities.AIFlow.filter({ organization_id: org.id, unit_id: unitData.id })
       ]);
 
       setAssistants(assistantsData || []);
@@ -91,23 +95,23 @@ export default function Assistants() {
         return;
       }
 
-      if (!organization) {
-        toast.error('Organização não carregada');
+      if (!organization || !unit) {
+        toast.error('Organização ou unidade não carregada');
         return;
       }
 
       const payload = {
         ...formData,
         organization_id: organization.id,
-        brand_id: organization.id,
-        default_flow_id: formData.default_flow_id || null
+        unit_id: unit.id,
+        ai_flow_id: formData.default_flow_id || null
       };
 
       if (editingAssistant) {
-        await base44.entities.Assistant.update(editingAssistant.id, payload);
+        await base44.entities.AIAssistant.update(editingAssistant.id, payload);
         toast.success('Assistente atualizado');
       } else {
-        await base44.entities.Assistant.create(payload);
+        await base44.entities.AIAssistant.create(payload);
         toast.success('Assistente criado com sucesso');
       }
 
@@ -130,7 +134,7 @@ export default function Assistants() {
 
   const handleDelete = async (id) => {
     if (!confirm('Deseja excluir este assistente?')) return;
-    await base44.entities.Assistant.delete(id);
+    await base44.entities.AIAssistant.delete(id);
     await loadData();
   };
 
@@ -165,7 +169,7 @@ export default function Assistants() {
   };
 
   const toggleActive = async (assistant) => {
-    await base44.entities.Assistant.update(assistant.id, {
+    await base44.entities.AIAssistant.update(assistant.id, {
       is_active: !assistant.is_active
     });
     await loadData();

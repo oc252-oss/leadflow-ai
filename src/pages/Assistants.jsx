@@ -24,6 +24,8 @@ export default function Assistants() {
   const [editingAssistant, setEditingAssistant] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterChannel, setFilterChannel] = useState('all');
+  const [filterUsageType, setFilterUsageType] = useState('all');
+  const [filterStatus, setFilterStatus] = useState('all');
 
   const [formData, setFormData] = useState({
     name: '',
@@ -31,6 +33,7 @@ export default function Assistants() {
     channel: 'whatsapp',
     assistant_type: 'qualificacao',
     tone: 'elegante',
+    formality_level: 'high',
     greeting_message: '',
     system_prompt: '',
     behavior_rules: {
@@ -39,6 +42,11 @@ export default function Assistants() {
       no_pricing: false,
       feminine_language: false,
       respect_hours: true
+    },
+    response_restrictions: {
+      avoid_pricing: false,
+      avoid_personal_info: false,
+      require_confirmation: false
     },
     default_flow_id: '',
     can_use_voice: false,
@@ -135,6 +143,7 @@ export default function Assistants() {
       channel: 'whatsapp',
       assistant_type: 'qualificacao',
       tone: 'elegante',
+      formality_level: 'high',
       greeting_message: '',
       system_prompt: '',
       behavior_rules: {
@@ -143,6 +152,11 @@ export default function Assistants() {
         no_pricing: false,
         feminine_language: false,
         respect_hours: true
+      },
+      response_restrictions: {
+        avoid_pricing: false,
+        avoid_personal_info: false,
+        require_confirmation: false
       },
       default_flow_id: '',
       can_use_voice: false,
@@ -159,7 +173,9 @@ export default function Assistants() {
 
   const filteredAssistants = assistants.filter(a =>
     a.name?.toLowerCase().includes(searchTerm.toLowerCase()) &&
-    (filterChannel === 'all' || a.channel === filterChannel)
+    (filterChannel === 'all' || a.channel === filterChannel) &&
+    (filterUsageType === 'all' || a.assistant_type === filterUsageType) &&
+    (filterStatus === 'all' || (filterStatus === 'active' ? a.is_active : !a.is_active))
   );
 
   if (loading) {
@@ -176,12 +192,39 @@ export default function Assistants() {
       </div>
 
       <Card>
-        <CardContent className="pt-6 flex gap-4">
+        <CardContent className="pt-6 space-y-3">
           <Input
             placeholder="Buscar assistente..."
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
           />
+          <div className="flex gap-3">
+            <Select value={filterUsageType} onValueChange={setFilterUsageType}>
+              <SelectTrigger className="w-[200px]">
+                <SelectValue placeholder="Tipo de uso" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos os tipos</SelectItem>
+                <SelectItem value="qualificacao">Qualificação</SelectItem>
+                <SelectItem value="reengajamento_7d">Reengajamento 7d</SelectItem>
+                <SelectItem value="reengajamento_30d">Reengajamento 30d</SelectItem>
+                <SelectItem value="reengajamento_90d">Reengajamento 90d</SelectItem>
+                <SelectItem value="prospeccao_ativa">Prospecção Ativa</SelectItem>
+                <SelectItem value="voz_reativacao">Voz - Reativação</SelectItem>
+                <SelectItem value="voz_qualificacao">Voz - Qualificação</SelectItem>
+              </SelectContent>
+            </Select>
+            <Select value={filterStatus} onValueChange={setFilterStatus}>
+              <SelectTrigger className="w-[150px]">
+                <SelectValue placeholder="Status" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Ativos</SelectItem>
+                <SelectItem value="inactive">Inativos</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </CardContent>
       </Card>
 
@@ -191,6 +234,7 @@ export default function Assistants() {
             <TableRow>
               <TableHead>Nome</TableHead>
               <TableHead>Canal</TableHead>
+              <TableHead>Tipo de Uso</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Fluxo</TableHead>
               <TableHead />
@@ -200,9 +244,14 @@ export default function Assistants() {
             {filteredAssistants.map(a => (
               <TableRow key={a.id}>
                 <TableCell>{a.name}</TableCell>
-                <TableCell>{a.channel}</TableCell>
+                <TableCell className="capitalize">{a.channel}</TableCell>
                 <TableCell>
-                  <Badge>{a.is_active ? 'Ativo' : 'Inativo'}</Badge>
+                  <Badge variant="outline" className="capitalize">
+                    {a.assistant_type?.replace(/_/g, ' ') || '-'}
+                  </Badge>
+                </TableCell>
+                <TableCell>
+                  <Badge variant={a.is_active ? 'default' : 'secondary'}>{a.is_active ? 'Ativo' : 'Inativo'}</Badge>
                 </TableCell>
                 <TableCell>
                   {a.default_flow_id ? 'Configurado' : '-'}
@@ -231,11 +280,12 @@ export default function Assistants() {
           </DialogHeader>
 
           <Tabs defaultValue="general">
-            <TabsList className="grid grid-cols-4">
+            <TabsList className="grid grid-cols-5">
               <TabsTrigger value="general">Geral</TabsTrigger>
               <TabsTrigger value="behavior">Comportamento</TabsTrigger>
+              <TabsTrigger value="voice">Voz</TabsTrigger>
               <TabsTrigger value="messages">Mensagens</TabsTrigger>
-              <TabsTrigger value="integration">Integração</TabsTrigger>
+              <TabsTrigger value="restrictions">Restrições</TabsTrigger>
             </TabsList>
 
             <TabsContent value="general" className="space-y-4 mt-4">
@@ -244,6 +294,47 @@ export default function Assistants() {
                 value={formData.name}
                 onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               />
+
+              <Textarea
+                placeholder="Descrição (opcional)"
+                value={formData.description}
+                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={2}
+              />
+
+              <Select
+                value={formData.channel}
+                onValueChange={(v) => setFormData({ ...formData, channel: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Canal" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                  <SelectItem value="voice">Voz</SelectItem>
+                  <SelectItem value="webchat">WebChat</SelectItem>
+                  <SelectItem value="messenger">Messenger</SelectItem>
+                  <SelectItem value="instagram">Instagram</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={formData.assistant_type}
+                onValueChange={(v) => setFormData({ ...formData, assistant_type: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Tipo de uso" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="qualificacao">Qualificação</SelectItem>
+                  <SelectItem value="reengajamento_7d">Reengajamento 7 dias</SelectItem>
+                  <SelectItem value="reengajamento_30d">Reengajamento 30 dias</SelectItem>
+                  <SelectItem value="reengajamento_90d">Reengajamento 90 dias</SelectItem>
+                  <SelectItem value="prospeccao_ativa">Prospecção Ativa</SelectItem>
+                  <SelectItem value="voz_reativacao">Voz - Reativação</SelectItem>
+                  <SelectItem value="voz_qualificacao">Voz - Qualificação</SelectItem>
+                </SelectContent>
+              </Select>
 
               <Select
                 value={formData.default_flow_id}
@@ -271,6 +362,83 @@ export default function Assistants() {
                     setFormData({ ...formData, is_active: v })
                   }
                 />
+              </div>
+            </TabsContent>
+
+            <TabsContent value="voice" className="space-y-4 mt-4">
+              <Select
+                value={formData.tone}
+                onValueChange={(v) => setFormData({ ...formData, tone: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Tom de voz" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="neutro">Neutro</SelectItem>
+                  <SelectItem value="comercial">Comercial</SelectItem>
+                  <SelectItem value="elegante">Elegante</SelectItem>
+                  <SelectItem value="humanizado">Humanizado</SelectItem>
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={formData.formality_level}
+                onValueChange={(v) => setFormData({ ...formData, formality_level: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nível de formalidade" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="low">Baixo (informal)</SelectItem>
+                  <SelectItem value="medium">Médio (semi-formal)</SelectItem>
+                  <SelectItem value="high">Alto (muito formal)</SelectItem>
+                </SelectContent>
+              </Select>
+            </TabsContent>
+
+            <TabsContent value="restrictions" className="space-y-4 mt-4">
+              <div className="space-y-3">
+                <div className="flex items-center justify-between p-3 border rounded">
+                  <div>
+                    <p className="text-sm font-medium">Evitar Preços</p>
+                    <p className="text-xs text-slate-500">Não menciona valores ou preços</p>
+                  </div>
+                  <Switch
+                    checked={formData.response_restrictions.avoid_pricing}
+                    onCheckedChange={(v) => setFormData({
+                      ...formData,
+                      response_restrictions: { ...formData.response_restrictions, avoid_pricing: v }
+                    })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 border rounded">
+                  <div>
+                    <p className="text-sm font-medium">Evitar Dados Pessoais</p>
+                    <p className="text-xs text-slate-500">Não solicita informações sensíveis</p>
+                  </div>
+                  <Switch
+                    checked={formData.response_restrictions.avoid_personal_info}
+                    onCheckedChange={(v) => setFormData({
+                      ...formData,
+                      response_restrictions: { ...formData.response_restrictions, avoid_personal_info: v }
+                    })}
+                  />
+                </div>
+
+                <div className="flex items-center justify-between p-3 border rounded">
+                  <div>
+                    <p className="text-sm font-medium">Exigir Confirmação</p>
+                    <p className="text-xs text-slate-500">Pede confirmação antes de ações</p>
+                  </div>
+                  <Switch
+                    checked={formData.response_restrictions.require_confirmation}
+                    onCheckedChange={(v) => setFormData({
+                      ...formData,
+                      response_restrictions: { ...formData.response_restrictions, require_confirmation: v }
+                    })}
+                  />
+                </div>
               </div>
             </TabsContent>
           </Tabs>

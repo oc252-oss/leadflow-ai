@@ -148,7 +148,7 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
           {/* Assistente IA */}
            <div>
              <Label className="text-sm font-medium mb-2 block">Assistente IA (opcional)</Label>
-             <Select value={formData.assistant_id || ''} onValueChange={(value) => setFormData({...formData, assistant_id: value || ''})}>
+             <Select value={formData.assistant_id || ''} onValueChange={(value) => setFormData({...formData, assistant_id: value})}>
                <SelectTrigger disabled={loadingAssistants}>
                  <SelectValue placeholder={loadingAssistants ? 'Carregando...' : 'Selecione um assistente'} />
                </SelectTrigger>

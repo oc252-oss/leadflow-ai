@@ -29,6 +29,7 @@ import { toast } from 'sonner';
 export default function SimulationTraining() {
   const [user, setUser] = useState(null);
   const [teamMember, setTeamMember] = useState(null);
+  const [assistants, setAssistants] = useState([]);
   const [flows, setFlows] = useState([]);
   const [campaigns, setCampaigns] = useState([]);
   const [companies, setCompanies] = useState([]);
@@ -42,6 +43,7 @@ export default function SimulationTraining() {
   const [processing, setProcessing] = useState(false);
 
   // Configuration
+  const [selectedAssistant, setSelectedAssistant] = useState('');
   const [selectedFlow, setSelectedFlow] = useState('');
   const [selectedCampaign, setSelectedCampaign] = useState('');
   const [simulatedContext, setSimulatedContext] = useState({
@@ -83,18 +85,23 @@ export default function SimulationTraining() {
       const teamMembers = await base44.entities.TeamMember.filter({ user_email: currentUser.email });
       if (teamMembers.length > 0) {
         setTeamMember(teamMembers[0]);
-        const [aiFlows, voiceCampaigns, companiesData] = await Promise.all([
+        const [assistantsData, aiFlows, voiceCampaigns, companiesData] = await Promise.all([
+          base44.entities.Assistant.filter({ 
+            organization_id: teamMembers[0].organization_id,
+            is_active: true
+          }),
           base44.entities.AIConversationFlow.filter({ 
-            company_id: teamMembers[0].company_id,
+            organization_id: teamMembers[0].organization_id,
             is_active: true
           }),
           base44.entities.VoiceCampaign.filter({ 
-            company_id: teamMembers[0].company_id
+            organization_id: teamMembers[0].organization_id
           }),
           base44.entities.Company.filter({ 
             id: teamMembers[0].company_id 
           })
         ]);
+        setAssistants(assistantsData);
         setFlows(aiFlows);
         setCampaigns(voiceCampaigns);
         setCompanies(companiesData);
@@ -107,6 +114,11 @@ export default function SimulationTraining() {
   };
 
   const startSimulation = async () => {
+    if (!selectedAssistant) {
+      toast.error('Selecione um assistente');
+      return;
+    }
+
     if (activeMode === 'ai_text' && !selectedFlow) {
       toast.error('Selecione um fluxo de IA');
       return;
@@ -400,6 +412,28 @@ Seja crítico mas construtivo.`,
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
+              <div className="space-y-2">
+                <Label>Assistente IA*</Label>
+                <Select 
+                  value={selectedAssistant} 
+                  onValueChange={setSelectedAssistant}
+                  disabled={isSimulating}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {assistants
+                      .filter(a => activeMode === 'ai_voice' ? a.can_use_voice : true)
+                      .map(assistant => (
+                        <SelectItem key={assistant.id} value={assistant.id}>
+                          {assistant.name}
+                        </SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
               {activeMode === 'ai_text' && (
                 <div className="space-y-2">
                   <Label>Fluxo de IA*</Label>

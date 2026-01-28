@@ -30,6 +30,8 @@ export default function Assistants() {
     description: '',
     unit_id: '',
     channel: 'whatsapp',
+    assistant_type: 'qualificacao',
+    tone: 'elegante',
     greeting_message: '',
     system_prompt: '',
     behavior_rules: {
@@ -40,6 +42,7 @@ export default function Assistants() {
       respect_hours: true
     },
     default_flow_id: '',
+    can_use_voice: false,
     is_active: false
   });
 
@@ -116,6 +119,8 @@ export default function Assistants() {
       description: assistant.description || '',
       unit_id: assistant.unit_id || '',
       channel: assistant.channel || 'whatsapp',
+      assistant_type: assistant.assistant_type || 'qualificacao',
+      tone: assistant.tone || 'elegante',
       greeting_message: assistant.greeting_message || '',
       system_prompt: assistant.system_prompt || '',
       behavior_rules: assistant.behavior_rules || {
@@ -126,6 +131,7 @@ export default function Assistants() {
         respect_hours: true
       },
       default_flow_id: assistant.default_flow_id || '',
+      can_use_voice: assistant.can_use_voice || false,
       is_active: assistant.is_active || false
     });
     setShowDialog(true);
@@ -152,6 +158,8 @@ export default function Assistants() {
       description: '',
       unit_id: '',
       channel: 'whatsapp',
+      assistant_type: 'qualificacao',
+      tone: 'elegante',
       greeting_message: '',
       system_prompt: '',
       behavior_rules: {
@@ -162,6 +170,7 @@ export default function Assistants() {
         respect_hours: true
       },
       default_flow_id: '',
+      can_use_voice: false,
       is_active: false
     });
   };
@@ -260,6 +269,7 @@ export default function Assistants() {
               <TableHead>Nome</TableHead>
               <TableHead>Unidade</TableHead>
               <TableHead>Canal</TableHead>
+              <TableHead>Tipo de Uso</TableHead>
               <TableHead>Status</TableHead>
               <TableHead>Fluxo Padrão</TableHead>
               <TableHead className="text-right">Ações</TableHead>
@@ -268,7 +278,7 @@ export default function Assistants() {
           <TableBody>
             {filteredAssistants.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={6} className="text-center py-12 text-slate-500">
+                <TableCell colSpan={7} className="text-center py-12 text-slate-500">
                   Nenhum assistente encontrado
                 </TableCell>
               </TableRow>
@@ -289,6 +299,11 @@ export default function Assistants() {
                         <ChannelIcon className="w-4 h-4 text-slate-500" />
                         <span className="capitalize">{assistant.channel}</span>
                       </div>
+                    </TableCell>
+                    <TableCell>
+                      <Badge variant="outline" className="capitalize">
+                        {assistant.assistant_type?.replace(/_/g, ' ') || '-'}
+                      </Badge>
                     </TableCell>
                     <TableCell>
                       <Badge variant={assistant.is_active ? 'default' : 'secondary'}>
@@ -383,10 +398,16 @@ export default function Assistants() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label>Tipo de Assistente</Label>
+                  <Label>Canal</Label>
                   <Select 
                     value={formData.channel} 
-                    onValueChange={(value) => setFormData({ ...formData, channel: value })}
+                    onValueChange={(value) => {
+                      setFormData({ 
+                        ...formData, 
+                        channel: value,
+                        can_use_voice: value === 'voice'
+                      });
+                    }}
                   >
                     <SelectTrigger>
                       <SelectValue />
@@ -397,6 +418,47 @@ export default function Assistants() {
                       <SelectItem value="webchat">WebChat</SelectItem>
                       <SelectItem value="messenger">Messenger</SelectItem>
                       <SelectItem value="instagram">Instagram</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Tipo de Uso</Label>
+                  <Select 
+                    value={formData.assistant_type} 
+                    onValueChange={(value) => setFormData({ ...formData, assistant_type: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="qualificacao">Qualificação</SelectItem>
+                      <SelectItem value="reengajamento_7d">Reengajamento 7 dias</SelectItem>
+                      <SelectItem value="reengajamento_30d">Reengajamento 30 dias</SelectItem>
+                      <SelectItem value="reengajamento_90d">Reengajamento 90 dias</SelectItem>
+                      <SelectItem value="prospeccao_ativa">Prospecção Ativa</SelectItem>
+                      <SelectItem value="voz_reativacao">Voz - Reativação</SelectItem>
+                      <SelectItem value="voz_qualificacao">Voz - Qualificação</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Tom de Comunicação</Label>
+                  <Select 
+                    value={formData.tone} 
+                    onValueChange={(value) => setFormData({ ...formData, tone: value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="neutro">Neutro</SelectItem>
+                      <SelectItem value="comercial">Comercial</SelectItem>
+                      <SelectItem value="elegante">Elegante</SelectItem>
+                      <SelectItem value="humanizado">Humanizado</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

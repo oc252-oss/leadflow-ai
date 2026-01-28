@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Plus, Edit2, Trash2, Loader, AlertCircle } from 'lucide-react';
+import { toast } from 'sonner';
 
 export default function AIAssistants() {
   const [assistants, setAssistants] = useState([]);
@@ -106,19 +107,25 @@ export default function AIAssistants() {
   const isFormValid = formData.name.trim() && formData.channel && formData.default_flow_id;
 
   const handleSave = async () => {
-    if (!isFormValid) return;
+    if (!isFormValid) {
+      toast.error('Preencha os campos obrigatórios: Nome, Canal e Fluxo');
+      return;
+    }
     
     setIsSaving(true);
     try {
       if (editingAssistant) {
         await base44.entities.AIAssistant.update(editingAssistant.id, formData);
+        toast.success('Assistente atualizado com sucesso');
       } else {
         await base44.entities.AIAssistant.create(formData);
+        toast.success('Assistente criado com sucesso');
       }
       await loadData();
       setShowDialog(false);
     } catch (error) {
       console.error('Erro ao salvar assistente:', error);
+      toast.error('Erro ao salvar assistente. Tente novamente.');
     } finally {
       setIsSaving(false);
     }

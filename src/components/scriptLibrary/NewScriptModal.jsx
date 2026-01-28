@@ -121,7 +121,8 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
       greeting_message: '',
       tone: 'elegante',
       behavior_rules: {},
-      voice_settings: {}
+      voice_settings: {},
+      assistant_id: ''
     });
     setVoiceSpeed([1.0]);
   };

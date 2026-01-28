@@ -43,7 +43,6 @@ export default function Layout({ children, currentPageName }) {
   const [teamMember, setTeamMember] = useState(null);
   const [notifications, setNotifications] = useState([]);
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadUserData();
@@ -71,7 +70,6 @@ export default function Layout({ children, currentPageName }) {
     } catch (error) {
       console.error('Error loading user data:', error);
     }
-    setLoading(false);
   };
 
   const canAccessPage = (pageName) => {
@@ -168,25 +166,19 @@ export default function Layout({ children, currentPageName }) {
 
           {/* Company selector */}
           <div className="px-4 py-3 border-b border-slate-100">
-            {loading ? (
-              <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-50">
-                <div className="w-8 h-8 rounded-lg bg-slate-100 animate-pulse" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-4 bg-slate-200 rounded animate-pulse w-24" />
-                  <div className="h-3 bg-slate-200 rounded animate-pulse w-16" />
-                </div>
+            <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-50">
+              <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
+                <Building2 className="w-4 h-4 text-indigo-600" />
               </div>
-            ) : company ? (
-              <div className="flex items-center gap-3 px-3 py-2 rounded-lg bg-slate-50">
-                <div className="w-8 h-8 rounded-lg bg-indigo-100 flex items-center justify-center">
-                  <Building2 className="w-4 h-4 text-indigo-600" />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-sm font-medium text-slate-900 truncate">{company.name}</p>
-                  <p className="text-xs text-slate-500 capitalize">{teamMember?.role?.replace('_', ' ')}</p>
-                </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-medium text-slate-900 truncate">
+                  {company?.name || 'Carregando...'}
+                </p>
+                <p className="text-xs text-slate-500 capitalize">
+                  {teamMember?.role?.replace('_', ' ') || 'Usuário'}
+                </p>
               </div>
-            ) : null}
+            </div>
           </div>
 
           {/* Navigation */}
@@ -215,28 +207,23 @@ export default function Layout({ children, currentPageName }) {
 
           {/* User section */}
           <div className="p-4 border-t border-slate-100">
-            {loading ? (
-              <div className="flex items-center gap-3 px-3 py-2">
-                <div className="w-9 h-9 rounded-full bg-slate-200 animate-pulse" />
-                <div className="flex-1 space-y-2">
-                  <div className="h-3 bg-slate-200 rounded animate-pulse w-20" />
-                  <div className="h-2 bg-slate-200 rounded animate-pulse w-24" />
-                </div>
-              </div>
-            ) : user ? (
-              <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                  <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-medium">
-                      {user.full_name?.charAt(0) || 'U'}
-                    </div>
-                    <div className="flex-1 text-left min-w-0">
-                      <p className="text-sm font-medium text-slate-900 truncate">{user.full_name}</p>
-                      <p className="text-xs text-slate-500 truncate">{user.email}</p>
-                    </div>
-                    <ChevronDown className="w-4 h-4 text-slate-400" />
-                  </button>
-                </DropdownMenuTrigger>
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <button className="flex items-center gap-3 w-full px-3 py-2 rounded-lg hover:bg-slate-50 transition-colors">
+                  <div className="w-9 h-9 rounded-full bg-gradient-to-br from-indigo-500 to-violet-500 flex items-center justify-center text-white font-medium">
+                    {user?.full_name?.charAt(0) || 'U'}
+                  </div>
+                  <div className="flex-1 text-left min-w-0">
+                    <p className="text-sm font-medium text-slate-900 truncate">
+                      {user?.full_name || 'Usuário'}
+                    </p>
+                    <p className="text-xs text-slate-500 truncate">
+                      {user?.email || 'Carregando...'}
+                    </p>
+                  </div>
+                  <ChevronDown className="w-4 h-4 text-slate-400" />
+                </button>
+              </DropdownMenuTrigger>
               <DropdownMenuContent align="end" className="w-56">
                 <DropdownMenuLabel>{t('my_account')}</DropdownMenuLabel>
                 <DropdownMenuSeparator />
@@ -249,10 +236,9 @@ export default function Layout({ children, currentPageName }) {
                   <LogOut className="w-4 h-4 mr-2" />
                   {t('logout')}
                 </DropdownMenuItem>
-                </DropdownMenuContent>
-                </DropdownMenu>
-                ) : null}
-                </div>
+              </DropdownMenuContent>
+            </DropdownMenu>
+          </div>
         </div>
       </aside>
 

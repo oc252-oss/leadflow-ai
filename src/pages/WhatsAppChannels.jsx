@@ -5,21 +5,21 @@ import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { MessageSquare, QrCode, Trash2, RefreshCw, Plus, CheckCircle2, Loader2 } from 'lucide-react';
+import { MessageSquare, QrCode, Trash2, RefreshCw, Plus, CheckCircle2, Loader2, AlertCircle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { toast } from 'sonner';
 import WhatsAppTestPanel from '@/components/WhatsAppTestPanel';
 
 export default function WhatsAppChannels() {
   const [channels, setChannels] = useState([]);
-  const [assistants, setAssistants] = useState([]);
+  const [scripts, setScripts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [showQRDialog, setShowQRDialog] = useState(false);
   const [selectedChannel, setSelectedChannel] = useState(null);
   const [qrCode, setQrCode] = useState(null);
   const [qrLoading, setQrLoading] = useState(false);
-  const [formData, setFormData] = useState({ label: '', assistant_id: '' });
+  const [formData, setFormData] = useState({ label: '', script_id: '' });
 
   useEffect(() => {
     loadData();
@@ -28,12 +28,12 @@ export default function WhatsAppChannels() {
   const loadData = async () => {
     setLoading(true);
     try {
-      const [channelsData, assistantsData] = await Promise.all([
+      const [channelsData, scriptsData] = await Promise.all([
         base44.entities.WhatsAppChannel.list(),
-        base44.entities.AIAssistant.list()
+        base44.entities.AIScript.filter({ is_approved: true, channel: 'whatsapp' })
       ]);
       setChannels(channelsData || []);
-      setAssistants(assistantsData || []);
+      setScripts(scriptsData || []);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
@@ -42,25 +42,26 @@ export default function WhatsAppChannels() {
   };
 
   const handleCreateChannel = async () => {
-    if (!formData.label || !formData.assistant_id) {
-      alert('Preencha todos os campos');
+    if (!formData.script_id) {
+      toast.error('Selecione um script aprovado');
       return;
     }
 
     try {
       await base44.entities.WhatsAppChannel.create({
-        label: formData.label,
-        assistant_id: formData.assistant_id,
+        label: formData.label || 'WhatsApp Channel',
+        script_id: formData.script_id,
         phone_number: '',
         status: 'disconnected'
       });
 
-      setFormData({ label: '', assistant_id: '' });
+      setFormData({ label: '', script_id: '' });
       setShowCreateDialog(false);
       await loadData();
+      toast.success('Canal criado com sucesso!');
     } catch (error) {
       console.error('Erro ao criar canal:', error);
-      alert('Erro ao criar canal');
+      toast.error('Erro ao criar canal');
     }
   };
 
@@ -118,9 +119,9 @@ export default function WhatsAppChannels() {
     }
   };
 
-  const getAssistantName = (assistantId) => {
-    const assistant = assistants.find(a => a.id === assistantId);
-    return assistant?.name || 'Assistente não encontrado';
+  const getScriptName = (scriptId) => {
+    const script = scripts.find(s => s.id === scriptId);
+    return script?.name || 'Script não encontrado';
   };
 
   const getStatusColor = (status) => {
@@ -147,30 +148,46 @@ export default function WhatsAppChannels() {
               <DialogTitle>Criar Novo Canal WhatsApp</DialogTitle>
             </DialogHeader>
             <div className="space-y-4">
-              <div>
-                <label className="text-sm font-medium">Rótulo</label>
-                <Input
-                  placeholder="Ex: WhatsApp Comercial"
-                  value={formData.label}
-                  onChange={(e) => setFormData({ ...formData, label: e.target.value })}
-                />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Assistente IA</label>
-                <Select value={formData.assistant_id} onValueChange={(value) => setFormData({ ...formData, assistant_id: value })}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Selecione um assistente" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {assistants.map(assistant => (
-                      <SelectItem key={assistant.id} value={assistant.id}>
-                        {assistant.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <Button onClick={handleCreateChannel} className="w-full bg-indigo-600 hover:bg-indigo-700">
+              {scripts.length === 0 ? (
+                <div className="flex flex-col items-center justify-center py-6 text-center">
+                  <AlertCircle className="w-8 h-8 text-amber-600 mb-2" />
+                  <p className="text-sm font-medium text-slate-900">Nenhum script aprovado</p>
+                  <p className="text-xs text-slate-600 mt-1">
+                    Crie e aprove um script em Biblioteca de Scripts primeiro
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div>
+                    <label className="text-sm font-medium">Rótulo (Opcional)</label>
+                    <Input
+                      placeholder="Ex: WhatsApp Comercial"
+                      value={formData.label}
+                      onChange={(e) => setFormData({ ...formData, label: e.target.value })}
+                    />
+                  </div>
+                  <div>
+                    <label className="text-sm font-medium">Script Aprovado *</label>
+                    <Select value={formData.script_id} onValueChange={(value) => setFormData({ ...formData, script_id: value })}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Selecione um script" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {scripts.map(script => (
+                          <SelectItem key={script.id} value={script.id}>
+                            {script.name} ({script.version})
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </>
+              )}
+              <Button 
+                onClick={handleCreateChannel} 
+                className="w-full bg-indigo-600 hover:bg-indigo-700"
+                disabled={scripts.length === 0 || !formData.script_id}
+              >
                 Criar Canal
               </Button>
             </div>
@@ -206,10 +223,10 @@ export default function WhatsAppChannels() {
                         {channel.status === 'connected' ? '🟢' : channel.status === 'pending' ? '🟡' : '🔴'} {channel.status}
                       </Badge>
                     </div>
-                    <div className="text-sm text-slate-600">
-                      <p>Número: <span className="font-mono">{channel.phone_number || 'Desconectado'}</span></p>
-                      <p>Assistente: <span className="font-medium">{getAssistantName(channel.assistant_id)}</span></p>
-                    </div>
+                    <div className="text-sm text-slate-600 space-y-1">
+                       <p>Número: <span className="font-mono">{channel.phone_number || 'Desconectado'}</span></p>
+                       <p>Script: <span className="font-medium">{getScriptName(channel.script_id)}</span></p>
+                     </div>
                   </div>
                   <div className="flex gap-2">
                     <Button

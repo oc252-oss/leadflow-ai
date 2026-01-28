@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import UnitSelector from "@/components/UnitSelector";
 import { 
   MessageSquare, 
   Instagram, 
@@ -34,6 +35,7 @@ export default function ChannelsIntegrations() {
   const [flows, setFlows] = useState([]);
   const [teamMember, setTeamMember] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [activeUnitId, setActiveUnitId] = useState('');
   
   // WhatsApp QR Code
   const [showQRDialog, setShowQRDialog] = useState(false);
@@ -101,6 +103,11 @@ export default function ChannelsIntegrations() {
         setUnits(unitsData);
         setAssistants(assistantsData);
         setFlows(flowsData);
+        
+        // Auto-select first unit if available
+        if (unitsData.length > 0 && !activeUnitId) {
+          setActiveUnitId(unitsData[0].id);
+        }
       }
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
@@ -227,12 +234,32 @@ export default function ChannelsIntegrations() {
     );
   }
 
+  // Filter data by active unit
+  const filteredIntegrations = activeUnitId 
+    ? integrations.filter(i => i.unit_id === activeUnitId)
+    : integrations;
+  
+  const filteredAssistants = activeUnitId 
+    ? assistants.filter(a => a.unit_id === activeUnitId)
+    : assistants;
+
+  const hasAssistants = filteredAssistants.length > 0;
+
   return (
     <div className="space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-3xl font-bold text-slate-900">Canais & Integrações</h1>
-        <p className="text-slate-500 mt-1">Conecte e gerencie todos os canais de atendimento</p>
+      {/* Header with Unit Selector */}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-3xl font-bold text-slate-900">Canais & Integrações</h1>
+          <p className="text-slate-500 mt-1">Conecte e gerencie todos os canais de atendimento</p>
+        </div>
+        {units.length > 0 && (
+          <UnitSelector 
+            value={activeUnitId} 
+            onChange={setActiveUnitId}
+            teamMember={teamMember}
+          />
+        )}
       </div>
 
       {/* Alert if no units */}
@@ -290,9 +317,28 @@ export default function ChannelsIntegrations() {
                     Cadastre uma unidade antes de conectar canais
                   </p>
                 </div>
+              ) : !hasAssistants ? (
+                <div className="space-y-2">
+                  <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                    <p className="text-xs text-blue-700 text-center">
+                      Crie um assistente primeiro para conectar o WhatsApp
+                    </p>
+                  </div>
+                  <Button 
+                    onClick={() => window.location.href = '/Assistants'} 
+                    variant="outline" 
+                    className="w-full"
+                    size="sm"
+                  >
+                    Criar Assistente
+                  </Button>
+                </div>
               ) : (
                 <Button 
-                  onClick={() => setShowQRDialog(true)} 
+                  onClick={() => {
+                    setQrFormData({ ...qrFormData, unit_id: activeUnitId });
+                    setShowQRDialog(true);
+                  }} 
                   variant="outline" 
                   className="w-full"
                 >
@@ -328,13 +374,34 @@ export default function ChannelsIntegrations() {
               <CardDescription>Z-API, Gupshup, Zenvia</CardDescription>
             </CardHeader>
             <CardContent>
-              <Button 
-                onClick={() => setShowProviderDialog(true)}
-                className="w-full bg-green-600 hover:bg-green-700"
-              >
-                <MessageSquare className="w-4 h-4 mr-2" />
-                Conectar Provider
-              </Button>
+              {units.length === 0 ? (
+                <Button disabled className="w-full" variant="outline">
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Cadastre uma Unidade
+                </Button>
+              ) : !hasAssistants ? (
+                <div className="space-y-2">
+                  <Button 
+                    onClick={() => window.location.href = '/Assistants'} 
+                    variant="outline" 
+                    className="w-full"
+                    size="sm"
+                  >
+                    Criar Assistente Primeiro
+                  </Button>
+                </div>
+              ) : (
+                <Button 
+                  onClick={() => {
+                    setProviderFormData({ ...providerFormData, unit_id: activeUnitId });
+                    setShowProviderDialog(true);
+                  }}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                >
+                  <MessageSquare className="w-4 h-4 mr-2" />
+                  Conectar Provider
+                </Button>
+              )}
             </CardContent>
           </Card>
         </div>
@@ -469,14 +536,16 @@ export default function ChannelsIntegrations() {
               </TableRow>
             </TableHeader>
             <TableBody>
-              {integrations.length === 0 ? (
+              {filteredIntegrations.length === 0 ? (
                 <TableRow>
                   <TableCell colSpan={6} className="text-center py-12 text-slate-500">
-                    Nenhum canal conectado ainda
+                    {units.length === 0 
+                      ? 'Cadastre uma unidade para começar'
+                      : 'Nenhum canal conectado nesta unidade'}
                   </TableCell>
                 </TableRow>
               ) : (
-                integrations.map((integration) => {
+                filteredIntegrations.map((integration) => {
                   const unit = units.find(u => u.id === integration.unit_id);
                   const assistant = assistants.find(a => a.id === integration.assistant_id);
                   const flow = flows.find(f => f.id === integration.default_flow_id);

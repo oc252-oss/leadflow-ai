@@ -10,6 +10,7 @@ import ScriptLibraryFilters from '@/components/scriptLibrary/ScriptLibraryFilter
 import ScriptCard from '@/components/scriptLibrary/ScriptCard';
 import ScriptDetailModal from '@/components/scriptLibrary/ScriptDetailModal';
 import ScriptAssignmentModal from '@/components/scriptLibrary/ScriptAssignmentModal';
+import NewScriptModal from '@/components/scriptLibrary/NewScriptModal';
 
 export default function ScriptLibrary() {
   const [scripts, setScripts] = useState([]);
@@ -27,6 +28,7 @@ export default function ScriptLibrary() {
   const [assignScript, setAssignScript] = useState(null);
   const [approving, setApproving] = useState(false);
   const [assigning, setAssigning] = useState(false);
+  const [newScriptModalOpen, setNewScriptModalOpen] = useState(false);
 
   useEffect(() => {
     loadScripts();
@@ -146,7 +148,7 @@ export default function ScriptLibrary() {
           <p className="text-slate-600 mt-2">Repositório central de inteligência do CLINIQ.AI</p>
         </div>
         <Button
-          onClick={() => window.location.href = createPageUrl('SimulationTraining')}
+          onClick={() => setNewScriptModalOpen(true)}
           className="gap-2 bg-indigo-600 hover:bg-indigo-700"
         >
           <Plus className="w-4 h-4" />
@@ -228,6 +230,12 @@ export default function ScriptLibrary() {
         onOpenChange={setAssignModalOpen}
         onAssign={handleAssignScript}
         assigning={assigning}
+      />
+
+      <NewScriptModal
+        open={newScriptModalOpen}
+        onOpenChange={setNewScriptModalOpen}
+        onScriptCreated={loadScripts}
       />
     </div>
   );

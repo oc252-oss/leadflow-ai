@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { CheckCircle2, Copy, Loader2 } from 'lucide-react';
+import { CheckCircle2, Copy, Loader2, Calendar, User } from 'lucide-react';
 import { toast } from 'sonner';
 
 export default function ScriptDetailModal({ script, open, onOpenChange, onApprove, approving }) {
@@ -59,14 +59,23 @@ export default function ScriptDetailModal({ script, open, onOpenChange, onApprov
           {/* Approval Info */}
           {script.is_approved && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-4 space-y-2">
-              <div className="flex items-start justify-between">
-                <div>
-                  <p className="text-xs text-green-600 font-medium">✓ Aprovado</p>
-                  <p className="text-xs text-slate-600 mt-1">Aprovado por: {script.approved_by}</p>
-                  {script.approved_at && (
-                    <p className="text-xs text-slate-600">Em: {new Date(script.approved_at).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
-                  )}
-                </div>
+              <div className="flex items-center gap-2 mb-2">
+                <CheckCircle2 className="w-4 h-4 text-green-600" />
+                <p className="text-sm font-semibold text-green-700">Script Aprovado</p>
+              </div>
+              <div className="space-y-1 text-xs text-slate-600">
+                {script.approved_by && (
+                  <div className="flex items-center gap-2">
+                    <User className="w-3 h-3" />
+                    <span>Aprovado por: <strong>{script.approved_by}</strong></span>
+                  </div>
+                )}
+                {script.approved_at && (
+                  <div className="flex items-center gap-2">
+                    <Calendar className="w-3 h-3" />
+                    <span>{new Date(script.approved_at).toLocaleDateString('pt-BR', { year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
+                  </div>
+                )}
               </div>
             </div>
           )}

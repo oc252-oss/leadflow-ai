@@ -367,10 +367,6 @@ export default function AIFlows() {
           <p className="text-slate-500 mt-1">Configure os fluxos de qualificação automática por IA</p>
         </div>
         <div className="flex gap-2">
-          <Button onClick={() => window.location.href = '/AISimulator'} variant="outline">
-            <Bot className="w-4 h-4 mr-2" />
-            Testar Simulador
-          </Button>
           <Button 
             onClick={() => {
               const plan = company?.plan || 'free';

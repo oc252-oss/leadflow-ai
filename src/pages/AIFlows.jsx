@@ -368,15 +368,7 @@ export default function AIFlows() {
         </div>
         <div className="flex gap-2">
           <Button 
-            onClick={() => {
-              const plan = company?.plan || 'free';
-              const canCreate = flows.length < getLimit(plan, 'ai_flows');
-              if (!canCreate) {
-                toast.error('Você atingiu o limite de fluxos do seu plano');
-                return;
-              }
-              setShowDialog(true);
-            }} 
+            onClick={() => setShowDialog(true)} 
             className="bg-indigo-600 hover:bg-indigo-700"
           >
             <Plus className="w-4 h-4 mr-2" />
@@ -435,16 +427,6 @@ export default function AIFlows() {
           </div>
         </CardContent>
       </Card>
-
-      {/* Upgrade CTA if at limit */}
-      {company && flows.length >= getLimit(company.plan || 'free', 'ai_flows') && !hasFeature(company.plan, FEATURES.MULTIPLE_AI_FLOWS) && (
-        <UpgradeCTA 
-          feature={FEATURES.MULTIPLE_AI_FLOWS}
-          message="Você atingiu o limite de fluxos de IA"
-          inline={true}
-          currentPlan={company.plan}
-        />
-      )}
 
       {/* Table */}
       <Card>

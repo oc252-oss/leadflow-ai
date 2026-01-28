@@ -6,6 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
+import { cn } from "@/lib/utils";
 
 export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMembers = [], company }) {
   const [data, setData] = useState(campaign || {
@@ -41,11 +42,12 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
     try {
       const approved = await base44.entities.AIScript.filter({
         is_approved: true,
-        status: 'approved'
+        channel: 'voice'
       }, '-created_date', 100);
-      setScripts(approved);
+      setScripts(approved || []);
     } catch (error) {
       console.error('Erro ao carregar scripts aprovados:', error);
+      setScripts([]);
     } finally {
       setLoadingScripts(false);
     }

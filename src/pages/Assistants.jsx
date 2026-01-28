@@ -13,22 +13,23 @@ import { Switch } from "@/components/ui/switch";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Bot, Plus, Pencil, Trash2, MessageSquare, Phone, Zap, Search } from 'lucide-react';
 import { toast } from 'sonner';
+import { getDefaultOrganization, getDefaultUnit, isSingleCompanyMode } from '@/components/singleCompanyMode';
 
 export default function Assistants() {
   const [assistants, setAssistants] = useState([]);
-  const [units, setUnits] = useState([]);
+  const [organization, setOrganization] = useState(null);
+  const [unit, setUnit] = useState(null);
   const [flows, setFlows] = useState([]);
-  const [teamMember, setTeamMember] = useState(null);
   const [loading, setLoading] = useState(true);
   const [showDialog, setShowDialog] = useState(false);
   const [editingAssistant, setEditingAssistant] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterChannel, setFilterChannel] = useState('all');
+  const singleCompanyMode = isSingleCompanyMode();
 
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    unit_id: '',
     channel: 'whatsapp',
     assistant_type: 'qualificacao',
     tone: 'elegante',
@@ -53,26 +54,25 @@ export default function Assistants() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const user = await base44.auth.me();
-      const teamMembers = await base44.entities.TeamMember.filter({ user_email: user.email });
       
-      if (teamMembers.length > 0) {
-        setTeamMember(teamMembers[0]);
-        
-        const [assistantsData, unitsData, flowsData] = await Promise.all([
+      // Load default organization and unit for single company mode
+      const org = await getDefaultOrganization();
+      const unitData = org ? await getDefaultUnit(org.id) : null;
+      
+      setOrganization(org);
+      setUnit(unitData);
+      
+      if (org) {
+        const [assistantsData, flowsData] = await Promise.all([
           base44.entities.Assistant.filter({ 
-            organization_id: teamMembers[0].organization_id 
-          }),
-          base44.entities.Unit.filter({ 
-            organization_id: teamMembers[0].organization_id 
+            organization_id: org.id 
           }),
           base44.entities.AIConversationFlow.filter({ 
-            organization_id: teamMembers[0].organization_id 
+            organization_id: org.id 
           })
         ]);
         
         setAssistants(assistantsData);
-        setUnits(unitsData);
         setFlows(flowsData);
       }
     } catch (error) {
@@ -90,15 +90,21 @@ export default function Assistants() {
         return;
       }
 
-      if (!formData.unit_id) {
-        toast.error('Selecione uma unidade. Se não houver unidades, cadastre uma primeiro.');
+      if (!formData.channel) {
+        toast.error('Canal é obrigatório');
+        return;
+      }
+
+      if (!formData.assistant_type) {
+        toast.error('Tipo de uso é obrigatório');
         return;
       }
 
       const dataToSave = {
         ...formData,
-        organization_id: teamMember.organization_id,
-        brand_id: teamMember.brand_id
+        organization_id: organization.id,
+        brand_id: organization.id,
+        unit_id: unit?.id || null
       };
 
       if (editingAssistant) {
@@ -122,7 +128,6 @@ export default function Assistants() {
     setFormData({
       name: assistant.name || '',
       description: assistant.description || '',
-      unit_id: assistant.unit_id || '',
       channel: assistant.channel || 'whatsapp',
       assistant_type: assistant.assistant_type || 'qualificacao',
       tone: assistant.tone || 'elegante',
@@ -161,7 +166,6 @@ export default function Assistants() {
     setFormData({
       name: '',
       description: '',
-      unit_id: '',
       channel: 'whatsapp',
       assistant_type: 'qualificacao',
       tone: 'elegante',
@@ -199,10 +203,7 @@ export default function Assistants() {
     return matchesSearch && matchesChannel;
   });
 
-  const getUnitName = (unitId) => {
-    const unit = units.find(u => u.id === unitId);
-    return unit?.name || unitId;
-  };
+
 
   const channelIcons = {
     whatsapp: MessageSquare,
@@ -272,7 +273,6 @@ export default function Assistants() {
           <TableHeader>
             <TableRow>
               <TableHead>Nome</TableHead>
-              <TableHead>Unidade</TableHead>
               <TableHead>Canal</TableHead>
               <TableHead>Tipo de Uso</TableHead>
               <TableHead>Status</TableHead>
@@ -283,7 +283,7 @@ export default function Assistants() {
           <TableBody>
             {filteredAssistants.length === 0 ? (
               <TableRow>
-                <TableCell colSpan={7} className="text-center py-12 text-slate-500">
+                <TableCell colSpan={6} className="text-center py-12 text-slate-500">
                   Nenhum assistente encontrado
                 </TableCell>
               </TableRow>
@@ -293,13 +293,12 @@ export default function Assistants() {
                 return (
                   <TableRow key={assistant.id}>
                     <TableCell className="font-medium">
-                      <div className="flex items-center gap-2">
-                        <Bot className="w-4 h-4 text-indigo-600" />
-                        {assistant.name}
-                      </div>
-                    </TableCell>
-                    <TableCell>{getUnitName(assistant.unit_id)}</TableCell>
-                    <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Bot className="w-4 h-4 text-indigo-600" />
+                          {assistant.name}
+                        </div>
+                      </TableCell>
+                      <TableCell>
                       <div className="flex items-center gap-2">
                         <ChannelIcon className="w-4 h-4 text-slate-500" />
                         <span className="capitalize">{assistant.channel}</span>
@@ -384,100 +383,68 @@ export default function Assistants() {
                 />
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Unidade *</Label>
-                  <Select 
-                    value={formData.unit_id} 
-                    onValueChange={(value) => setFormData({ ...formData, unit_id: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Selecione a unidade" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {units.length === 0 ? (
-                        <div className="p-4 text-sm text-slate-500 text-center">
-                          Nenhuma unidade cadastrada
-                        </div>
-                      ) : (
-                        units.map(unit => (
-                          <SelectItem key={unit.id} value={unit.id}>{unit.name}</SelectItem>
-                        ))
-                      )}
-                    </SelectContent>
-                  </Select>
-                  {units.length === 0 && (
-                    <p className="text-xs text-amber-600">
-                      ⚠️ Cadastre uma unidade antes de criar assistentes
-                    </p>
-                  )}
-                </div>
-
-                <div className="space-y-2">
-                  <Label>Canal</Label>
-                  <Select 
-                    value={formData.channel} 
-                    onValueChange={(value) => {
-                      setFormData({ 
-                        ...formData, 
-                        channel: value,
-                        can_use_voice: value === 'voice'
-                      });
-                    }}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="whatsapp">WhatsApp</SelectItem>
-                      <SelectItem value="voice">Voz</SelectItem>
-                      <SelectItem value="webchat">WebChat</SelectItem>
-                      <SelectItem value="messenger">Messenger</SelectItem>
-                      <SelectItem value="instagram">Instagram</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label>Canal *</Label>
+                <Select 
+                  value={formData.channel} 
+                  onValueChange={(value) => {
+                    setFormData({ 
+                      ...formData, 
+                      channel: value,
+                      can_use_voice: value === 'voice'
+                    });
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="whatsapp">WhatsApp</SelectItem>
+                    <SelectItem value="voice">Voz</SelectItem>
+                    <SelectItem value="webchat">WebChat</SelectItem>
+                    <SelectItem value="messenger">Messenger</SelectItem>
+                    <SelectItem value="instagram">Instagram</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label>Tipo de Uso</Label>
-                  <Select 
-                    value={formData.assistant_type} 
-                    onValueChange={(value) => setFormData({ ...formData, assistant_type: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="qualificacao">Qualificação</SelectItem>
-                      <SelectItem value="reengajamento_7d">Reengajamento 7 dias</SelectItem>
-                      <SelectItem value="reengajamento_30d">Reengajamento 30 dias</SelectItem>
-                      <SelectItem value="reengajamento_90d">Reengajamento 90 dias</SelectItem>
-                      <SelectItem value="prospeccao_ativa">Prospecção Ativa</SelectItem>
-                      <SelectItem value="voz_reativacao">Voz - Reativação</SelectItem>
-                      <SelectItem value="voz_qualificacao">Voz - Qualificação</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label>Tipo de Uso *</Label>
+                <Select 
+                  value={formData.assistant_type} 
+                  onValueChange={(value) => setFormData({ ...formData, assistant_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="qualificacao">Qualificação</SelectItem>
+                    <SelectItem value="reengajamento_7d">Reengajamento 7 dias</SelectItem>
+                    <SelectItem value="reengajamento_30d">Reengajamento 30 dias</SelectItem>
+                    <SelectItem value="reengajamento_90d">Reengajamento 90 dias</SelectItem>
+                    <SelectItem value="prospeccao_ativa">Prospecção Ativa</SelectItem>
+                    <SelectItem value="voz_reativacao">Voz - Reativação</SelectItem>
+                    <SelectItem value="voz_qualificacao">Voz - Qualificação</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
 
-                <div className="space-y-2">
-                  <Label>Tom de Comunicação</Label>
-                  <Select 
-                    value={formData.tone} 
-                    onValueChange={(value) => setFormData({ ...formData, tone: value })}
-                  >
-                    <SelectTrigger>
-                      <SelectValue />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="neutro">Neutro</SelectItem>
-                      <SelectItem value="comercial">Comercial</SelectItem>
-                      <SelectItem value="elegante">Elegante</SelectItem>
-                      <SelectItem value="humanizado">Humanizado</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
+              <div className="space-y-2">
+                <Label>Tom de Comunicação</Label>
+                <Select 
+                  value={formData.tone} 
+                  onValueChange={(value) => setFormData({ ...formData, tone: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="neutro">Neutro</SelectItem>
+                    <SelectItem value="comercial">Comercial</SelectItem>
+                    <SelectItem value="elegante">Elegante</SelectItem>
+                    <SelectItem value="humanizado">Humanizado</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div className="space-y-2">

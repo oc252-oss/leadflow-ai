@@ -1,232 +1,179 @@
-import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Play, Pause, Volume2, ThumbsUp, ThumbsDown, Loader2 } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Phone, Pause, Play, RotateCcw, PhoneOff } from 'lucide-react';
 import { toast } from 'sonner';
-import { base44 } from '@/api/base44Client';
 
-export default function VoiceSimulationCall({ script, assistantId, callType, leadName, voiceSettings }) {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [playing, setPlaying] = useState(null);
-  const [feedbackMode, setFeedbackMode] = useState(null);
-  const [feedbackText, setFeedbackText] = useState('');
-  const [savingFeedback, setSavingFeedback] = useState(false);
+export default function VoiceSimulationCall({ assistant, leadName, leadContext, onEnd }) {
+  const [isPlaying, setIsPlaying] = useState(true);
+  const [currentStep, setCurrentStep] = useState(0);
+  const [callDuration, setCallDuration] = useState(0);
+  const [feedback, setFeedback] = useState(null);
 
-  const currentSpeech = script[currentIndex];
-  const isAISpeech = currentSpeech?.speaker === 'ai';
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCallDuration(d => d + 1);
+    }, 1000);
+    return () => clearInterval(timer);
+  }, []);
 
-  const handlePlayAudio = async () => {
-    try {
-      setPlaying(currentIndex);
-      // Simular reprodução de áudio TTS
-      // Em produção, integraria com serviço TTS real
-      toast.success(`Reproduzindo fala da IA...`);
-      setTimeout(() => setPlaying(null), 2000);
-    } catch (error) {
-      toast.error('Erro ao reproduzir áudio');
-    }
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const handleNext = () => {
-    if (currentIndex < script.length - 1) {
-      setCurrentIndex(currentIndex + 1);
-      setFeedbackMode(null);
-    } else {
-      toast.success('Simulação finalizada!');
-    }
+  const getGreetingMessage = () => {
+    return assistant.greeting_message || `Olá ${leadName}, tudo bem com você?`;
   };
 
-  const handlePrevious = () => {
-    if (currentIndex > 0) {
-      setCurrentIndex(currentIndex - 1);
-      setFeedbackMode(null);
-    }
+  const handleFeedback = (isAdequate) => {
+    setFeedback(isAdequate);
+    toast.success(isAdequate ? 'Resposta marcada como adequada' : 'Resposta marcada como inadequada');
+    setTimeout(() => {
+      setCurrentStep(currentStep + 1);
+      setFeedback(null);
+    }, 2000);
   };
 
-  const handleSaveFeedback = async (isAdequate) => {
-    if (isAdequate && !feedbackText) {
-      await saveFeedbackToDatabase(isAdequate, '');
-      return;
-    }
-
-    if (!isAdequate && !feedbackText) {
-      toast.error('Digite a fala ideal para feedback inadequado');
-      return;
-    }
-
-    await saveFeedbackToDatabase(isAdequate, feedbackText);
+  const handleRestart = () => {
+    setCurrentStep(0);
+    setCallDuration(0);
+    setFeedback(null);
+    setIsPlaying(true);
   };
 
-  const saveFeedbackToDatabase = async (isAdequate, idealSpeech) => {
-    setSavingFeedback(true);
-    try {
-      await base44.asServiceRole.entities.VoiceTrainingFeedback.create({
-        assistant_id: assistantId,
-        simulation_id: `sim_${Date.now()}`,
-        sequence_number: currentIndex,
-        ai_speech: currentSpeech.text,
-        is_adequate: isAdequate,
-        ideal_speech: idealSpeech,
-        feedback_notes: feedbackText,
-        call_type: callType,
-        voice_settings: voiceSettings,
-        status: 'new'
-      });
-
-      toast.success('Feedback salvo!');
-      setFeedbackMode(null);
-      setFeedbackText('');
-      handleNext();
-    } catch (error) {
-      console.error('Erro:', error);
-      toast.error('Erro ao salvar feedback');
-    } finally {
-      setSavingFeedback(false);
-    }
+  const handleEnd = () => {
+    onEnd();
   };
-
-  const progress = ((currentIndex + 1) / script.length) * 100;
 
   return (
     <div className="space-y-6">
-      {/* Header */}
-      <Card>
+      {/* Header - Informações da Simulação */}
+      <Card className="bg-gradient-to-r from-indigo-50 to-purple-50 border-indigo-200">
         <CardContent className="pt-6">
-          <div className="space-y-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-slate-900">{leadName}</h3>
-                <p className="text-sm text-slate-600">
-                  Fala {currentIndex + 1} de {script.length}
-                </p>
-              </div>
-              <Badge>{callType}</Badge>
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-sm text-slate-600">Assistente</p>
+              <p className="text-lg font-semibold text-slate-900">{assistant.name}</p>
             </div>
-
-            {/* Progress Bar */}
-            <div className="space-y-2">
-              <div className="w-full bg-slate-200 rounded-full h-2">
-                <div
-                  className="bg-indigo-600 h-2 rounded-full transition-all"
-                  style={{ width: `${progress}%` }}
-                />
-              </div>
-              <p className="text-xs text-slate-600">{Math.round(progress)}%</p>
+            <div className="text-right">
+              <p className="text-sm text-slate-600">Duração</p>
+              <p className="text-2xl font-mono font-bold text-indigo-600">{formatTime(callDuration)}</p>
             </div>
           </div>
         </CardContent>
       </Card>
 
-      {/* Current Speech Card */}
-      <Card className={isAISpeech ? 'border-indigo-200 bg-indigo-50' : 'border-slate-200'}>
-        <CardHeader>
-          <CardTitle className="text-base flex items-center gap-2">
-            <Badge variant={isAISpeech ? 'default' : 'secondary'}>
-              {isAISpeech ? 'IA' : 'Lead Simulado'}
-            </Badge>
-          </CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          {/* Texto da Fala */}
-          <div className="bg-white p-4 rounded-lg border">
-            <p className="text-lg leading-relaxed text-slate-900">{currentSpeech?.text}</p>
-          </div>
-
-          {/* Controles de Áudio */}
-          {isAISpeech && (
-            <Button
-              onClick={handlePlayAudio}
-              disabled={playing === currentIndex}
-              variant="outline"
-              className="w-full gap-2"
-            >
-              {playing === currentIndex ? (
-                <>
-                  <Loader2 className="w-4 h-4 animate-spin" />
-                  Reproduzindo...
-                </>
-              ) : (
-                <>
-                  <Volume2 className="w-4 h-4" />
-                  Ouvir Fala (TTS)
-                </>
-              )}
-            </Button>
-          )}
-
-          {/* Feedback para IA */}
-          {isAISpeech && !feedbackMode && (
-            <div className="flex gap-2 pt-2 border-t">
-              <Button
-                onClick={() => setFeedbackMode('adequate')}
-                variant="outline"
-                className="flex-1 gap-2 text-green-600 hover:bg-green-50"
-              >
-                <ThumbsUp className="w-4 h-4" />
-                Adequada
-              </Button>
-              <Button
-                onClick={() => setFeedbackMode('inadequate')}
-                variant="outline"
-                className="flex-1 gap-2 text-red-600 hover:bg-red-50"
-              >
-                <ThumbsDown className="w-4 h-4" />
-                Inadequada
-              </Button>
+      {/* Animação de Chamada */}
+      <Card className="border-2 border-indigo-200">
+        <CardContent className="pt-8 pb-8">
+          <div className="space-y-6">
+            {/* Status da Ligação */}
+            <div className="text-center">
+              <div className="flex justify-center mb-4">
+                <div className="relative w-20 h-20 flex items-center justify-center bg-indigo-100 rounded-full">
+                  <Phone className="w-10 h-10 text-indigo-600" />
+                  {isPlaying && (
+                    <>
+                      <div className="absolute inset-0 rounded-full border-2 border-indigo-600 animate-pulse" />
+                      <div className="absolute inset-0 rounded-full border-2 border-indigo-600 animate-pulse" style={{animationDelay: '0.5s'}} />
+                    </>
+                  )}
+                </div>
+              </div>
+              <p className="text-lg font-semibold text-slate-900">Ligação em Andamento...</p>
+              <p className="text-sm text-slate-600 mt-1">Com {leadName}</p>
             </div>
-          )}
 
-          {/* Formulário de Feedback */}
-          {feedbackMode && (
-            <div className="border-t pt-4 space-y-3 bg-amber-50 p-3 rounded-lg">
-              <p className="text-sm font-medium">
-                {feedbackMode === 'inadequate' ? 'Qual seria a fala ideal?' : 'Comentários (opcional)'}
-              </p>
-              <textarea
-                placeholder={feedbackMode === 'inadequate' ? 'Digite a fala ideal...' : 'Escreva suas observações...'}
-                value={feedbackText}
-                onChange={(e) => setFeedbackText(e.target.value)}
-                className="w-full p-2 border rounded-lg text-sm h-20 resize-none"
+            {/* Barra de Progresso */}
+            <div className="bg-slate-200 h-1 rounded-full overflow-hidden">
+              <div 
+                className="bg-indigo-600 h-full transition-all duration-300"
+                style={{width: `${Math.min(((currentStep + 1) / 16) * 100, 100)}%`}}
               />
-              <div className="flex gap-2">
-                <Button
-                  onClick={() => handleSaveFeedback(feedbackMode === 'adequate')}
-                  disabled={savingFeedback}
-                  className="flex-1 bg-indigo-600 hover:bg-indigo-700"
-                >
-                  {savingFeedback ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : null}
-                  Salvar Feedback
-                </Button>
-                <Button
-                  onClick={() => setFeedbackMode(null)}
-                  variant="outline"
-                  className="flex-1"
-                >
-                  Cancelar
-                </Button>
+            </div>
+            <p className="text-xs text-slate-500 text-center">Fala {currentStep + 1} de 16</p>
+
+            {/* Mensagem Atual */}
+            <div className="bg-slate-50 rounded-lg p-6 border border-slate-200 min-h-[120px] flex flex-col justify-center">
+              <div className="flex gap-3 items-start">
+                <Badge className="bg-indigo-600 flex-shrink-0">IA</Badge>
+                <div className="flex-1">
+                  <p className="text-slate-900 leading-relaxed">
+                    {currentStep === 0 ? getGreetingMessage() : 'Continuando a conversa...'}
+                  </p>
+                  {isPlaying && (
+                    <div className="mt-3 flex gap-1 items-center">
+                      <span className="text-xs text-slate-500">Ouvir Fala (TTS)</span>
+                      <div className="flex gap-1">
+                        <div className="w-1 h-4 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0s'}} />
+                        <div className="w-1 h-4 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0.1s'}} />
+                        <div className="w-1 h-4 bg-indigo-400 rounded-full animate-bounce" style={{animationDelay: '0.2s'}} />
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
-          )}
+
+            {/* Feedback */}
+            {feedback === null && (
+              <div className="grid grid-cols-2 gap-3">
+                <Button 
+                  variant="outline"
+                  onClick={() => handleFeedback(true)}
+                  className="border-green-200 text-green-700 hover:bg-green-50"
+                >
+                  ✓ Adequada
+                </Button>
+                <Button 
+                  variant="outline"
+                  onClick={() => handleFeedback(false)}
+                  className="border-red-200 text-red-700 hover:bg-red-50"
+                >
+                  ✗ Inadequada
+                </Button>
+              </div>
+            )}
+
+            {feedback !== null && (
+              <div className={`p-4 rounded-lg text-center text-sm font-medium ${
+                feedback 
+                  ? 'bg-green-50 text-green-700 border border-green-200' 
+                  : 'bg-red-50 text-red-700 border border-red-200'
+              }`}>
+                {feedback ? 'Resposta adequada! Próximo...' : 'Resposta inadequada. Próximo...'}
+              </div>
+            )}
+          </div>
         </CardContent>
       </Card>
 
-      {/* Navigation */}
-      <div className="flex gap-2">
-        <Button
-          onClick={handlePrevious}
-          disabled={currentIndex === 0}
+      {/* Controles */}
+      <div className="flex gap-2 justify-center">
+        <Button 
           variant="outline"
-          className="flex-1"
+          size="icon"
+          onClick={() => setIsPlaying(!isPlaying)}
         >
-          ← Anterior
+          {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
         </Button>
-        <Button
-          onClick={handleNext}
-          disabled={currentIndex === script.length - 1}
-          className="flex-1 bg-indigo-600 hover:bg-indigo-700"
+        <Button 
+          variant="outline"
+          size="icon"
+          onClick={handleRestart}
         >
-          {currentIndex === script.length - 1 ? 'Finalizar' : 'Próximo →'}
+          <RotateCcw className="w-4 h-4" />
+        </Button>
+        <Button 
+          variant="destructive"
+          className="gap-2"
+          onClick={handleEnd}
+        >
+          <PhoneOff className="w-4 h-4" />
+          Encerrar Ligação
         </Button>
       </div>
     </div>

@@ -1,181 +1,114 @@
 import React, { useState } from 'react';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Label } from '@/components/ui/label';
-import { Slider } from '@/components/ui/slider';
-import { Phone, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Phone } from 'lucide-react';
+import VoiceSimulationCall from './VoiceSimulationCall';
 
-export default function VoiceSimulationSetup({ assistants, onStartSimulation, isLoading }) {
-  const [selectedAssistant, setSelectedAssistant] = useState('');
-  const [callType, setCallType] = useState('qualificacao');
+export default function VoiceSimulationSetup({ assistants }) {
+  const [selectedAssistant, setSelectedAssistant] = useState(null);
   const [leadName, setLeadName] = useState('');
-  const [leadProfile, setLeadProfile] = useState('');
-  const [voiceGender, setVoiceGender] = useState('feminine');
-  const [voiceSpeed, setVoiceSpeed] = useState([1.0]);
-  const [voiceTone, setVoiceTone] = useState('professional');
+  const [leadContext, setLeadContext] = useState('');
+  const [isSimulating, setIsSimulating] = useState(false);
 
-  const handleStart = async () => {
-    if (!selectedAssistant || !leadName) {
-      toast.error('Selecione um assistente e digite o nome do lead');
-      return;
-    }
-
-    onStartSimulation({
-      assistantId: selectedAssistant,
-      callType,
-      leadName,
-      leadProfile,
-      voiceSettings: {
-        gender: voiceGender,
-        speed: voiceSpeed[0],
-        tone: voiceTone
-      }
-    });
+  const handleStartSimulation = () => {
+    if (!selectedAssistant) return;
+    setIsSimulating(true);
   };
+
+  const handleEndSimulation = () => {
+    setIsSimulating(false);
+  };
+
+  if (isSimulating && selectedAssistant) {
+    return (
+      <VoiceSimulationCall 
+        assistant={selectedAssistant}
+        leadName={leadName || 'Cliente'}
+        leadContext={leadContext}
+        onEnd={handleEndSimulation}
+      />
+    );
+  }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Phone className="w-5 h-5" />
-          Configuração da Simulação de Voz
-        </CardTitle>
+        <CardTitle>Simulação de Ligação de Voz</CardTitle>
+        <p className="text-sm text-slate-500 mt-1">Teste um assistente como se fosse uma ligação real</p>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Grid principal */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Assistente */}
-          <div>
-            <Label className="text-sm font-medium mb-2 block">Assistente IA *</Label>
-            <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
-              <SelectTrigger>
-                <SelectValue placeholder="Selecione um assistente..." />
-              </SelectTrigger>
-              <SelectContent>
-                {assistants.map(asst => (
-                  <SelectItem key={asst.id} value={asst.id}>
-                    {asst.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Tipo de Ligação */}
-          <div>
-            <Label className="text-sm font-medium mb-2 block">Tipo de Ligação *</Label>
-            <Select value={callType} onValueChange={setCallType}>
-              <SelectTrigger>
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="qualificacao">Qualificação</SelectItem>
-                <SelectItem value="reengajamento">Reengajamento</SelectItem>
-                <SelectItem value="prospeccao">Prospecção Ativa</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Nome do Lead */}
-          <div>
-            <Label className="text-sm font-medium mb-2 block">Nome do Lead *</Label>
-            <Input
-              placeholder="Ex: João Silva"
-              value={leadName}
-              onChange={(e) => setLeadName(e.target.value)}
-            />
-          </div>
-
-          {/* Perfil do Lead */}
-          <div>
-            <Label className="text-sm font-medium mb-2 block">Perfil do Lead (Opcional)</Label>
-            <Input
-              placeholder="Ex: Proprietário de clínica, 35 anos"
-              value={leadProfile}
-              onChange={(e) => setLeadProfile(e.target.value)}
-            />
-          </div>
-        </div>
-
-        {/* Configurações de Voz */}
-        <div className="border-t pt-6 space-y-4">
-          <h3 className="font-semibold text-slate-900">Configurações de Voz</h3>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {/* Gênero */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Gênero da Voz</Label>
-              <Select value={voiceGender} onValueChange={setVoiceGender}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="feminine">Feminina</SelectItem>
-                  <SelectItem value="masculine">Masculina</SelectItem>
-                </SelectContent>
-              </Select>
+        {/* Seleção de Assistente */}
+        <div>
+          <label className="text-sm font-semibold text-slate-700">Selecione um Assistente *</label>
+          <p className="text-xs text-slate-500 mt-1 mb-3">Apenas assistentes configurados para voz</p>
+          
+          {assistants.length === 0 ? (
+            <div className="p-4 rounded-lg bg-amber-50 border border-amber-200">
+              <p className="text-sm text-amber-700">Nenhum assistente configurado para voz. Configure um em Assistentes de IA.</p>
             </div>
-
-            {/* Tom */}
-            <div>
-              <Label className="text-sm font-medium mb-2 block">Tom da Voz</Label>
-              <Select value={voiceTone} onValueChange={setVoiceTone}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="neutral">Neutro</SelectItem>
-                  <SelectItem value="professional">Profissional</SelectItem>
-                  <SelectItem value="friendly">Amigável</SelectItem>
-                  <SelectItem value="energetic">Energético</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-
-          {/* Velocidade */}
-          <div>
-            <Label className="text-sm font-medium mb-3 block">
-              Velocidade da Fala: {voiceSpeed[0].toFixed(1)}x
-            </Label>
-            <Slider
-              value={voiceSpeed}
-              onValueChange={setVoiceSpeed}
-              min={0.8}
-              max={1.5}
-              step={0.1}
-              className="w-full"
-            />
-            <div className="flex justify-between text-xs text-slate-500 mt-1">
-              <span>0.8x (Lento)</span>
-              <span>1.5x (Rápido)</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Botão de Ação */}
-        <Button
-          onClick={handleStart}
-          disabled={isLoading || !selectedAssistant}
-          className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700"
-          size="lg"
-        >
-          {isLoading ? (
-            <>
-              <Loader2 className="w-4 h-4 animate-spin" />
-              Gerando Script...
-            </>
           ) : (
-            <>
-              <Phone className="w-4 h-4" />
-              Iniciar Simulação de Voz
-            </>
+            <div className="grid gap-2">
+              {assistants.map(assistant => (
+                <button
+                  key={assistant.id}
+                  onClick={() => setSelectedAssistant(assistant)}
+                  className={`p-4 rounded-lg border-2 text-left transition-all ${
+                    selectedAssistant?.id === assistant.id
+                      ? 'border-indigo-600 bg-indigo-50'
+                      : 'border-slate-200 hover:border-slate-300 bg-white'
+                  }`}
+                >
+                  <p className="font-medium text-slate-900">{assistant.name}</p>
+                  <p className="text-xs text-slate-500 mt-1">{assistant.description || 'Sem descrição'}</p>
+                  <div className="flex gap-2 mt-2">
+                    <span className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded capitalize">
+                      {assistant.channel}
+                    </span>
+                    <span className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded capitalize">
+                      {assistant.tone}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
           )}
-        </Button>
+        </div>
+
+        {selectedAssistant && (
+          <>
+            {/* Nome do Lead */}
+            <div>
+              <label className="text-sm font-medium text-slate-700">Nome do Lead (opcional)</label>
+              <Input 
+                value={leadName}
+                onChange={(e) => setLeadName(e.target.value)}
+                placeholder="Ex: João Silva"
+                className="mt-2"
+              />
+            </div>
+
+            {/* Contexto */}
+            <div>
+              <label className="text-sm font-medium text-slate-700">Contexto do Lead (opcional)</label>
+              <Input 
+                value={leadContext}
+                onChange={(e) => setLeadContext(e.target.value)}
+                placeholder="Ex: Interessado em Botox"
+                className="mt-2"
+              />
+            </div>
+
+            {/* Botão de Iniciar */}
+            <Button 
+              onClick={handleStartSimulation}
+              className="w-full h-12 bg-indigo-600 hover:bg-indigo-700 text-lg gap-2"
+            >
+              <Phone className="w-5 h-5" />
+              Iniciar Simulação de Ligação
+            </Button>
+          </>
+        )}
       </CardContent>
     </Card>
   );

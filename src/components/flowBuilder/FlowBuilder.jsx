@@ -8,14 +8,18 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Plus, Trash2, Copy, MessageCircle } from 'lucide-react';
 import { toast } from 'sonner';
-import FlowNode from './FlowNode';
+import FlowCanvas from './FlowCanvas';
+import FlowPreview from './FlowPreview';
+import AdvancedConditionBuilder from './AdvancedConditionBuilder';
 import FlowSimulator from './FlowSimulator';
 
 export default function FlowBuilder({ flow, onSave }) {
   const [nodes, setNodes] = useState(flow?.questions || []);
+  const [conditions, setConditions] = useState(flow?.conditions || []);
   const [showNodeDialog, setShowNodeDialog] = useState(false);
   const [editingNode, setEditingNode] = useState(null);
   const [showSimulator, setShowSimulator] = useState(false);
+  const [activeTab, setActiveTab] = useState('canvas');
   const [nodeForm, setNodeForm] = useState({
     type: 'question',
     label: '',
@@ -89,15 +93,16 @@ export default function FlowBuilder({ flow, onSave }) {
   };
 
   const handleSaveFlow = () => {
-    onSave(nodes);
+    onSave({ nodes, conditions });
   };
 
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between mb-2">
         <h2 className="text-2xl font-bold text-slate-900">Editor Visual de Fluxo</h2>
         <div className="flex gap-2">
+          <FlowPreview nodes={nodes} />
           <Button variant="outline" onClick={() => setShowSimulator(true)}>
             Testar Fluxo
           </Button>
@@ -108,50 +113,49 @@ export default function FlowBuilder({ flow, onSave }) {
         </div>
       </div>
 
-      {/* Flow Canvas */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Estrutura do Fluxo</CardTitle>
-        </CardHeader>
-        <CardContent>
-          {nodes.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-12 text-slate-500">
-              <MessageCircle className="w-12 h-12 mb-4 opacity-20" />
-              <p className="mb-4">Nenhum nó adicionado</p>
-              <Button size="sm" onClick={handleAddNode}>Adicionar primeiro nó</Button>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {nodes.map((node, idx) => (
-                <div key={node.id}>
-                  <div className="flex items-center gap-2">
-                    <div className="flex-1 flex items-center gap-2">
-                      <FlowNode 
-                        node={node}
-                        onDelete={handleDeleteNode}
-                        onEdit={handleEditNode}
-                      />
-                      <Button 
-                        variant="ghost" 
-                        size="icon" 
-                        className="h-8 w-8"
-                        onClick={() => handleDuplicate(node)}
-                      >
-                        <Copy className="w-3 h-3" />
-                      </Button>
-                    </div>
-                  </div>
-                  {idx < nodes.length - 1 && (
-                    <div className="flex justify-center py-2">
-                      <div className="w-0.5 h-6 bg-slate-300" />
-                    </div>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-        </CardContent>
-      </Card>
+      {/* Tabs */}
+      <div className="flex gap-2 border-b border-slate-200">
+        <button
+          onClick={() => setActiveTab('canvas')}
+          className={`px-4 py-2 font-medium text-sm transition-colors ${
+            activeTab === 'canvas'
+              ? 'border-b-2 border-indigo-600 text-indigo-600'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          Canvas Interativo
+        </button>
+        <button
+          onClick={() => setActiveTab('conditions')}
+          className={`px-4 py-2 font-medium text-sm transition-colors ${
+            activeTab === 'conditions'
+              ? 'border-b-2 border-orange-600 text-orange-600'
+              : 'text-slate-600 hover:text-slate-900'
+          }`}
+        >
+          Lógica Condicional
+        </button>
+      </div>
+
+      {/* Canvas Tab */}
+      {activeTab === 'canvas' && (
+        <FlowCanvas
+          nodes={nodes}
+          onReorder={setNodes}
+          onEdit={handleEditNode}
+          onDelete={handleDeleteNode}
+          onAddNode={handleAddNode}
+        />
+      )}
+
+      {/* Conditions Tab */}
+      {activeTab === 'conditions' && (
+        <AdvancedConditionBuilder
+          conditions={conditions}
+          onChange={setConditions}
+          availableNodes={nodes}
+        />
+      )}
 
       {/* Node Editor Dialog */}
       <Dialog open={showNodeDialog} onOpenChange={setShowNodeDialog}>
@@ -230,7 +234,7 @@ export default function FlowBuilder({ flow, onSave }) {
       )}
 
       {/* Save Button */}
-      <div className="flex justify-end gap-2">
+      <div className="flex justify-end gap-2 mt-8 pt-6 border-t border-slate-200">
         <Button variant="outline" onClick={() => window.history.back()}>Cancelar</Button>
         <Button onClick={handleSaveFlow} className="bg-green-600 hover:bg-green-700">
           Salvar Fluxo

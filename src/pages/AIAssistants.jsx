@@ -45,13 +45,14 @@ export default function AIAssistants() {
   const loadData = async () => {
     try {
       const [assistantsData, flowsData] = await Promise.all([
-        base44.entities.AIAssistant.list('-updated_date', 100),
-        base44.entities.AIFlow.filter({ is_active: true }, '-updated_date', 100)
+        base44.entities.Assistant.list('-updated_date', 100),
+        base44.entities.AIConversationFlow.filter({ is_active: true }, '-updated_date', 100)
       ]);
       setAssistants(assistantsData);
       setFlows(flowsData);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
+      toast.error('Erro ao carregar dados');
     } finally {
       setLoading(false);
     }
@@ -114,18 +115,25 @@ export default function AIAssistants() {
     
     setIsSaving(true);
     try {
+      const user = await base44.auth.me();
+      const payload = {
+        ...formData,
+        organization_id: user.organization_id || 'default',
+        brand_id: user.brand_id || 'default'
+      };
+
       if (editingAssistant) {
-        await base44.entities.AIAssistant.update(editingAssistant.id, formData);
+        await base44.entities.Assistant.update(editingAssistant.id, payload);
         toast.success('Assistente atualizado com sucesso');
       } else {
-        await base44.entities.AIAssistant.create(formData);
+        await base44.entities.Assistant.create(payload);
         toast.success('Assistente criado com sucesso');
       }
       await loadData();
       setShowDialog(false);
     } catch (error) {
       console.error('Erro ao salvar assistente:', error);
-      toast.error('Erro ao salvar assistente. Tente novamente.');
+      toast.error('Erro ao salvar assistente: ' + error.message);
     } finally {
       setIsSaving(false);
     }
@@ -134,20 +142,24 @@ export default function AIAssistants() {
   const handleDelete = async (id) => {
     if (confirm('Tem certeza que deseja deletar este assistente?')) {
       try {
-        await base44.entities.AIAssistant.delete(id);
+        await base44.entities.Assistant.delete(id);
+        toast.success('Assistente deletado com sucesso');
         await loadData();
       } catch (error) {
         console.error('Erro ao deletar assistente:', error);
+        toast.error('Erro ao deletar assistente');
       }
     }
   };
 
   const handleToggleActive = async (assistant) => {
     try {
-      await base44.entities.AIAssistant.update(assistant.id, { is_active: !assistant.is_active });
+      await base44.entities.Assistant.update(assistant.id, { is_active: !assistant.is_active });
+      toast.success('Status atualizado');
       await loadData();
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
+      toast.error('Erro ao atualizar status');
     }
   };
 

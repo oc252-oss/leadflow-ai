@@ -73,8 +73,16 @@ export default function WhatsAppIntegration() {
       const response = await base44.functions.invoke('generateWhatsAppQR', {
         integrationId: integration.id
       });
-      setQrCode(response.data.qr_code);
-      setShowQRDialog(true);
+      if (response.data.qr_code) {
+        setQrCode(response.data.qr_code);
+        setShowQRDialog(true);
+      } else {
+        alert('QR Code sendo gerado. Aguarde 2 segundos e tente novamente.');
+        setTimeout(() => {
+          handleGenerateQR(integration);
+        }, 2000);
+        return;
+      }
       await loadData();
     } catch (error) {
       console.error('Erro ao gerar QR Code:', error);

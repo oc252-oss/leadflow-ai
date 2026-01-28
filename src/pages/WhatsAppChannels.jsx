@@ -220,6 +220,9 @@ export default function WhatsAppChannels() {
                     >
                       <QrCode className="w-4 h-4 mr-2" /> QR Code
                     </Button>
+                    {channel.status === 'connected' && (
+                      <WhatsAppTestPanel channelId={channel.id} channelLabel={channel.label} />
+                    )}
                     <Button
                       size="sm"
                       variant="ghost"

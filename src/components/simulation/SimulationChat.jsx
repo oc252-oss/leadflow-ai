@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Send, Loader2, ThumbsUp, ThumbsDown } from 'lucide-react';
 import { toast } from 'sonner';
 
-export default function SimulationChat({ simulationId, assistantId, flowId, systemPrompt, greetingMessage }) {
+export default function SimulationChat({ conversationId, assistantId, systemPrompt, onNewMessage }) {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(false);
   const [inputValue, setInputValue] = useState('');
@@ -15,57 +15,49 @@ export default function SimulationChat({ simulationId, assistantId, flowId, syst
   const messagesEndRef = useRef(null);
 
   useEffect(() => {
-    // Initialize with greeting message
-    if (greetingMessage && messages.length === 0) {
-      setMessages([{
-        id: `msg_${Date.now()}`,
-        sender_type: 'bot',
-        content: greetingMessage,
-        created_date: new Date().toISOString()
-      }]);
-    }
-  }, [simulationId]);
+    loadMessages();
+    // Subscribe to real-time updates
+    const unsubscribe = base44.entities.Message.subscribe((event) => {
+      if (event.data?.conversation_id === conversationId) {
+        loadMessages();
+      }
+    });
+    return unsubscribe;
+  }, [conversationId]);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
+
+  const loadMessages = async () => {
+    try {
+      const msgs = await base44.entities.Message.filter({ 
+        conversation_id: conversationId 
+      }, 'created_date', 100);
+      setMessages(msgs || []);
+    } catch (error) {
+      console.error('Erro ao carregar mensagens:', error);
+    }
+  };
 
   const handleSendMessage = async () => {
     if (!inputValue.trim()) return;
 
     const userMessage = inputValue;
     setInputValue('');
-    
-    // Add user message to chat (session only)
-    const userMsg = {
-      id: `msg_${Date.now()}`,
-      sender_type: 'lead',
-      content: userMessage,
-      created_date: new Date().toISOString()
-    };
-    setMessages(prev => [...prev, userMsg]);
     setLoading(true);
 
     try {
       const response = await base44.functions.invoke('processSimulationMessage', {
+        conversationId,
         userMessage,
         assistantId,
-        flowId,
-        systemPrompt,
-        conversationHistory: messages
+        systemPrompt
       });
 
       if (response.data?.success) {
-        // Add AI response to chat (session only)
-        const aiMsg = {
-          id: `msg_${Date.now() + 1}`,
-          sender_type: 'bot',
-          content: response.data.aiResponse,
-          created_date: new Date().toISOString()
-        };
-        setMessages(prev => [...prev, aiMsg]);
-      } else {
-        toast.error('Erro ao processar mensagem');
+        await loadMessages();
+        onNewMessage?.(response.data.aiResponse);
       }
     } catch (error) {
       console.error('Erro:', error);
@@ -80,7 +72,7 @@ export default function SimulationChat({ simulationId, assistantId, flowId, syst
       const message = messages.find(m => m.id === messageId);
       await base44.asServiceRole.entities.TrainingFeedback.create({
         assistant_id: assistantId,
-        simulation_id: simulationId,
+        simulation_id: conversationId,
         message_id: messageId,
         ai_response: message?.content,
         is_adequate: isAdequate,
@@ -88,7 +80,7 @@ export default function SimulationChat({ simulationId, assistantId, flowId, syst
         status: 'new'
       });
 
-      toast.success('Feedback salvo!');
+      toast.success('Feedback salvo com sucesso!');
       setFeedbackMode(null);
     } catch (error) {
       console.error('Erro ao salvar feedback:', error);
@@ -183,15 +175,12 @@ export default function SimulationChat({ simulationId, assistantId, flowId, syst
             <Button
               onClick={handleSendMessage}
               disabled={loading || !inputValue.trim()}
-              className="gap-2 bg-indigo-600 hover:bg-indigo-700"
+              className="gap-2"
             >
               {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Send className="w-4 h-4" />}
-              Enviar
             </Button>
           </div>
-          <Badge variant="outline" className="text-xs">
-            🔒 Sessão Local - Dados não são salvos
-          </Badge>
+          <Badge variant="outline">Modo Simulação - Conversas não são salvas em canais reais</Badge>
         </div>
       </CardContent>
     </Card>

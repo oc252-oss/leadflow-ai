@@ -113,6 +113,7 @@ export default function Layout({ children, currentPageName }) {
     { type: 'header', label: 'IA & Automação', roles: ['company_admin', 'unit_admin', 'brand_manager', 'sales_manager'] },
     { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Bot, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
     { name: 'AIAssistants', label: 'Assistentes de IA', href: createPageUrl('AIAssistants'), icon: Bot, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
+    { name: 'ScriptLibrary', label: 'Biblioteca de Scripts', href: createPageUrl('ScriptLibrary'), icon: Bot, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
     { name: 'SimulationTraining', label: 'Simulação & Treinamento', href: createPageUrl('SimulationTraining'), icon: Bot, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
     { type: 'divider' },
     { type: 'header', label: 'CLINIQ Voice', roles: ['company_admin', 'sales_manager', 'unit_admin'] },

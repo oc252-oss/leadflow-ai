@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Play, RotateCcw, CheckCircle2, MessageSquare, Phone, Plus } from 'lucide-react';
+import { Loader2, Play, RotateCcw, CheckCircle2, MessageSquare, Phone } from 'lucide-react';
 import { toast } from 'sonner';
 import SimulationChat from '@/components/simulation/SimulationChat';
 import AdjustmentsPanel from '@/components/simulation/AdjustmentsPanel';
@@ -21,8 +21,11 @@ export default function SimulationTraining() {
   const [selectedAssistant, setSelectedAssistant] = useState('');
   const [selectedFlow, setSelectedFlow] = useState('');
   const [leadName, setLeadName] = useState('');
+  const [leadInterest, setLeadInterest] = useState('');
+  const [leadUrgency, setLeadUrgency] = useState('exploring');
   
-  const [activeChatSimulation, setActiveChatSimulation] = useState(null);
+  const [activeConversation, setActiveConversation] = useState(null);
+  const [simulationHistory, setSimulationHistory] = useState([]);
   const [assistant, setAssistant] = useState(null);
   const [loading, setLoading] = useState(false);
   const [voiceSimulation, setVoiceSimulation] = useState(null);
@@ -36,38 +39,58 @@ export default function SimulationTraining() {
   const loadData = async () => {
     try {
       const [assistantsData, flowsData] = await Promise.all([
-        base44.entities.Assistant.list('-updated_date', 100),
-        base44.entities.AIConversationFlow.list('-updated_date', 100)
+        base44.entities.AIAssistant.list(),
+        base44.entities.AIFlow.list()
       ]);
       setAssistants(assistantsData || []);
       setFlows(flowsData || []);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
-      toast.error('Erro ao carregar dados');
+      toast.error('Erro ao carregar assistentes');
     }
   };
 
-  const handleStartChatSimulation = async () => {
-    if (!selectedAssistant || !selectedFlow || !leadName.trim()) {
-      toast.error('Selecione Assistente, Fluxo e digite o nome do lead');
+  const handleStartSimulation = async () => {
+    if (!selectedAssistant || !leadName) {
+      toast.error('Selecione um assistente e digite o nome do lead');
       return;
     }
 
     setLoading(true);
     try {
-      const selectedAssistantData = assistants.find(a => a.id === selectedAssistant);
-      const selectedFlowData = flows.find(f => f.id === selectedFlow);
-      
-      setAssistant(selectedAssistantData);
-      setActiveChatSimulation({
-        id: `sim_${Date.now()}`,
-        assistantId: selectedAssistant,
-        flowId: selectedFlow,
-        leadName: leadName.trim(),
-        startedAt: new Date().toISOString()
+      // Criar conversa de simulação
+      const conversation = await base44.asServiceRole.entities.Conversation.create({
+        lead_id: `sim_${Date.now()}`, // Fake lead ID para simulação
+        unit_id: 'simulation',
+        company_id: 'simulation',
+        channel: 'simulation',
+        status: 'bot_active',
+        ai_active: true,
+        priority: 'normal',
+        ai_flow_id: selectedFlow || null
       });
-      
-      toast.success('Simulação de chat iniciada!');
+
+      // Carregar assistente
+       const assistantData = await base44.entities.AIAssistant.filter({ id: selectedAssistant });
+       setAssistant(assistantData[0]);
+
+      // Enviar mensagem de saudação
+      if (assistantData[0]?.greeting_message) {
+        await base44.asServiceRole.entities.Message.create({
+          conversation_id: conversation.id,
+          lead_id: `sim_${Date.now()}`,
+          company_id: 'simulation',
+          unit_id: 'simulation',
+          sender_type: 'bot',
+          content: assistantData[0].greeting_message,
+          message_type: 'text',
+          direction: 'outbound',
+          delivered: true
+        });
+      }
+
+      setActiveConversation(conversation);
+      toast.success('Simulação iniciada!');
     } catch (error) {
       console.error('Erro:', error);
       toast.error('Erro ao iniciar simulação');
@@ -76,15 +99,42 @@ export default function SimulationTraining() {
     }
   };
 
-  const handleRestartChatSimulation = () => {
-    setActiveChatSimulation(null);
+  const handleRestartSimulation = () => {
+    setActiveConversation(null);
     setSelectedAssistant('');
     setSelectedFlow('');
     setLeadName('');
+    setLeadInterest('');
+    setLeadUrgency('exploring');
     setAssistant(null);
   };
 
+  const handleSaveAdjustments = async (edits) => {
+    try {
+      await base44.asServiceRole.entities.AIAssistant.update(selectedAssistant, {
+        system_prompt: edits.system_prompt,
+        greeting_message: edits.greeting_message,
+        behavior_rules: edits.behavior_rules
+      });
+      setAssistant({...assistant, ...edits});
+    } catch (error) {
+      console.error('Erro:', error);
+      throw error;
+    }
+  };
 
+  const handleMarkReadyForProduction = async () => {
+    if (!selectedAssistant) return;
+    try {
+      await base44.asServiceRole.entities.AIAssistant.update(selectedAssistant, {
+        is_active: true
+      });
+      toast.success('Assistente marcado como pronto para produção!');
+    } catch (error) {
+      console.error('Erro:', error);
+      toast.error('Erro ao atualizar assistente');
+    }
+  };
 
   const handleStartVoiceSimulation = async (config) => {
     setLoading(true);
@@ -111,35 +161,92 @@ export default function SimulationTraining() {
     setVoiceSettings(null);
   };
 
-  if (activeChatSimulation) {
+  if (activeConversation) {
     return (
       <div className="space-y-6">
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-3xl font-bold text-slate-900">Simulação de Chat</h1>
+            <h1 className="text-3xl font-bold text-slate-900">Simulação de Chat em Andamento</h1>
             <p className="text-slate-600 mt-2">
-              Lead: <Badge>{activeChatSimulation.leadName}</Badge>
-              <Badge className="ml-2">{assistant?.name}</Badge>
+              Assistente: <Badge>{assistant?.name}</Badge>
+              {selectedFlow && <Badge className="ml-2">{flows.find(f => f.id === selectedFlow)?.name}</Badge>}
             </p>
           </div>
           <Button
-            onClick={handleRestartChatSimulation}
+            onClick={handleRestartSimulation}
             variant="outline"
             className="gap-2"
           >
             <RotateCcw className="w-4 h-4" />
-            Encerrar
+            Reiniciar
           </Button>
         </div>
 
-        <SimulationChat
-          simulationId={activeChatSimulation.id}
-          assistantId={selectedAssistant}
-          flowId={selectedFlow}
-          systemPrompt={assistant?.system_prompt}
-          greetingMessage={assistant?.greeting_message}
-        />
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Chat */}
+          <div className="lg:col-span-2 space-y-4">
+            <SimulationChat
+              conversationId={activeConversation.id}
+              assistantId={selectedAssistant}
+              systemPrompt={assistant?.system_prompt}
+            />
+
+            <ScriptApprovalPanel
+              assistantId={selectedAssistant}
+              usageType={selectedAssistant}
+              channel="webchat"
+              systemPrompt={assistant?.system_prompt}
+              greetingMessage={assistant?.greeting_message}
+              tone={assistant?.tone}
+              behaviorRules={assistant?.behavior_rules}
+            />
+          </div>
+
+          {/* Adjustments & Info */}
+          <div className="space-y-4">
+            <AdjustmentsPanel
+              assistant={assistant}
+              onSave={handleSaveAdjustments}
+            />
+
+            {/* Metadata */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">Informações da Simulação</CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-3 text-sm">
+                <div>
+                  <p className="text-slate-600">Lead</p>
+                  <p className="font-medium">{leadName}</p>
+                </div>
+                {leadInterest && (
+                  <div>
+                    <p className="text-slate-600">Interesse</p>
+                    <p className="font-medium">{leadInterest}</p>
+                  </div>
+                )}
+                <div>
+                  <p className="text-slate-600">Urgência</p>
+                  <Badge>{leadUrgency}</Badge>
+                </div>
+              </CardContent>
+            </Card>
+
+            {/* Actions */}
+            <Card className="border-green-200 bg-green-50">
+              <CardContent className="pt-6">
+                <Button
+                  onClick={handleMarkReadyForProduction}
+                  className="w-full gap-2 bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle2 className="w-4 h-4" />
+                  Pronto para Produção
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -216,128 +323,120 @@ export default function SimulationTraining() {
       <div>
         <h1 className="text-3xl font-bold text-slate-900">Simulação & Treinamento de IA</h1>
         <p className="text-slate-600 mt-2">
-          Teste seus assistentes com fluxos antes de ativar em produção
+          Teste, treine e ajuste seus assistentes antes de ativar em produção
         </p>
       </div>
 
-      {/* Empty States Check */}
-      {assistants.length === 0 || flows.length === 0 ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {assistants.length === 0 && (
-            <Card className="border-amber-200 bg-amber-50">
-              <CardContent className="pt-6 space-y-4">
-                <div>
-                  <h3 className="font-semibold text-amber-900 mb-2">Nenhum Assistente encontrado</h3>
-                  <p className="text-sm text-amber-800 mb-4">Crie um assistente em "Assistentes de IA" para começar.</p>
-                </div>
-                <Button className="w-full gap-2" variant="outline" onClick={() => window.location.href = createPageUrl('AIAssistants')}>
-                  <Plus className="w-4 h-4" />
-                  Criar Assistente
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-          {flows.length === 0 && (
-            <Card className="border-amber-200 bg-amber-50">
-              <CardContent className="pt-6 space-y-4">
-                <div>
-                  <h3 className="font-semibold text-amber-900 mb-2">Nenhum Fluxo encontrado</h3>
-                  <p className="text-sm text-amber-800 mb-4">Crie um fluxo em "Fluxos de IA" para testar.</p>
-                </div>
-                <Button className="w-full gap-2" variant="outline" onClick={() => window.location.href = createPageUrl('AIFlows')}>
-                  <Plus className="w-4 h-4" />
-                  Criar Fluxo
-                </Button>
-              </CardContent>
-            </Card>
-          )}
-        </div>
-      ) : (
-        <Tabs defaultValue="chat" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="chat" className="gap-2">
-              <MessageSquare className="w-4 h-4" />
-              Chat
-            </TabsTrigger>
-            <TabsTrigger value="voice" className="gap-2">
-              <Phone className="w-4 h-4" />
-              Voz (CLINIQ Voice)
-            </TabsTrigger>
-          </TabsList>
+      <Tabs defaultValue="chat" className="w-full">
+        <TabsList className="grid w-full grid-cols-2">
+          <TabsTrigger value="chat" className="gap-2">
+            <MessageSquare className="w-4 h-4" />
+            Chat
+          </TabsTrigger>
+          <TabsTrigger value="voice" className="gap-2">
+            <Phone className="w-4 h-4" />
+            Voz (CLINIQ Voice)
+          </TabsTrigger>
+        </TabsList>
 
-          <TabsContent value="chat" className="mt-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Iniciar Simulação de Chat</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Assistente */}
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Assistente IA *</label>
-                    <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um assistente..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {assistants.map(asst => (
-                          <SelectItem key={asst.id} value={asst.id}>
-                            {asst.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+        <TabsContent value="chat" className="mt-6">
+          <Card>
+            <CardHeader>
+              <CardTitle>Iniciar Simulação de Chat</CardTitle>
+            </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {/* Assistente */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Assistente IA *</label>
+              <Select value={selectedAssistant} onValueChange={setSelectedAssistant}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um assistente..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {assistants.map(asst => (
+                    <SelectItem key={asst.id} value={asst.id}>
+                      {asst.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                  {/* Flow */}
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">Fluxo de IA *</label>
-                    <Select value={selectedFlow} onValueChange={setSelectedFlow}>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Selecione um fluxo..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {flows.map(flow => (
-                          <SelectItem key={flow.id} value={flow.id}>
-                            {flow.name}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
+            {/* Flow */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Fluxo de IA (Opcional)</label>
+              <Select value={selectedFlow} onValueChange={setSelectedFlow}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione um fluxo..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {flows.map(flow => (
+                    <SelectItem key={flow.id} value={flow.id}>
+                      {flow.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
 
-                  {/* Lead Name */}
-                  <div className="md:col-span-2">
-                    <label className="text-sm font-medium mb-2 block">Nome do Lead *</label>
-                    <Input
-                      placeholder="Ex: João Silva"
-                      value={leadName}
-                      onChange={(e) => setLeadName(e.target.value)}
-                    />
-                  </div>
-                </div>
+            {/* Lead Name */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Nome do Lead *</label>
+              <Input
+                placeholder="Ex: João Silva"
+                value={leadName}
+                onChange={(e) => setLeadName(e.target.value)}
+              />
+            </div>
 
-                <Button
-                  onClick={handleStartChatSimulation}
-                  disabled={loading || !selectedAssistant || !selectedFlow || !leadName.trim()}
-                  className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700"
-                >
-                  {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
-                  Iniciar Simulação
-                </Button>
-              </CardContent>
-            </Card>
-          </TabsContent>
+            {/* Interest */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Interesse (Opcional)</label>
+              <Input
+                placeholder="Ex: Implante dentário"
+                value={leadInterest}
+                onChange={(e) => setLeadInterest(e.target.value)}
+              />
+            </div>
 
-          <TabsContent value="voice" className="mt-6">
-            <VoiceSimulationSetup
-              assistants={assistants}
-              onStartSimulation={handleStartVoiceSimulation}
-              isLoading={loading}
-            />
-          </TabsContent>
-        </Tabs>
-      )}
+            {/* Urgency */}
+            <div>
+              <label className="text-sm font-medium mb-2 block">Urgência</label>
+              <Select value={leadUrgency} onValueChange={setLeadUrgency}>
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="immediate">Imediata</SelectItem>
+                  <SelectItem value="this_week">Esta Semana</SelectItem>
+                  <SelectItem value="this_month">Este Mês</SelectItem>
+                  <SelectItem value="exploring">Explorando</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </div>
+
+          <Button
+            onClick={handleStartSimulation}
+            disabled={loading}
+            className="w-full gap-2 bg-indigo-600 hover:bg-indigo-700"
+          >
+            {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Play className="w-4 h-4" />}
+            Iniciar Simulação
+          </Button>
+        </CardContent>
+      </Card>
+        </TabsContent>
+
+        <TabsContent value="voice" className="mt-6">
+          <VoiceSimulationSetup
+            assistants={assistants}
+            onStartSimulation={handleStartVoiceSimulation}
+            isLoading={loading}
+          />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

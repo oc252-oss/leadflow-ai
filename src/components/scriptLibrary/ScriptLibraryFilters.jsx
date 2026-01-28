@@ -21,7 +21,7 @@ export default function ScriptLibraryFilters({ filters, onFilterChange }) {
           </div>
 
           {/* Canal */}
-          <Select value={filters.channel || ''} onValueChange={(value) => onFilterChange('channel', value === '' ? '' : value)}>
+          <Select value={filters.channel || ''} onValueChange={(value) => onFilterChange('channel', value)}>
             <SelectTrigger>
               <SelectValue placeholder="Canal" />
             </SelectTrigger>
@@ -36,7 +36,7 @@ export default function ScriptLibraryFilters({ filters, onFilterChange }) {
           </Select>
 
           {/* Tipo */}
-          <Select value={filters.usageType || ''} onValueChange={(value) => onFilterChange('usageType', value === '' ? '' : value)}>
+          <Select value={filters.usageType || ''} onValueChange={(value) => onFilterChange('usageType', value)}>
             <SelectTrigger>
               <SelectValue placeholder="Tipo" />
             </SelectTrigger>
@@ -53,13 +53,13 @@ export default function ScriptLibraryFilters({ filters, onFilterChange }) {
           </Select>
 
           {/* Status */}
-          <Select value={filters.status || ''} onValueChange={(value) => onFilterChange('status', value === '' ? '' : value)}>
+          <Select value={filters.status || ''} onValueChange={(value) => onFilterChange('status', value)}>
             <SelectTrigger>
               <SelectValue placeholder="Status" />
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={null}>Todos os status</SelectItem>
-              <SelectItem value="draft">Rascunho</SelectItem>
+              <SelectItem value="draft">Draft</SelectItem>
               <SelectItem value="testing">Testando</SelectItem>
               <SelectItem value="approved">Aprovado</SelectItem>
               <SelectItem value="deprecated">Descontinuado</SelectItem>
@@ -73,8 +73,8 @@ export default function ScriptLibraryFilters({ filters, onFilterChange }) {
             </SelectTrigger>
             <SelectContent>
               <SelectItem value={null}>Todos</SelectItem>
-              <SelectItem value="true">✓ Aprovados</SelectItem>
-              <SelectItem value="false">Pendentes</SelectItem>
+              <SelectItem value="true">Aprovados</SelectItem>
+              <SelectItem value="false">Não aprovados</SelectItem>
             </SelectContent>
           </Select>
         </div>

@@ -5,12 +5,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Edit2, Trash2, Loader, AlertCircle } from 'lucide-react';
-import { toast } from 'sonner';
+import { Plus, Edit2, Trash2, Loader } from 'lucide-react';
 
 export default function AIAssistants() {
   const [assistants, setAssistants] = useState([]);
+  const [flows, setFlows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [defaultBrand, setDefaultBrand] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
@@ -19,6 +18,7 @@ export default function AIAssistants() {
     name: '',
     channel: 'whatsapp',
     tone: 'elegante',
+    ai_flow_id: '',
     greeting_message: '',
     system_prompt: ''
   });
@@ -36,11 +36,14 @@ export default function AIAssistants() {
         setDefaultBrand(brands[0]);
       }
 
-      const assistantsData = await base44.entities.Assistant.list('-updated_date', 100);
+      const [assistantsData, flowsData] = await Promise.all([
+        base44.entities.AIAssistant.list('-updated_date', 100),
+        base44.entities.AIFlow.filter({ is_active: true }, '-updated_date', 100)
+      ]);
       setAssistants(assistantsData || []);
+      setFlows(flowsData || []);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
-      toast.error('Erro ao carregar dados');
     } finally {
       setLoading(false);
     }
@@ -53,6 +56,7 @@ export default function AIAssistants() {
         name: assistant.name,
         channel: assistant.channel,
         tone: assistant.tone,
+        ai_flow_id: assistant.ai_flow_id,
         greeting_message: assistant.greeting_message || '',
         system_prompt: assistant.system_prompt || ''
       });
@@ -62,6 +66,7 @@ export default function AIAssistants() {
         name: '',
         channel: 'whatsapp',
         tone: 'elegante',
+        ai_flow_id: '',
         greeting_message: '',
         system_prompt: ''
       });
@@ -69,7 +74,7 @@ export default function AIAssistants() {
     setShowDialog(true);
   };
 
-  const isFormValid = formData.name.trim() && formData.channel;
+  const isFormValid = formData.name.trim() && formData.channel && formData.ai_flow_id;
 
   const handleSave = async () => {
     if (!isFormValid) return;
@@ -82,13 +87,13 @@ export default function AIAssistants() {
       };
 
       if (editingAssistant) {
-        await base44.entities.Assistant.update(editingAssistant.id, dataToSave);
+        await base44.entities.AIAssistant.update(editingAssistant.id, dataToSave);
       } else {
         if (!defaultBrand?.id) {
           alert('Erro: Marca não foi carregada');
           return;
         }
-        await base44.entities.Assistant.create(dataToSave);
+        await base44.entities.AIAssistant.create(dataToSave);
       }
       await loadData();
       setShowDialog(false);
@@ -103,7 +108,7 @@ export default function AIAssistants() {
   const handleDelete = async (id) => {
     if (confirm('Tem certeza que deseja deletar este assistente?')) {
       try {
-        await base44.entities.Assistant.delete(id);
+        await base44.entities.AIAssistant.delete(id);
         await loadData();
       } catch (error) {
         console.error('Erro ao deletar assistente:', error);
@@ -113,11 +118,16 @@ export default function AIAssistants() {
 
   const handleToggleActive = async (assistant) => {
     try {
-      await base44.entities.Assistant.update(assistant.id, { is_active: !assistant.is_active });
+      await base44.entities.AIAssistant.update(assistant.id, { is_active: !assistant.is_active });
       await loadData();
     } catch (error) {
       console.error('Erro ao atualizar status:', error);
     }
+  };
+
+  const getFlowName = (flowId) => {
+    const flow = flows.find(f => f.id === flowId);
+    return flow?.name || 'Fluxo não encontrado';
   };
 
   if (loading) {
@@ -152,6 +162,7 @@ export default function AIAssistants() {
                 <div className="flex items-start justify-between gap-4">
                   <div className="flex-1">
                     <h3 className="font-semibold text-slate-900">{assistant.name}</h3>
+                    <p className="text-sm text-slate-600 mt-1">Fluxo: {getFlowName(assistant.ai_flow_id)}</p>
                     {assistant.greeting_message && (
                       <p className="text-sm text-slate-600 mt-1">"{assistant.greeting_message}"</p>
                     )}
@@ -225,7 +236,19 @@ export default function AIAssistants() {
                 <option value="instagram">Instagram</option>
               </select>
             </div>
-
+            <div>
+              <label className="text-sm font-medium text-slate-700">Fluxo de IA *</label>
+              <select 
+                value={formData.ai_flow_id}
+                onChange={(e) => setFormData({...formData, ai_flow_id: e.target.value})}
+                className="w-full mt-1 px-3 py-2 border border-slate-300 rounded-md text-sm"
+              >
+                <option value="">Selecione um fluxo</option>
+                {flows.map(flow => (
+                  <option key={flow.id} value={flow.id}>{flow.name}</option>
+                ))}
+              </select>
+            </div>
             <div>
               <label className="text-sm font-medium text-slate-700">Tom de Voz</label>
               <select 

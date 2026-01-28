@@ -14,6 +14,7 @@ import Pipeline from './pages/Pipeline';
 import Reengagement from './pages/Reengagement';
 import Reports from './pages/Reports';
 import SalesFunnel from './pages/SalesFunnel';
+import ScriptLibrary from './pages/ScriptLibrary';
 import Settings from './pages/Settings';
 import SimulationTraining from './pages/SimulationTraining';
 import Tasks from './pages/Tasks';
@@ -42,6 +43,7 @@ export const PAGES = {
     "Reengagement": Reengagement,
     "Reports": Reports,
     "SalesFunnel": SalesFunnel,
+    "ScriptLibrary": ScriptLibrary,
     "Settings": Settings,
     "SimulationTraining": SimulationTraining,
     "Tasks": Tasks,

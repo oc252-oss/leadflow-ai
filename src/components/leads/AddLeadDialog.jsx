@@ -20,11 +20,11 @@ import {
 } from "@/components/ui/select";
 import { Loader2 } from 'lucide-react';
 
-export default function AddLeadDialog({ open, onOpenChange, onSave, campaigns = [] }) {
+export default function AddLeadDialog({ open, onOpenChange, onSave, campaigns = [], unit_id = null }) {
   const [formData, setFormData] = useState({
     name: '',
-    email: '',
     phone: '',
+    email: '',
     source: 'manual',
     campaign_id: '',
     interest_type: '',
@@ -33,11 +33,14 @@ export default function AddLeadDialog({ open, onOpenChange, onSave, campaigns = 
   const [saving, setSaving] = useState(false);
 
   const handleSave = async () => {
-    if (!formData.name) return;
+    if (!formData.name || (!formData.phone && !formData.email)) {
+      alert('Nome e (telefone ou email) são obrigatórios');
+      return;
+    }
     
     setSaving(true);
     try {
-      await onSave(formData);
+      await onSave({ ...formData, unit_id });
       setFormData({
         name: '',
         email: '',
@@ -168,7 +171,7 @@ export default function AddLeadDialog({ open, onOpenChange, onSave, campaigns = 
           </Button>
           <Button 
             onClick={handleSave} 
-            disabled={!formData.name || saving}
+            disabled={!formData.name || (!formData.phone && !formData.email) || saving}
             className="bg-indigo-600 hover:bg-indigo-700"
           >
             {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

@@ -54,7 +54,9 @@ Deno.serve(async (req) => {
     const inactivityDate = new Date();
     inactivityDate.setDate(inactivityDate.getDate() - campaign.days_inactive);
 
-    // Get eligible leads
+    // Get eligible leads based on funnel stage and filters
+    const targetStages = campaign.target_funnel_stages || ['Atendimento Iniciado', 'Qualificado'];
+    
     const allLeads = await base44.asServiceRole.entities.Lead.filter({
       company_id: campaign.company_id,
       status: 'active'
@@ -63,6 +65,9 @@ Deno.serve(async (req) => {
     const eligibleLeads = [];
 
     for (const lead of allLeads) {
+      // Check funnel stage (CENTRAL FUNNEL)
+      if (!targetStages.includes(lead.funnel_stage)) continue;
+
       // Check last interaction
       if (!lead.last_interaction_at) continue;
       
@@ -73,15 +78,30 @@ Deno.serve(async (req) => {
       if (!lead.phone) continue;
 
       // Check if lead opted out
+      if (lead.opt_out_voice === true) continue;
       if (lead.tags && lead.tags.includes('opt_out_voice')) continue;
 
-      // Check if lead has open tasks
-      const openTasks = await base44.asServiceRole.entities.Task.filter({
-        lead_id: lead.id,
-        status: 'open'
-      });
+      // Filter by source if specified
+      if (campaign.lead_sources && campaign.lead_sources.length > 0) {
+        const sourceMapping = {
+          'Facebook': 'facebook_lead_ad',
+          'WhatsApp': 'whatsapp',
+          'Importados': 'import'
+        };
+        
+        const mappedSources = campaign.lead_sources.map(s => sourceMapping[s] || s.toLowerCase());
+        if (!mappedSources.includes(lead.source)) continue;
+      }
 
-      if (openTasks.length > 0 && campaign.exclude_open_tasks) continue;
+      // Check if lead has open tasks
+      if (campaign.exclude_open_tasks) {
+        const openTasks = await base44.asServiceRole.entities.Task.filter({
+          lead_id: lead.id,
+          status: 'open'
+        });
+
+        if (openTasks.length > 0) continue;
+      }
 
       // Check attempts count
       const previousCalls = await base44.asServiceRole.entities.VoiceCall.filter({

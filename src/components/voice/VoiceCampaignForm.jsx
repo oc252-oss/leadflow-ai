@@ -106,10 +106,45 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
       </div>
       </div>
 
-      {/* SECTION 2: LEAD SELECTION */}
+      {/* SECTION 2: LEAD SELECTION - FUNNEL BASED */}
       <div className="space-y-4 border-b pb-6">
         <h3 className="font-semibold text-slate-900">Quem a IA vai Ligar</h3>
         
+        <div className="space-y-2">
+          <Label>Etapas do Funil*</Label>
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg space-y-2">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={data.target_funnel_stages?.includes('Atendimento Iniciado')}
+                onCheckedChange={(checked) => {
+                  const stages = data.target_funnel_stages || ['Atendimento Iniciado', 'Qualificado'];
+                  if (checked) {
+                    setData({ ...data, target_funnel_stages: [...stages.filter(s => s !== 'Atendimento Iniciado'), 'Atendimento Iniciado'] });
+                  } else {
+                    setData({ ...data, target_funnel_stages: stages.filter(s => s !== 'Atendimento Iniciado') });
+                  }
+                }}
+              />
+              <span className="text-sm font-medium text-slate-900">Atendimento Iniciado</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <Checkbox
+                checked={data.target_funnel_stages?.includes('Qualificado')}
+                onCheckedChange={(checked) => {
+                  const stages = data.target_funnel_stages || ['Atendimento Iniciado', 'Qualificado'];
+                  if (checked) {
+                    setData({ ...data, target_funnel_stages: [...stages.filter(s => s !== 'Qualificado'), 'Qualificado'] });
+                  } else {
+                    setData({ ...data, target_funnel_stages: stages.filter(s => s !== 'Qualificado') });
+                  }
+                }}
+              />
+              <span className="text-sm font-medium text-slate-900">Qualificado</span>
+            </label>
+          </div>
+          <p className="text-xs text-slate-500">Selecione em quais etapas do funil os leads estão parados.</p>
+        </div>
+
         <div className="space-y-2">
           <Label>Leads Sem Interação Há*</Label>
           <Select value={String(data.days_inactive)} onValueChange={(val) => setData({ ...data, days_inactive: parseInt(val) })}>
@@ -125,18 +160,19 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
         </div>
 
         <div className="space-y-2">
-          <Label>Origem dos Leads</Label>
+          <Label>Origem dos Leads (opcional)</Label>
           <div className="space-y-2">
             {leadSources.map(source => (
               <label key={source} className="flex items-center gap-2 cursor-pointer">
                 <input 
                   type="checkbox" 
-                  checked={data.lead_sources.includes(source)}
+                  checked={data.lead_sources?.includes(source)}
                   onChange={(e) => {
+                    const sources = data.lead_sources || [];
                     if (e.target.checked) {
-                      setData({ ...data, lead_sources: [...data.lead_sources, source] });
+                      setData({ ...data, lead_sources: [...sources, source] });
                     } else {
-                      setData({ ...data, lead_sources: data.lead_sources.filter(s => s !== source) });
+                      setData({ ...data, lead_sources: sources.filter(s => s !== source) });
                     }
                   }}
                   className="w-4 h-4"
@@ -145,31 +181,24 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
               </label>
             ))}
           </div>
-          <p className="text-xs text-slate-500">Selecione de onde vêm os leads que a campanha deve considerar.</p>
+          <p className="text-xs text-slate-500">Deixe em branco para incluir todos.</p>
         </div>
 
         <div className="space-y-2">
           <Label>Exclusões Automáticas</Label>
-          <label className="flex items-center gap-2 cursor-pointer p-3 border border-slate-200 rounded-lg hover:bg-slate-50">
+          <label className="flex items-center gap-2 cursor-pointer p-3 border border-slate-200 rounded-lg hover:bg-slate-50 bg-blue-50 border-blue-300">
             <Checkbox
-              checked={data.exclude_do_not_contact}
-              onCheckedChange={(checked) => setData({ ...data, exclude_do_not_contact: checked })}
-            />
-            <span className="text-sm text-slate-700">Leads que pediram para não receber contato</span>
-          </label>
-          <label className="flex items-center gap-2 cursor-pointer p-3 border border-slate-200 rounded-lg hover:bg-slate-50">
-            <Checkbox
-              checked={data.exclude_open_tasks}
+              checked={data.exclude_open_tasks !== false}
               onCheckedChange={(checked) => setData({ ...data, exclude_open_tasks: checked })}
             />
-            <span className="text-sm text-slate-700">Leads que já possuem tarefa em andamento</span>
+            <span className="text-sm text-slate-700 font-medium">Leads que já possuem tarefa em andamento</span>
           </label>
-          <p className="text-xs text-slate-500">Isso evita contatos repetidos e melhora a experiência do paciente.</p>
+          <p className="text-xs text-slate-500">Evita contatos repetidos e melhora a experiência do paciente.</p>
         </div>
 
-        <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
-          <p className="text-sm text-blue-900">
-            📊 <span className="font-medium">Esta campanha atingirá aproximadamente X leads</span>
+        <div className="p-3 bg-indigo-50 border border-indigo-200 rounded-lg">
+          <p className="text-sm text-indigo-900">
+            ⚡ <span className="font-medium">A campanha usa o funil central de vendas para identificar leads parados.</span>
           </p>
         </div>
       </div>

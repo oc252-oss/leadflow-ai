@@ -97,13 +97,18 @@ Deno.serve(async (req) => {
     const campaign = campaigns[0];
     const lead = leads[0];
 
-    // Process intent-based actions
+    // Process intent-based actions and UPDATE CENTRAL FUNNEL
     if (intent === 'yes') {
-      // Update lead
+      // Update lead funnel stage
+      const newStage = lead.funnel_stage === 'Novo Lead' || lead.funnel_stage === 'Atendimento Iniciado' 
+        ? 'Qualificado' 
+        : lead.funnel_stage;
+
       await base44.asServiceRole.entities.Lead.update(lead.id, {
-        funnel_stage: 'Qualificado',
+        funnel_stage: newStage,
         score: Math.min((lead.score || 0) + 30, 100),
-        temperature: 'hot'
+        temperature: 'hot',
+        last_interaction_at: new Date().toISOString()
       });
 
       // Create task
@@ -111,7 +116,7 @@ Deno.serve(async (req) => {
         company_id: campaign.company_id,
         lead_id: lead.id,
         title: '🎙️ Lead demonstrou interesse por ligação da IA',
-        description: `Lead ${lead.name} demonstrou interesse durante ligação automática.\n\nSugerir avaliação e próximos passos.`,
+        description: `Lead ${lead.name} demonstrou interesse durante ligação automática.\n\nTranscrição: "${transcript}"\n\nSugerir avaliação e próximos passos.`,
         type: 'voice_campaign',
         priority: 'high',
         status: 'open',
@@ -132,7 +137,11 @@ Deno.serve(async (req) => {
       });
 
     } else if (intent === 'maybe') {
-      // Create follow-up task in 5 days
+      // Keep current funnel stage, create follow-up
+      await base44.asServiceRole.entities.Lead.update(lead.id, {
+        last_interaction_at: new Date().toISOString()
+      });
+
       await base44.asServiceRole.entities.Task.create({
         company_id: campaign.company_id,
         lead_id: lead.id,
@@ -148,19 +157,16 @@ Deno.serve(async (req) => {
       });
 
       await base44.asServiceRole.entities.VoiceCampaign.update(campaign.id, {
-        total_maybe_responses: campaign.total_maybe_responses + 1
+        total_maybe_responses: (campaign.total_maybe_responses || 0) + 1
       });
 
     } else if (intent === 'no') {
-      // Mark lead as opt-out
-      const currentTags = lead.tags || [];
-      if (!currentTags.includes('opt_out_voice')) {
-        currentTags.push('opt_out_voice');
-      }
-
+      // Move to Lost stage and opt out
       await base44.asServiceRole.entities.Lead.update(lead.id, {
-        tags: currentTags,
-        notes: (lead.notes || '') + `\n[${new Date().toISOString()}] Lead optou por não receber ligações de voz.`
+        funnel_stage: 'Venda Perdida',
+        opt_out_voice: true,
+        notes: (lead.notes || '') + `\n[${new Date().toISOString()}] Lead optou por não receber ligações de voz.`,
+        last_interaction_at: new Date().toISOString()
       });
 
       await base44.asServiceRole.entities.VoiceCampaign.update(campaign.id, {

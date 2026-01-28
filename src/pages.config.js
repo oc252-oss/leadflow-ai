@@ -17,6 +17,7 @@ import VoiceCampaigns from './pages/VoiceCampaigns';
 import VoiceFunnel from './pages/VoiceFunnel';
 import WhatsAppIntegration from './pages/WhatsAppIntegration';
 import AIFlows from './pages/AIFlows';
+import AIAssistants from './pages/AIAssistants';
 import Campaigns from './pages/Campaigns';
 import SalesFunnel from './pages/SalesFunnel';
 import ScriptLibrary from './pages/ScriptLibrary';
@@ -25,7 +26,6 @@ import AISimulator from './pages/AISimulator';
 import ConversationFlows from './pages/ConversationFlows';
 import TreinarAssistente from './pages/TreinarAssistente';
 import WhatsAppChannels from './pages/WhatsAppChannels';
-import AIAssistants from './pages/AIAssistants';
 import SimulationTraining from './pages/SimulationTraining';
 import AIFlowsSimple from './pages/AIFlowsSimple';
 import AssistantCentral from './pages/AssistantCentral';
@@ -53,6 +53,7 @@ export const PAGES = {
     "VoiceFunnel": VoiceFunnel,
     "WhatsAppIntegration": WhatsAppIntegration,
     "AIFlows": AIFlows,
+    "AIAssistants": AIAssistants,
     "Campaigns": Campaigns,
     "SalesFunnel": SalesFunnel,
     "ScriptLibrary": ScriptLibrary,
@@ -61,7 +62,6 @@ export const PAGES = {
     "ConversationFlows": ConversationFlows,
     "TreinarAssistente": TreinarAssistente,
     "WhatsAppChannels": WhatsAppChannels,
-    "AIAssistants": AIAssistants,
     "SimulationTraining": SimulationTraining,
     "AIFlowsSimple": AIFlowsSimple,
     "AssistantCentral": AssistantCentral,

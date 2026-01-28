@@ -255,7 +255,6 @@ export default function Assistants() {
                   <SelectValue placeholder="Fluxo padrão (opcional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Nenhum</SelectItem>
                   {flows.map(flow => (
                     <SelectItem key={flow.id} value={flow.id}>
                       {flow.name}

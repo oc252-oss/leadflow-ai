@@ -1,5 +1,4 @@
 import AIAssistantsSimple from './pages/AIAssistantsSimple';
-import AIFlowEditor from './pages/AIFlowEditor';
 import AIFlowsSimple from './pages/AIFlowsSimple';
 import AISimulator from './pages/AISimulator';
 import AssistantCentral from './pages/AssistantCentral';
@@ -31,7 +30,6 @@ import __Layout from './Layout.jsx';
 
 export const PAGES = {
     "AIAssistantsSimple": AIAssistantsSimple,
-    "AIFlowEditor": AIFlowEditor,
     "AIFlowsSimple": AIFlowsSimple,
     "AISimulator": AISimulator,
     "AssistantCentral": AssistantCentral,

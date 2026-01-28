@@ -123,8 +123,10 @@ export default function Layout({ children, currentPageName }) {
     { type: 'divider' },
     { name: 'Automations', label: t('automations'), href: createPageUrl('Automations'), icon: Zap, roles: ['company_admin', 'unit_admin'] },
     { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['company_admin', 'sales_manager', 'brand_manager'] },
+    { type: 'divider' },
+    { name: 'Help', label: 'Ajuda', href: createPageUrl('Help'), icon: BarChart3, roles: ['company_admin', 'sales_manager', 'sales_agent', 'unit_admin', 'brand_manager'] },
     { name: 'Settings', label: 'Configurações', href: createPageUrl('Settings'), icon: Settings, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
-  ];
+    ];
 
   const filteredNav = navigation.filter(item => {
     if (!item) return false;

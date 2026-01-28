@@ -237,22 +237,38 @@ export default function WhatsAppChannels() {
 
       {/* Dialog QR Code */}
       <Dialog open={showQRDialog} onOpenChange={setShowQRDialog}>
-        <DialogContent className="max-w-sm">
+        <DialogContent className="max-w-md">
           <DialogHeader>
             <DialogTitle>Conectar {selectedChannel?.label}</DialogTitle>
           </DialogHeader>
-          <div className="flex flex-col items-center justify-center py-8">
+          <div className="flex flex-col items-center gap-4">
             {qrLoading ? (
-              <div className="w-8 h-8 border-4 border-indigo-600 border-t-transparent rounded-full animate-spin" />
-            ) : qrCode ? (
-              <div className="space-y-4 w-full">
-                <img src={qrCode} alt="QR Code" className="w-full aspect-square" />
-                <p className="text-sm text-slate-600 text-center">
-                  Escaneie o QR Code com seu WhatsApp para conectar este canal
-                </p>
+              <div className="w-full aspect-square flex items-center justify-center bg-slate-100 rounded-lg">
+                <Loader2 className="w-8 h-8 animate-spin text-indigo-600" />
               </div>
+            ) : qrCode ? (
+              <>
+                <div className="w-full aspect-square bg-white p-4 rounded-lg border border-slate-200">
+                  <img
+                    src={`data:image/svg+xml;base64,${qrCode}`}
+                    alt="QR Code WhatsApp"
+                    className="w-full h-full"
+                  />
+                </div>
+                <Badge className="bg-amber-100 text-amber-800">Modo Teste Interno</Badge>
+                <p className="text-sm text-slate-600 text-center">
+                  Canal em modo teste. Clique no botão abaixo para simular conexão.
+                </p>
+                <Button 
+                  onClick={() => handleSimulateConnection(selectedChannel)}
+                  className="w-full bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Simular Conexão
+                </Button>
+              </>
             ) : (
-              <p className="text-red-600">Erro ao gerar QR Code</p>
+              <p className="text-slate-600">Erro ao gerar QR Code</p>
             )}
           </div>
         </DialogContent>

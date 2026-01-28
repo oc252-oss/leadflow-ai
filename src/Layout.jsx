@@ -126,14 +126,14 @@ export default function Layout({ children, currentPageName }) {
     { name: 'WhiteLabel', label: 'Marca & White-label', href: createPageUrl('WhiteLabel'), icon: Building2, roles: ['organization_admin'] },
   ];
 
-  const filteredNav = navigation.filter(item => 
-    item && item.label && (!teamMember?.role || item.roles.includes(teamMember.role)) && canAccessPage(item.name)
-  );
-
   // Public pages - no layout
   if (publicPages.includes(currentPageName)) {
     return <>{children}</>;
   }
+
+  const filteredNav = navigation.filter(item => 
+    item && item.label && (!teamMember?.role || item.roles.includes(teamMember.role)) && canAccessPage(item.name)
+  );
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -145,7 +145,7 @@ export default function Layout({ children, currentPageName }) {
         />
       )}
 
-      {/* Sidebar */}
+      {/* Sidebar - ALWAYS VISIBLE */}
       <aside className={cn(
         "fixed top-0 left-0 z-50 h-full w-72 bg-white border-r border-slate-200 transition-transform duration-300 lg:translate-x-0",
         sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -183,26 +183,36 @@ export default function Layout({ children, currentPageName }) {
 
           {/* Navigation */}
           <nav className="flex-1 px-4 py-4 space-y-1 overflow-y-auto">
-            {filteredNav.map((item) => {
-              if (!item || !item.label) return null;
-              const isActive = currentPageName === item.name;
-              return (
-                <Link
-                  key={item.name}
-                  to={item.href}
-                  className={cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
-                    isActive 
-                      ? "bg-indigo-50 text-indigo-700" 
-                      : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
-                  )}
-                  onClick={() => setSidebarOpen(false)}
-                >
-                  <item.icon className={cn("w-5 h-5", isActive ? "text-indigo-600" : "text-slate-400")} />
-                  {item.label}
-                </Link>
-              );
-            })}
+            {filteredNav.length > 0 ? (
+              filteredNav.map((item) => {
+                if (!item || !item.label) return null;
+                const isActive = currentPageName === item.name;
+                return (
+                  <Link
+                    key={item.name}
+                    to={item.href}
+                    className={cn(
+                      "flex items-center gap-3 px-3 py-2.5 rounded-lg text-sm font-medium transition-all",
+                      isActive 
+                        ? "bg-indigo-50 text-indigo-700" 
+                        : "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
+                    )}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <item.icon className={cn("w-5 h-5", isActive ? "text-indigo-600" : "text-slate-400")} />
+                    {item.label}
+                  </Link>
+                );
+              })
+            ) : (
+              // Show loading skeleton while navigation loads
+              Array.from({ length: 8 }).map((_, idx) => (
+                <div key={idx} className="flex items-center gap-3 px-3 py-2.5">
+                  <div className="w-5 h-5 bg-slate-200 rounded animate-pulse" />
+                  <div className="h-4 bg-slate-200 rounded animate-pulse flex-1" />
+                </div>
+              ))
+            )}
           </nav>
 
           {/* User section */}

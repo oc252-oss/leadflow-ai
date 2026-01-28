@@ -69,17 +69,47 @@ export default function WhatsAppChannels() {
     setShowQRDialog(true);
 
     try {
-      const response = await base44.functions.invoke('generateWhatsAppQR', {
+      // Iniciar geração
+      await base44.functions.invoke('generateWhatsAppQR', {
         channelId: channel.id
       });
 
-      if (response.data.qr_code) {
-        setQrCode(response.data.qr_code);
-      }
+      // Polling para QR Code
+      let pollInterval = setInterval(async () => {
+        try {
+          const response = await base44.functions.invoke('generateWhatsAppQR', {
+            channelId: channel.id
+          });
+
+          if (response.data.qr_code) {
+            setQrCode(response.data.qr_code);
+            clearInterval(pollInterval);
+            setQrLoading(false);
+
+            // Polling para status de conexão
+            let statusInterval = setInterval(async () => {
+              const updated = await base44.entities.WhatsAppChannel.filter({ id: channel.id });
+              if (updated[0]?.status === 'connected') {
+                clearInterval(statusInterval);
+                setShowQRDialog(false);
+                await loadData();
+              }
+            }, 3000);
+
+            setTimeout(() => clearInterval(statusInterval), 120000);
+          }
+        } catch (error) {
+          console.error('Erro ao buscar QR:', error);
+        }
+      }, 2000);
+
+      setTimeout(() => {
+        clearInterval(pollInterval);
+        setQrLoading(false);
+      }, 30000);
     } catch (error) {
       console.error('Erro ao gerar QR Code:', error);
-      alert('Erro ao gerar QR Code');
-    } finally {
+      setShowQRDialog(false);
       setQrLoading(false);
     }
   };

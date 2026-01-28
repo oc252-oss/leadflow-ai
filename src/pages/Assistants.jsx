@@ -104,7 +104,8 @@ export default function Assistants() {
         ...formData,
         organization_id: organization.id,
         brand_id: organization.id,
-        unit_id: unit?.id || null
+        unit_id: unit?.id || null,
+        default_flow_id: formData.default_flow_id || null
       };
 
       if (editingAssistant) {
@@ -448,13 +449,13 @@ export default function Assistants() {
               </div>
 
               <div className="space-y-2">
-                <Label>Fluxo de IA Padrão</Label>
+                <Label>Fluxo de IA Padrão (Opcional)</Label>
                 <Select 
-                  value={formData.default_flow_id} 
-                  onValueChange={(value) => setFormData({ ...formData, default_flow_id: value })}
+                  value={formData.default_flow_id || ''} 
+                  onValueChange={(value) => setFormData({ ...formData, default_flow_id: value || null })}
                 >
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um fluxo" />
+                    <SelectValue placeholder="Selecione um fluxo ou deixe em branco" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value={null}>Nenhum</SelectItem>
@@ -463,6 +464,9 @@ export default function Assistants() {
                     ))}
                   </SelectContent>
                 </Select>
+                <p className="text-xs text-slate-500 mt-1">
+                  Se vazio, será usado fluxo da campanha ou canal
+                </p>
               </div>
 
               <div className="flex items-center justify-between p-4 border rounded-lg">

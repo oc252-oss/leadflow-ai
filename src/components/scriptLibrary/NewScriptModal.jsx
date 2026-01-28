@@ -273,7 +273,7 @@ export default function NewScriptModal({ open, onOpenChange, onScriptCreated }) 
             </Button>
             <Button
               onClick={handleSave}
-              disabled={!isFormValid || saving}
+              disabled={saving}
               className="gap-2 bg-indigo-600 hover:bg-indigo-700"
             >
               {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : null}

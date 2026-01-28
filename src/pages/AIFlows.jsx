@@ -353,10 +353,16 @@ export default function AIFlows() {
           <h1 className="text-3xl font-bold text-slate-900">Fluxos de IA</h1>
           <p className="text-slate-500 mt-1">Configure os fluxos de qualificação automática por IA</p>
         </div>
-        <Button onClick={() => setShowDialog(true)} className="bg-indigo-600 hover:bg-indigo-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Novo Fluxo
-        </Button>
+        <div className="flex gap-2">
+          <Button onClick={() => window.location.href = '/AISimulator'} variant="outline">
+            <Bot className="w-4 h-4 mr-2" />
+            Testar Simulador
+          </Button>
+          <Button onClick={() => setShowDialog(true)} className="bg-indigo-600 hover:bg-indigo-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Novo Fluxo
+          </Button>
+        </div>
       </div>
 
       {/* Filters */}

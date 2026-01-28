@@ -2,15 +2,80 @@ import React, { useState, useEffect } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Phone, Pause, Play, RotateCcw, PhoneOff } from 'lucide-react';
+import { Phone, Pause, Play, RotateCcw, PhoneOff, AlertCircle, Volume2 } from 'lucide-react';
 import { toast } from 'sonner';
 
+const CALL_SEQUENCE = [
+  {
+    speaker: 'ia',
+    text: 'Oi, tudo bem? Aqui é da clínica, eu falo com [NOME]?',
+    duration: 4
+  },
+  {
+    speaker: 'lead',
+    text: '[Lead responde]',
+    duration: 3
+  },
+  {
+    speaker: 'ia',
+    text: 'Perfeito! Eu estou te ligando porque você teve contato com a gente recentemente, e eu queria entender rapidinho como posso te ajudar.',
+    duration: 6
+  },
+  {
+    speaker: 'lead',
+    text: '[Lead responde]',
+    duration: 3
+  },
+  {
+    speaker: 'ia',
+    text: 'Legal! Então me diz uma coisa, hoje você está buscando mais informação ou já pensa em fazer um procedimento?',
+    duration: 5
+  },
+  {
+    speaker: 'lead',
+    text: '[Lead responde]',
+    duration: 3
+  },
+  {
+    speaker: 'ia',
+    text: 'Entendi. Seria para agora ou mais para frente?',
+    duration: 3
+  },
+  {
+    speaker: 'lead',
+    text: '[Lead responde]',
+    duration: 3
+  },
+  {
+    speaker: 'ia',
+    text: 'Perfeito! Pelo que você me contou, o melhor próximo passo é uma avaliação com um de nossos especialistas, para entender certinho seu caso e te orientar da melhor forma.',
+    duration: 7
+  },
+  {
+    speaker: 'lead',
+    text: '[Lead responde]',
+    duration: 3
+  },
+  {
+    speaker: 'ia',
+    text: 'Ótimo! Vou encaminhar seu contato para nossa equipe, e uma de nossas consultoras fala com você ainda hoje, tudo bem?',
+    duration: 6
+  },
+  {
+    speaker: 'lead',
+    text: '[Lead confirma]',
+    duration: 2
+  }
+];
+
 export default function VoiceSimulationCall({ assistant, leadName, leadContext, onEnd }) {
-  const [isPlaying, setIsPlaying] = useState(true);
+  const [callStatus, setCallStatus] = useState('calling'); // calling, speaking, listening, ended
   const [currentStep, setCurrentStep] = useState(0);
   const [callDuration, setCallDuration] = useState(0);
   const [feedback, setFeedback] = useState(null);
+  const [speakingDuration, setSpeakingDuration] = useState(0);
 
+  // Simular progresso da ligação
   useEffect(() => {
     const timer = setInterval(() => {
       setCallDuration(d => d + 1);
@@ -18,14 +83,58 @@ export default function VoiceSimulationCall({ assistant, leadName, leadContext, 
     return () => clearInterval(timer);
   }, []);
 
+  // Simular status da fala da IA
+  useEffect(() => {
+    if (currentStep >= CALL_SEQUENCE.length) {
+      setCallStatus('ended');
+      return;
+    }
+
+    const step = CALL_SEQUENCE[currentStep];
+    if (step.speaker === 'ia') {
+      setCallStatus('speaking');
+      setSpeakingDuration(0);
+
+      const speakingTimer = setInterval(() => {
+        setSpeakingDuration(d => {
+          if (d >= step.duration) {
+            setCallStatus('listening');
+            clearInterval(speakingTimer);
+            return step.duration;
+          }
+          return d + 0.5;
+        });
+      }, 500);
+
+      const nextStepTimer = setTimeout(() => {
+        setCurrentStep(currentStep + 1);
+      }, step.duration * 1000);
+
+      return () => {
+        clearInterval(speakingTimer);
+        clearTimeout(nextStepTimer);
+      };
+    }
+  }, [currentStep]);
+
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    const secs = Math.floor(seconds % 60);
     return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
   };
 
-  const getGreetingMessage = () => {
-    return assistant.greeting_message || `Olá ${leadName}, tudo bem com você?`;
+  const getStatusText = () => {
+    if (callStatus === 'calling') return 'Chamando…';
+    if (callStatus === 'speaking') return 'Assistente falando…';
+    if (callStatus === 'listening') return 'Escutando sua resposta…';
+    return 'Ligação encerrada';
+  };
+
+  const getCurrentMessage = () => {
+    if (currentStep < CALL_SEQUENCE.length) {
+      return CALL_SEQUENCE[currentStep].text.replace('[NOME]', leadName);
+    }
+    return null;
   };
 
   const handleFeedback = (isAdequate) => {
@@ -34,14 +143,15 @@ export default function VoiceSimulationCall({ assistant, leadName, leadContext, 
     setTimeout(() => {
       setCurrentStep(currentStep + 1);
       setFeedback(null);
-    }, 2000);
+    }, 1500);
   };
 
   const handleRestart = () => {
     setCurrentStep(0);
     setCallDuration(0);
     setFeedback(null);
-    setIsPlaying(true);
+    setCallStatus('calling');
+    setSpeakingDuration(0);
   };
 
   const handleEnd = () => {

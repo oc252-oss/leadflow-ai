@@ -39,8 +39,8 @@ export default function SimulationTraining() {
   const loadData = async () => {
     try {
       const [assistantsData, flowsData] = await Promise.all([
-        base44.entities.Assistant.filter({ is_active: true }),
-        base44.entities.AIConversationFlow.filter({ is_active: true })
+        base44.entities.AIAssistant.list(),
+        base44.entities.AIFlow.list()
       ]);
       setAssistants(assistantsData || []);
       setFlows(flowsData || []);

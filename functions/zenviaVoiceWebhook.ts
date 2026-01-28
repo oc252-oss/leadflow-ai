@@ -69,11 +69,11 @@ Deno.serve(async (req) => {
     // Update VoiceCall
     const updateData = {
       status: 'completed',
-      result: intent,
+      intent: intent,
       transcript: transcript || '',
       confidence_score: confidence,
-      duration_seconds: duration || 0,
-      ended_at: new Date().toISOString()
+      duration: duration || 0,
+      recording_url: recordingUrl || ''
     };
 
     if (status === 'no_answer' || status === 'failed') {
@@ -128,7 +128,7 @@ Deno.serve(async (req) => {
 
       // Update campaign stats
       await base44.asServiceRole.entities.VoiceCampaign.update(campaign.id, {
-        total_positive_responses: campaign.total_positive_responses + 1
+        total_yes_responses: (campaign.total_yes_responses || 0) + 1
       });
 
     } else if (intent === 'maybe') {
@@ -164,7 +164,7 @@ Deno.serve(async (req) => {
       });
 
       await base44.asServiceRole.entities.VoiceCampaign.update(campaign.id, {
-        total_negative_responses: campaign.total_negative_responses + 1
+        total_no_responses: (campaign.total_no_responses || 0) + 1
       });
     }
 

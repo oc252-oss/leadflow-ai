@@ -17,7 +17,7 @@ export default function VoiceCampaignsList({ campaigns, onEdit, onDelete, onDupl
   };
 
   const getCriteriaLabel = (campaign) => {
-    return `Leads sem interação há ${campaign.inactivity_days} dias`;
+    return `Leads sem interação há ${campaign.days_inactive} dias`;
   };
 
   if (campaigns.length === 0) {

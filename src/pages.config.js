@@ -14,6 +14,7 @@ import Reports from './pages/Reports';
 import SalesFunnel from './pages/SalesFunnel';
 import Settings from './pages/Settings';
 import VoiceCampaigns from './pages/VoiceCampaigns';
+import Tasks from './pages/Tasks';
 import __Layout from './Layout.jsx';
 
 
@@ -34,6 +35,7 @@ export const PAGES = {
     "SalesFunnel": SalesFunnel,
     "Settings": Settings,
     "VoiceCampaigns": VoiceCampaigns,
+    "Tasks": Tasks,
 }
 
 export const pagesConfig = {

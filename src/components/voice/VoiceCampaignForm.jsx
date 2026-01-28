@@ -11,15 +11,16 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
   const [data, setData] = useState(campaign || {
     name: '',
     description: '',
-    inactivity_days: 7,
-    script_text: '',
+    type: 'reengagement',
+    days_inactive: 7,
+    script: '',
     lead_sources: [],
     exclude_do_not_contact: true,
     exclude_open_tasks: false,
-    business_hours_start: '09:00',
-    business_hours_end: '18:00',
-    calling_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
-    max_attempts_per_lead: 1,
+    allowed_hours_start: '09:00',
+    allowed_hours_end: '18:00',
+    allowed_days: ['monday', 'tuesday', 'wednesday', 'thursday', 'friday'],
+    max_attempts: 1,
     assigned_to_type: 'queue',
     assigned_to_user_id: null,
     is_active: false
@@ -29,14 +30,18 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
   const [showAdvanced, setShowAdvanced] = useState(false);
 
   const handleSave = async (activate = false) => {
-    if (!data.name || !data.script_text) {
+    if (!data.name || !data.script) {
       alert('Nome e script são obrigatórios');
       return;
     }
 
     setSaving(true);
     try {
-      await onSave({ ...data, is_active: activate || data.is_active });
+      await onSave({ 
+        ...data, 
+        is_active: activate,
+        status: activate ? 'active' : 'draft'
+      });
     } finally {
       setSaving(false);
     }
@@ -107,7 +112,7 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
         
         <div className="space-y-2">
           <Label>Leads Sem Interação Há*</Label>
-          <Select value={String(data.inactivity_days)} onValueChange={(val) => setData({ ...data, inactivity_days: parseInt(val) })}>
+          <Select value={String(data.days_inactive)} onValueChange={(val) => setData({ ...data, days_inactive: parseInt(val) })}>
             <SelectTrigger>
               <SelectValue />
             </SelectTrigger>
@@ -176,8 +181,8 @@ export default function VoiceCampaignForm({ campaign, onSave, onCancel, teamMemb
       <div className="space-y-2">
         <Label>Mensagem da Ligação*</Label>
         <Textarea
-          value={data.script_text}
-          onChange={(e) => setData({ ...data, script_text: e.target.value })}
+          value={data.script}
+          onChange={(e) => setData({ ...data, script: e.target.value })}
           placeholder="Olá, tudo bem?
 Aqui é a assistente virtual da Royal Face Ji-Paraná.
 
@@ -269,8 +274,8 @@ Posso seguir?"
                 <Label>Das</Label>
                 <Input
                   type="time"
-                  value={data.business_hours_start}
-                  onChange={(e) => setData({ ...data, business_hours_start: e.target.value })}
+                  value={data.allowed_hours_start}
+                  onChange={(e) => setData({ ...data, allowed_hours_start: e.target.value })}
                 />
               </div>
 
@@ -278,8 +283,8 @@ Posso seguir?"
                 <Label>Até</Label>
                 <Input
                   type="time"
-                  value={data.business_hours_end}
-                  onChange={(e) => setData({ ...data, business_hours_end: e.target.value })}
+                  value={data.allowed_hours_end}
+                  onChange={(e) => setData({ ...data, allowed_hours_end: e.target.value })}
                 />
               </div>
             </div>
@@ -291,17 +296,17 @@ Posso seguir?"
                 {days.map(day => (
                   <label key={day} className="flex items-center gap-2 cursor-pointer">
                     <Checkbox
-                      checked={data.calling_days.includes(day)}
+                      checked={data.allowed_days.includes(day)}
                       onCheckedChange={(checked) => {
                         if (checked) {
                           setData({
                             ...data,
-                            calling_days: [...data.calling_days, day]
+                            allowed_days: [...data.allowed_days, day]
                           });
                         } else {
                           setData({
                             ...data,
-                            calling_days: data.calling_days.filter(d => d !== day)
+                            allowed_days: data.allowed_days.filter(d => d !== day)
                           });
                         }
                       }}
@@ -315,7 +320,7 @@ Posso seguir?"
 
             <div className="space-y-2">
               <Label>Tentativas por Lead</Label>
-              <Select value={String(data.max_attempts_per_lead)} onValueChange={(val) => setData({ ...data, max_attempts_per_lead: parseInt(val) })}>
+              <Select value={String(data.max_attempts)} onValueChange={(val) => setData({ ...data, max_attempts: parseInt(val) })}>
                 <SelectTrigger>
                   <SelectValue />
                 </SelectTrigger>

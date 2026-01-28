@@ -52,8 +52,7 @@ Deno.serve(async (req) => {
     // Update VoiceCall with external ID
     await base44.asServiceRole.entities.VoiceCall.update(voice_call_id, {
       external_call_id: zenviaData.callId || zenviaData.id,
-      status: 'calling',
-      started_at: new Date().toISOString()
+      status: 'answered'
     });
 
     return Response.json({

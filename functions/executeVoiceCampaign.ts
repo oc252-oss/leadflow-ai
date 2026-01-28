@@ -36,14 +36,14 @@ Deno.serve(async (req) => {
     const days = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'];
     const currentDay = days[now.getDay()];
 
-    if (!campaign.calling_days.includes(currentDay)) {
+    if (!campaign.allowed_days.includes(currentDay)) {
       return Response.json({ 
         message: 'Not within allowed calling days', 
         current_day: currentDay 
       });
     }
 
-    if (currentTime < campaign.business_hours_start || currentTime > campaign.business_hours_end) {
+    if (currentTime < campaign.allowed_hours_start || currentTime > campaign.allowed_hours_end) {
       return Response.json({ 
         message: 'Not within allowed calling hours', 
         current_time: currentTime 
@@ -52,7 +52,7 @@ Deno.serve(async (req) => {
 
     // Calculate inactivity threshold
     const inactivityDate = new Date();
-    inactivityDate.setDate(inactivityDate.getDate() - campaign.inactivity_days);
+    inactivityDate.setDate(inactivityDate.getDate() - campaign.days_inactive);
 
     // Get eligible leads
     const allLeads = await base44.asServiceRole.entities.Lead.filter({
@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
         lead_id: lead.id
       });
 
-      if (previousCalls.length >= campaign.max_attempts_per_lead) continue;
+      if (previousCalls.length >= campaign.max_attempts) continue;
 
       eligibleLeads.push(lead);
     }
@@ -105,8 +105,8 @@ Deno.serve(async (req) => {
         company_id: campaign.company_id,
         campaign_id: campaign.id,
         lead_id: lead.id,
-        phone_number: lead.phone,
-        status: 'pending',
+        phone: lead.phone,
+        status: 'initiated',
         attempt_number: (await base44.asServiceRole.entities.VoiceCall.filter({
           campaign_id: campaign.id,
           lead_id: lead.id
@@ -118,7 +118,7 @@ Deno.serve(async (req) => {
         const callResult = await base44.asServiceRole.functions.invoke('initiateZenviaCall', {
           voice_call_id: voiceCall.id,
           phone_number: lead.phone,
-          script_text: campaign.script_text
+          script_text: campaign.script
         });
 
         callsInitiated.push({

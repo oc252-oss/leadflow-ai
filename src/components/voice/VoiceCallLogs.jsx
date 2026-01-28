@@ -1,131 +1,96 @@
-import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
+import React from 'react';
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Loader2, Phone } from 'lucide-react';
+import { Card, CardContent } from "@/components/ui/card";
+import { Phone, CheckCircle, XCircle, Clock, HelpCircle } from 'lucide-react';
 import { format } from 'date-fns';
+import { cn } from "@/lib/utils";
 
-export default function VoiceCallLogs({ campaigns }) {
-  const [calls, setCalls] = useState([]);
-  const [loading, setLoading] = useState(true);
+const intentConfig = {
+  yes: { icon: CheckCircle, color: 'text-green-600', bg: 'bg-green-50', label: 'Sim - Interessado' },
+  maybe: { icon: HelpCircle, color: 'text-amber-600', bg: 'bg-amber-50', label: 'Talvez' },
+  no: { icon: XCircle, color: 'text-red-600', bg: 'bg-red-50', label: 'Não - Sem Interesse' },
+  unknown: { icon: Clock, color: 'text-slate-400', bg: 'bg-slate-50', label: 'Não Identificado' }
+};
 
-  useEffect(() => {
-    loadCalls();
-  }, [campaigns]);
+const statusConfig = {
+  initiated: { label: 'Iniciada', color: 'bg-blue-100 text-blue-700' },
+  answered: { label: 'Atendida', color: 'bg-indigo-100 text-indigo-700' },
+  completed: { label: 'Concluída', color: 'bg-green-100 text-green-700' },
+  no_answer: { label: 'Não Atendeu', color: 'bg-slate-100 text-slate-700' },
+  failed: { label: 'Falhou', color: 'bg-red-100 text-red-700' }
+};
 
-  const loadCalls = async () => {
-    try {
-      setLoading(true);
-      const campaignIds = campaigns.map(c => c.id);
-      
-      if (campaignIds.length === 0) {
-        setCalls([]);
-        return;
-      }
-
-      // Load calls for all campaigns
-      const allCalls = [];
-      for (const campaignId of campaignIds) {
-        const campaignCalls = await base44.entities.VoiceCall.filter({
-          campaign_id: campaignId
-        }, '-created_date', 100);
-        allCalls.push(...campaignCalls);
-      }
-
-      // Sort by date
-      allCalls.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
-      setCalls(allCalls.slice(0, 100));
-    } catch (error) {
-      console.error('Error loading calls:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const getResultBadge = (result) => {
-    const config = {
-      yes: { label: 'Positiva', color: 'bg-green-100 text-green-800' },
-      no: { label: 'Negativa', color: 'bg-red-100 text-red-800' },
-      maybe: { label: 'Indefinida', color: 'bg-yellow-100 text-yellow-800' },
-      unknown: { label: 'Desconhecida', color: 'bg-slate-100 text-slate-800' }
-    };
-    const cfg = config[result] || config.unknown;
-    return <Badge className={cfg.color}>{cfg.label}</Badge>;
-  };
-
-  const getStatusBadge = (status) => {
-    const config = {
-      completed: { label: 'Completa', color: 'bg-green-100 text-green-800' },
-      failed: { label: 'Falha', color: 'bg-red-100 text-red-800' },
-      no_answer: { label: 'Sem Resposta', color: 'bg-slate-100 text-slate-800' },
-      calling: { label: 'Chamando...', color: 'bg-blue-100 text-blue-800' },
-      pending: { label: 'Pendente', color: 'bg-gray-100 text-gray-800' }
-    };
-    const cfg = config[status] || config.pending;
-    return <Badge className={cfg.color}>{cfg.label}</Badge>;
-  };
-
-  if (loading) {
+export default function VoiceCallLogs({ calls, leads }) {
+  if (!calls || calls.length === 0) {
     return (
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-6 h-6 animate-spin text-indigo-600" />
-      </div>
-    );
-  }
-
-  if (calls.length === 0) {
-    return (
-      <Card>
-        <CardContent className="py-12">
-          <div className="text-center">
-            <Phone className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-            <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhuma chamada</h3>
-            <p className="text-sm text-slate-500">
-              Nenhuma campanha de voz foi executada ainda
-            </p>
-          </div>
+      <Card className="border-0 shadow-sm">
+        <CardContent className="py-12 text-center">
+          <Phone className="w-12 h-12 mx-auto mb-3 text-slate-300" />
+          <p className="text-slate-500">Nenhuma ligação realizada ainda</p>
         </CardContent>
       </Card>
     );
   }
 
   return (
-    <div className="space-y-4">
-      <Card>
-        <CardHeader>
-          <CardTitle>Log de Chamadas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead className="border-b border-slate-200">
-                <tr>
-                  <th className="text-left py-3 px-4 font-medium text-slate-700">Telefone</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-700">Status</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-700">Resultado</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-700">Transcrição</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-700">Duração</th>
-                  <th className="text-left py-3 px-4 font-medium text-slate-700">Data</th>
-                </tr>
-              </thead>
-              <tbody>
-                {calls.map((call) => (
-                  <tr key={call.id} className="border-b border-slate-100 hover:bg-slate-50">
-                    <td className="py-3 px-4 font-mono text-slate-900">{call.phone_number}</td>
-                    <td className="py-3 px-4">{getStatusBadge(call.status)}</td>
-                    <td className="py-3 px-4">{getResultBadge(call.result)}</td>
-                    <td className="py-3 px-4 text-slate-600 max-w-xs truncate">{call.transcript || '-'}</td>
-                    <td className="py-3 px-4">{call.duration_seconds ? `${call.duration_seconds}s` : '-'}</td>
-                    <td className="py-3 px-4 text-slate-500">
-                      {call.created_date ? format(new Date(call.created_date), 'dd/MM HH:mm') : '-'}
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </CardContent>
-      </Card>
+    <div className="space-y-3">
+      {calls.map((call) => {
+        const lead = leads.find(l => l.id === call.lead_id);
+        const intent = intentConfig[call.intent] || intentConfig.unknown;
+        const status = statusConfig[call.status] || statusConfig.initiated;
+        const IntentIcon = intent.icon;
+
+        return (
+          <Card key={call.id} className="border-0 shadow-sm hover:shadow-md transition-shadow">
+            <CardContent className="p-4">
+              <div className="flex items-start justify-between">
+                <div className="flex-1">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className={cn("p-2 rounded-lg", intent.bg)}>
+                      <IntentIcon className={cn("w-4 h-4", intent.color)} />
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-900">{lead?.name || 'Lead desconhecido'}</p>
+                      <p className="text-sm text-slate-500">{call.phone}</p>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-2 mb-2">
+                    <Badge className={status.color}>{status.label}</Badge>
+                    <Badge variant="outline">{intent.label}</Badge>
+                    {call.confidence_score > 0 && (
+                      <Badge variant="secondary" className="text-xs">
+                        {call.confidence_score}% confiança
+                      </Badge>
+                    )}
+                    {call.duration > 0 && (
+                      <Badge variant="secondary" className="text-xs">
+                        {call.duration}s
+                      </Badge>
+                    )}
+                  </div>
+
+                  {call.transcript && (
+                    <div className="mt-3 p-3 bg-slate-50 rounded-lg">
+                      <p className="text-xs text-slate-500 mb-1">Transcrição:</p>
+                      <p className="text-sm text-slate-700 italic">"{call.transcript}"</p>
+                    </div>
+                  )}
+                </div>
+
+                <div className="text-right ml-4">
+                  <p className="text-xs text-slate-500">
+                    {call.created_at ? format(new Date(call.created_at), 'dd/MM/yyyy') : '-'}
+                  </p>
+                  <p className="text-xs text-slate-400">
+                    {call.created_at ? format(new Date(call.created_at), 'HH:mm') : '-'}
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        );
+      })}
     </div>
   );
 }

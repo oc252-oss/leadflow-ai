@@ -399,9 +399,9 @@ function Automations() {
       <Dialog open={showVoiceDialog} onOpenChange={setShowVoiceDialog}>
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>{editingVoiceCampaign ? 'Edit Voice Campaign' : 'Create Voice Campaign'}</DialogTitle>
+            <DialogTitle>{editingVoiceCampaign ? 'Editar Campanha de Voz' : 'Criar Campanha de Voz'}</DialogTitle>
             <DialogDescription>
-              Configure your voice campaign for lead reengagement
+              Automatize ligações inteligentes para recuperar leads e gerar mais avaliações.
             </DialogDescription>
           </DialogHeader>
 

@@ -111,7 +111,7 @@ export default function SimulationTraining() {
 
   const handleSaveAdjustments = async (edits) => {
     try {
-      await base44.asServiceRole.entities.Assistant.update(selectedAssistant, {
+      await base44.asServiceRole.entities.AIAssistant.update(selectedAssistant, {
         system_prompt: edits.system_prompt,
         greeting_message: edits.greeting_message,
         behavior_rules: edits.behavior_rules

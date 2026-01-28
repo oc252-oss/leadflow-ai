@@ -67,14 +67,14 @@ export default function SalesFunnel() {
     try {
       setLoading(true);
       const stagesData = await base44.entities.FunnelStage.filter(
-        { brand_id: selectedCompany },
+        { company_id: selectedCompany },
         'position',
         100
       );
-      setStages(stagesData || []);
+      setStages(stagesData);
     } catch (error) {
-      console.warn('Aviso ao carregar estágios:', error);
-      setStages([]); // Continue mesmo sem estágios
+      toast.error('Erro ao carregar estágios');
+      console.error(error);
     } finally {
       setLoading(false);
     }
@@ -90,7 +90,7 @@ export default function SalesFunnel() {
       const position = editingStage ? editingStage.position : stages.length;
 
       const dataToSave = {
-        brand_id: selectedCompany,
+        company_id: selectedCompany,
         stage_name: formData.stage_name,
         position: position,
         color: formData.color,
@@ -111,8 +111,8 @@ export default function SalesFunnel() {
       await loadStages();
       handleCloseDialog();
     } catch (error) {
-      console.error('Erro ao salvar estágio:', error);
-      toast.error('Erro ao salvar estágio. Verifique se a empresa foi selecionada.');
+      toast.error('Erro ao salvar estágio');
+      console.error(error);
     }
   };
 

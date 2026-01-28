@@ -65,7 +65,6 @@ function Campaigns() {
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState(null);
-  const [organization, setOrganization] = useState(null);
   const [formData, setFormData] = useState({
     campaign_name: '',
     platform: 'facebook',
@@ -112,10 +111,7 @@ function Campaigns() {
   };
 
   const handleSave = async () => {
-    if (!formData.campaign_name) {
-      alert('Nome da campanha é obrigatório');
-      return;
-    }
+    if (!formData.campaign_name) return;
     
     setSaving(true);
     try {
@@ -125,10 +121,6 @@ function Campaigns() {
           c.id === editingCampaign.id ? { ...c, ...formData } : c
         ));
       } else {
-        if (!organization?.id) {
-          alert('Erro: Organização não foi carregada');
-          return;
-        }
         const newCampaign = await base44.entities.Campaign.create({
           ...formData,
           organization_id: organization.id
@@ -151,7 +143,6 @@ function Campaigns() {
       });
     } catch (error) {
       console.error('Error saving campaign:', error);
-      alert('Erro ao salvar campanha: ' + error.message);
     } finally {
       setSaving(false);
     }

@@ -11,7 +11,6 @@ export default function AIAssistants() {
   const [assistants, setAssistants] = useState([]);
   const [flows, setFlows] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [defaultBrand, setDefaultBrand] = useState(null);
   const [showDialog, setShowDialog] = useState(false);
   const [editingAssistant, setEditingAssistant] = useState(null);
   const [formData, setFormData] = useState({
@@ -30,18 +29,12 @@ export default function AIAssistants() {
 
   const loadData = async () => {
     try {
-      // Carregar marca padrão para modo single company
-      const brands = await base44.entities.Brand.list('-updated_date', 1);
-      if (brands?.length > 0) {
-        setDefaultBrand(brands[0]);
-      }
-
       const [assistantsData, flowsData] = await Promise.all([
         base44.entities.AIAssistant.list('-updated_date', 100),
         base44.entities.AIFlow.filter({ is_active: true }, '-updated_date', 100)
       ]);
-      setAssistants(assistantsData || []);
-      setFlows(flowsData || []);
+      setAssistants(assistantsData);
+      setFlows(flowsData);
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
     } finally {
@@ -81,25 +74,15 @@ export default function AIAssistants() {
     
     setIsSaving(true);
     try {
-      const dataToSave = {
-        ...formData,
-        ...(defaultBrand && { brand_id: defaultBrand.id })
-      };
-
       if (editingAssistant) {
-        await base44.entities.AIAssistant.update(editingAssistant.id, dataToSave);
+        await base44.entities.AIAssistant.update(editingAssistant.id, formData);
       } else {
-        if (!defaultBrand?.id) {
-          alert('Erro: Marca não foi carregada');
-          return;
-        }
-        await base44.entities.AIAssistant.create(dataToSave);
+        await base44.entities.AIAssistant.create(formData);
       }
       await loadData();
       setShowDialog(false);
     } catch (error) {
       console.error('Erro ao salvar assistente:', error);
-      alert('Erro ao salvar: ' + error.message);
     } finally {
       setIsSaving(false);
     }

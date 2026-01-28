@@ -1,7 +1,9 @@
 import AIFlows from './pages/AIFlows';
 import AISimulator from './pages/AISimulator';
+import Assistants from './pages/Assistants';
 import Automations from './pages/Automations';
 import Campaigns from './pages/Campaigns';
+import ChannelsIntegrations from './pages/ChannelsIntegrations';
 import CompanySettings from './pages/CompanySettings';
 import ConversationFlows from './pages/ConversationFlows';
 import Conversations from './pages/Conversations';
@@ -19,18 +21,19 @@ import SimulationTraining from './pages/SimulationTraining';
 import Tasks from './pages/Tasks';
 import TreinarAssistente from './pages/TreinarAssistente';
 import VoiceCampaigns from './pages/VoiceCampaigns';
-import VoiceSimulator from './pages/VoiceSimulator';
-import Assistants from './pages/Assistants';
 import VoiceFunnel from './pages/VoiceFunnel';
-import ChannelsIntegrations from './pages/ChannelsIntegrations';
+import VoiceSimulator from './pages/VoiceSimulator';
+import Units from './pages/Units';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "AIFlows": AIFlows,
     "AISimulator": AISimulator,
+    "Assistants": Assistants,
     "Automations": Automations,
     "Campaigns": Campaigns,
+    "ChannelsIntegrations": ChannelsIntegrations,
     "CompanySettings": CompanySettings,
     "ConversationFlows": ConversationFlows,
     "Conversations": Conversations,
@@ -48,10 +51,9 @@ export const PAGES = {
     "Tasks": Tasks,
     "TreinarAssistente": TreinarAssistente,
     "VoiceCampaigns": VoiceCampaigns,
-    "VoiceSimulator": VoiceSimulator,
-    "Assistants": Assistants,
     "VoiceFunnel": VoiceFunnel,
-    "ChannelsIntegrations": ChannelsIntegrations,
+    "VoiceSimulator": VoiceSimulator,
+    "Units": Units,
 }
 
 export const pagesConfig = {

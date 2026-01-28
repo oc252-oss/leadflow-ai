@@ -265,6 +265,10 @@ function Automations() {
             Manage automation rules and voice campaigns
           </p>
         </div>
+        <Button onClick={() => window.location.href = '/VoiceSimulator'} variant="outline">
+          <Phone className="w-4 h-4 mr-2" />
+          Test Voice Simulator
+        </Button>
       </div>
 
       {/* Tabs */}

@@ -5,12 +5,19 @@ import { Loader } from 'lucide-react';
 import VoiceSimulationSetup from '../components/simulation/VoiceSimulationSetup';
 import ChatSimulationSetup from '../components/simulation/ChatSimulationSetup';
 import ChatSimulationInterface from '../components/simulation/ChatSimulationInterface';
+import TrainingSetup from '../components/training/TrainingSetup';
+import TrainingChat from '../components/training/TrainingChat';
+import TrainingFeedback from '../components/training/TrainingFeedback';
 
 export default function SimulationTraining() {
   const [loading, setLoading] = useState(true);
   const [assistants, setAssistants] = useState([]);
   const [flows, setFlows] = useState([]);
   const [chatSimulation, setChatSimulation] = useState(null);
+  const [trainingConfig, setTrainingConfig] = useState(null);
+  const [trainingMessages, setTrainingMessages] = useState([]);
+  const [trainingFeedback, setTrainingFeedback] = useState(false);
+  const [userTrainingHistory, setUserTrainingHistory] = useState([]);
 
   useEffect(() => {
     loadData();
@@ -37,6 +44,31 @@ export default function SimulationTraining() {
 
   const handleChatRestart = () => {
     setChatSimulation(null);
+  };
+
+  const handleTrainingStart = (config) => {
+    setTrainingConfig(config);
+    setTrainingMessages([]);
+    setTrainingFeedback(false);
+  };
+
+  const handleTrainingEnd = async (messages) => {
+    setTrainingMessages(messages);
+    setTrainingFeedback(true);
+  };
+
+  const handleTrainingRestart = () => {
+    setTrainingConfig(null);
+    setTrainingMessages([]);
+    setTrainingFeedback(false);
+  };
+
+  const handleTrainingChangeDifficulty = (newDifficulty) => {
+    setTrainingConfig(prev => ({
+      ...prev,
+      difficulty: newDifficulty,
+    }));
+    handleTrainingRestart();
   };
 
   if (loading) {
@@ -78,9 +110,24 @@ export default function SimulationTraining() {
         </TabsContent>
 
         <TabsContent value="treinamento" className="mt-6">
-          <div className="text-center text-slate-500 py-12">
-            Treinamento Humano em desenvolvimento
-          </div>
+          {trainingFeedback ? (
+            <TrainingFeedback
+              config={trainingConfig}
+              messages={trainingMessages}
+              onRestart={handleTrainingRestart}
+              onChangeDifficulty={handleTrainingChangeDifficulty}
+            />
+          ) : trainingConfig ? (
+            <TrainingChat
+              config={trainingConfig}
+              onEnd={handleTrainingEnd}
+            />
+          ) : (
+            <TrainingSetup
+              onStart={handleTrainingStart}
+              userHistory={userTrainingHistory}
+            />
+          )}
         </TabsContent>
       </Tabs>
     </div>

@@ -69,6 +69,7 @@ import Reengagement from './pages/Reengagement';
 import Reports from './pages/Reports';
 import SalesFunnel from './pages/SalesFunnel';
 import ScriptLibrary from './pages/ScriptLibrary';
+import Scripts from './pages/Scripts';
 import Settings from './pages/Settings';
 import SimulationTraining from './pages/SimulationTraining';
 import Tasks from './pages/Tasks';
@@ -79,7 +80,6 @@ import VoiceFunnel from './pages/VoiceFunnel';
 import VoiceSimulator from './pages/VoiceSimulator';
 import WhatsAppChannels from './pages/WhatsAppChannels';
 import WhatsAppIntegration from './pages/WhatsAppIntegration';
-import Scripts from './pages/Scripts';
 import WhatsAppProduction from './pages/WhatsAppProduction';
 import __Layout from './Layout.jsx';
 
@@ -107,6 +107,7 @@ export const PAGES = {
     "Reports": Reports,
     "SalesFunnel": SalesFunnel,
     "ScriptLibrary": ScriptLibrary,
+    "Scripts": Scripts,
     "Settings": Settings,
     "SimulationTraining": SimulationTraining,
     "Tasks": Tasks,
@@ -117,7 +118,6 @@ export const PAGES = {
     "VoiceSimulator": VoiceSimulator,
     "WhatsAppChannels": WhatsAppChannels,
     "WhatsAppIntegration": WhatsAppIntegration,
-    "Scripts": Scripts,
     "WhatsAppProduction": WhatsAppProduction,
 }
 

@@ -22,6 +22,7 @@ import VoiceCampaigns from './pages/VoiceCampaigns';
 import VoiceSimulator from './pages/VoiceSimulator';
 import Assistants from './pages/Assistants';
 import VoiceFunnel from './pages/VoiceFunnel';
+import ChannelsIntegrations from './pages/ChannelsIntegrations';
 import __Layout from './Layout.jsx';
 
 
@@ -50,6 +51,7 @@ export const PAGES = {
     "VoiceSimulator": VoiceSimulator,
     "Assistants": Assistants,
     "VoiceFunnel": VoiceFunnel,
+    "ChannelsIntegrations": ChannelsIntegrations,
 }
 
 export const pagesConfig = {

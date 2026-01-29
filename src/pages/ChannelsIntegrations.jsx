@@ -3,7 +3,6 @@ import { base44 } from '@/api/base44Client';
 import { Loader } from 'lucide-react';
 import WhatsAppConnect from '../components/WhatsAppConnect';
 import WhatsAppServerConfig from '../components/channels/WhatsAppServerConfig';
-import WhatsAppChannelsMonitor from '../components/channels/WhatsAppChannelsMonitor';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";

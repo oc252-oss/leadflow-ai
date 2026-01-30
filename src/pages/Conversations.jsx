@@ -19,7 +19,40 @@ export default function Conversations() {
 
   useEffect(() => {
     loadData();
+    
+    // Polling para novas conversas
+    const interval = setInterval(() => {
+      checkNewConversations();
+    }, 10000); // A cada 10 segundos
+    
+    return () => clearInterval(interval);
   }, []);
+
+  const checkNewConversations = async () => {
+    try {
+      if (!teamMember) return;
+      
+      const allConvs = await base44.entities.Conversation.filter({
+        assigned_agent_id: teamMember.id
+      });
+      
+      if (allConvs.length > lastConversationCount) {
+        // Nova conversa atribuída
+        const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBi2Dz/LWhTsOFGS369+WRwwQVqzn77BcGQU+mNn1x20kBSh+zPLaizsKFF7U7O+vZBkFPJTY9MtyJgUpgM/z2IU2CRZotPD0ollBCEyo5e+qXBgEOY7W9Mp4LgUpg8/z14M4CxVptfDzpFlDDEyo5O6pXRkFOY7W8sp4LgUqhM/y1YM4ChVotfD0pF1FCkuo4+6rYBoGOY7V8sp5MAUrhM/y1YM4ChVotfDzpF1FCk6q4+6rYRsFO47V8sp5MAUrhM/y1IM4ChZptfDzpFxECk+q4+6rYRsFO47V88p5MAUrhM/y1IM4ChZptfDzpFxECk+q4+6rYRsFO47V88p5MAUrhM/y1IM4ChZptfD0pF1FCk+q4+6rYRsFO47V8sp5MAUrhM/y1YM4ChZptfDzpF1FCk+q4+6rYRsFO47V8sp5MAUrhM/y1IM4ChVptfDzpF1FCk+q4+6rYRsFO47V88p5MAUrhM/y1IM4ChVptfDzpF1FCk+q4+6rYRsFO47V8sp5MAUrhM/y1IM4ChVptfD0pF1FCk+q4+6rYRsFO47V8sp5MAUrhM/y1IM4ChVptfDzpF1FCk+q4+6rYRsFO47V88p5MAUrhM/y1IM4ChVptfDzpF1FCk+q4+6rYRsFO47V88p5MAUrhM/y1IM4ChVptfDzpF1FCk+q4+6rYRsFO47V88p5MAUrhM/y1IM4ChVptfDzpF1FCk+q4+6rYRsFO47V88p5MAUrhM/y1IM4ChVptfDzpF1FCk+q4+6rYRsFO47V88p5MAUrhM/y1IM4ChVptfDzpF1FCk+q4+6rYRsFO47V88p5MAUrhM/y1IM4ChVptfDzpF1FCk+q4+6rYRsFO47V88p5MAUrhM/y1IM4ChVptfDzpF1FCk+q4+6rYRsFO47V88p5MAUrhM/y1IM4ChVptfDzpF1FCk+q4+6rYRsFO47V88p5MAU=');
+        audio.play().catch(() => {});
+        
+        toast('Nova Conversa Atribuída!', {
+          description: 'Você tem uma nova conversa para atender',
+          icon: <Bell className="w-4 h-4" />,
+          duration: 5000
+        });
+      }
+      
+      setLastConversationCount(allConvs.length);
+    } catch (error) {
+      console.error('Erro ao verificar novas conversas:', error);
+    }
+  };
 
   useEffect(() => {
     // Auto-select conversation from URL

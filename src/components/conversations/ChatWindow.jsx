@@ -367,6 +367,14 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
           </Button>
         </div>
       </div>
+      </div>
+
+      {/* Painel de Informações do Lead */}
+      {showLeadInfo && (
+        <div className="w-80 flex-shrink-0">
+          <LeadInfoPanel lead={lead} conversation={conversation} />
+        </div>
+      )}
     </div>
   );
 }

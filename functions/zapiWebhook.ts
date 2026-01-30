@@ -60,13 +60,38 @@ Deno.serve(async (req) => {
     
     if (leads.length === 0) {
       console.log('👤 Criando novo lead para:', phone);
+      
+      // Buscar nome do contato no Z-API
+      let contactName = `Lead ${phone}`;
+      try {
+        const instanceId = Deno.env.get('ZAPI_INSTANCE_ID');
+        const token = Deno.env.get('ZAPI_TOKEN');
+        
+        if (instanceId && token) {
+          const contactResponse = await fetch(
+            `https://api.z-api.io/instances/${instanceId}/token/${token}/contacts/${rawPhone}`,
+            { method: 'GET' }
+          );
+          
+          if (contactResponse.ok) {
+            const contactData = await contactResponse.json();
+            if (contactData.name || contactData.pushname || contactData.notify) {
+              contactName = contactData.name || contactData.pushname || contactData.notify;
+              console.log('✅ Nome do contato encontrado:', contactName);
+            }
+          }
+        }
+      } catch (error) {
+        console.log('⚠️ Erro ao buscar nome do contato, usando padrão:', error.message);
+      }
+      
       lead = await base44.asServiceRole.entities.Lead.create({
-        name: `Lead ${phone}`,
+        name: contactName,
         phone,
         source: 'whatsapp',
         status: 'ativo'
       });
-      console.log('✅ Lead criado:', lead.id);
+      console.log('✅ Lead criado:', lead.id, lead.name);
     } else {
       lead = leads[0];
       console.log('✅ Lead encontrado:', lead.id, lead.name);

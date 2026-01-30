@@ -97,48 +97,27 @@ export default function Layout({ children, currentPageName }) {
   }
 
   const navigation = [
-    { name: 'Dashboard', label: t('dashboard'), href: createPageUrl('Dashboard'), icon: LayoutDashboard, roles: ['company_admin', 'sales_manager', 'sales_agent', 'unit_admin'] },
-    { name: 'FranchiseDashboard', label: 'Dashboard Executivo', href: createPageUrl('FranchiseDashboard'), icon: Building2, roles: ['organization_admin', 'brand_manager'] },
-    { name: 'Leads', label: t('leads'), href: createPageUrl('Leads'), icon: Users, roles: ['company_admin', 'sales_manager', 'sales_agent', 'unit_admin'] },
-    { name: 'Pipeline', label: t('pipeline'), href: createPageUrl('Pipeline'), icon: GitBranch, roles: ['company_admin', 'sales_manager', 'sales_agent', 'unit_admin'] },
-    { name: 'Conversations', label: t('conversations'), href: createPageUrl('Conversations'), icon: MessageSquare, roles: ['company_admin', 'sales_manager', 'sales_agent', 'unit_admin'] },
-    { name: 'Tasks', label: 'Tarefas', href: createPageUrl('Tasks'), icon: Clock, roles: ['company_admin', 'sales_manager', 'sales_agent', 'unit_admin'] },
-    { name: 'SalesFunnel', label: 'Funil de Vendas', href: createPageUrl('SalesFunnel'), icon: GitBranch, roles: ['company_admin', 'brand_manager'] },
+    { name: 'Dashboard', label: 'Dashboard', href: createPageUrl('Dashboard'), icon: LayoutDashboard },
+    { name: 'Leads', label: 'Leads', href: createPageUrl('Leads'), icon: Users },
+    { name: 'CRM', label: 'CRM', href: createPageUrl('CRM'), icon: GitBranch },
+    { name: 'Conversations', label: 'Conversas', href: createPageUrl('Conversations'), icon: MessageSquare },
     { type: 'divider' },
-    { name: 'ChannelsIntegrations', label: 'Canais & Integrações', href: createPageUrl('ChannelsIntegrations'), icon: MessageSquare, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
-    { name: 'WhatsAppServerConfig', label: 'Config. Servidor', href: createPageUrl('WhatsAppServerConfig'), icon: MessageSquare, roles: ['company_admin', 'brand_manager'] },
-    { name: 'WhatsAppChannels', label: 'Instâncias WhatsApp', href: createPageUrl('WhatsAppChannels'), icon: MessageSquare, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
+    { name: 'AIAssistants', label: 'Assistentes IA', href: createPageUrl('AIAssistants'), icon: Bot },
+    { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Zap },
+    { name: 'Campaigns', label: 'Campanhas', href: createPageUrl('Campaigns'), icon: Target },
     { type: 'divider' },
-    { name: 'Campaigns', label: t('campaigns'), href: createPageUrl('Campaigns'), icon: Target, roles: ['company_admin', 'sales_manager', 'unit_admin'] },
-    { name: 'Reengagement', label: 'Reengajamento', href: createPageUrl('Reengagement'), icon: RefreshCw, roles: ['company_admin', 'sales_manager', 'unit_admin'] },
+    { name: 'Conexoes', label: 'Conexões', href: createPageUrl('Conexoes'), icon: MessageSquare },
+    { name: 'SimulationTraining', label: 'Simulação & Treinamento', href: createPageUrl('SimulationTraining'), icon: Bot },
     { type: 'divider' },
-    { type: 'header', label: 'IA & Automação', roles: ['company_admin', 'unit_admin', 'brand_manager', 'sales_manager'] },
-    { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Bot, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
-    { name: 'AIAssistants', label: 'Assistentes de IA', href: createPageUrl('AIAssistants'), icon: Bot, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
-    { name: 'Scripts', label: 'Scripts de IA', href: createPageUrl('Scripts'), icon: Bot, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
-    { name: 'SimulationTraining', label: 'Simulação & Treinamento', href: createPageUrl('SimulationTraining'), icon: Bot, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
-    { type: 'divider' },
-    { type: 'header', label: 'CLINIQ Voice', roles: ['company_admin', 'sales_manager', 'unit_admin'] },
-    { name: 'VoiceCampaigns', label: 'Campanhas de Voz', href: createPageUrl('VoiceCampaigns'), icon: Phone, roles: ['company_admin', 'sales_manager', 'unit_admin'] },
-    { name: 'VoiceFunnel', label: 'Funil de Voz', href: createPageUrl('VoiceFunnel'), icon: Phone, roles: ['company_admin', 'sales_manager', 'unit_admin'] },
-    { type: 'divider' },
-    { name: 'Automations', label: t('automations'), href: createPageUrl('Automations'), icon: Zap, roles: ['company_admin', 'unit_admin'] },
-    { name: 'Reports', label: t('reports'), href: createPageUrl('Reports'), icon: BarChart3, roles: ['company_admin', 'sales_manager', 'brand_manager'] },
-    { type: 'divider' },
-    { name: 'Help', label: 'Ajuda', href: createPageUrl('Help'), icon: BarChart3, roles: ['company_admin', 'sales_manager', 'sales_agent', 'unit_admin', 'brand_manager'] },
-    { name: 'Settings', label: 'Configurações', href: createPageUrl('Settings'), icon: Settings, roles: ['company_admin', 'unit_admin', 'brand_manager'] },
+    { name: 'Reports', label: 'Relatórios', href: createPageUrl('Reports'), icon: BarChart3 },
+    { name: 'Settings', label: 'Configurações', href: createPageUrl('Settings'), icon: Settings },
+    { name: 'Help', label: 'Ajuda', href: createPageUrl('Help'), icon: BarChart3 },
     ];
 
   const filteredNav = navigation.filter(item => {
     if (!item) return false;
-
-    // Keep dividers and headers if user has access to any child
-    if (item.type === 'divider' || item.type === 'header') {
-      return !item.roles || !teamMember?.role || item.roles.includes(teamMember.role);
-    }
-
-    // Regular nav items
-    return item.label && (!teamMember?.role || item.roles.includes(teamMember.role)) && canAccessPage(item.name);
+    // Sem filtro de roles - modo empresa única, todos acessam tudo
+    return true;
   });
 
   return (

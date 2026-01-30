@@ -59,22 +59,20 @@ const platformConfig = {
 
 function Campaigns() {
   const [campaigns, setCampaigns] = useState([]);
-  const [leads, setLeads] = useState([]);
-  const [teamMember, setTeamMember] = useState(null);
+  const [assistants, setAssistants] = useState([]);
+  const [flows, setFlows] = useState([]);
+  const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [editingCampaign, setEditingCampaign] = useState(null);
   const [formData, setFormData] = useState({
-    campaign_name: '',
-    platform: 'facebook',
-    objective: 'lead_generation',
-    external_campaign_id: '',
-    external_adset_id: '',
-    external_ad_id: '',
-    adset_name: '',
-    ad_name: '',
-    status: 'active'
+    name: '',
+    assistant_id: '',
+    flow_id: '',
+    connection_id: '',
+    trigger_type: 'manual',
+    status: 'rascunho'
   });
   const [saving, setSaving] = useState(false);
 
@@ -84,25 +82,17 @@ function Campaigns() {
 
   const loadData = async () => {
     try {
-      const org = await getDefaultOrganization();
-      setOrganization(org);
+      const [campaignsData, assistantsData, flowsData, connectionsData] = await Promise.all([
+        base44.entities.Campaign.list('-created_date', 100),
+        base44.entities.Assistant.list(),
+        base44.entities.AIFlow.list(),
+        base44.entities.Connection.list()
+      ]);
 
-      if (org) {
-        const [campaignsData, leadsData] = await Promise.all([
-          base44.entities.Campaign.filter({ organization_id: org.id }, '-created_date').catch(() => []),
-          base44.entities.Lead.filter({ organization_id: org.id }).catch(() => [])
-        ]);
-
-        // Calculate leads per campaign
-        const campaignsWithStats = campaignsData.map(campaign => ({
-          ...campaign,
-          leads_count: leadsData.filter(l => l.campaign_id === campaign.id).length,
-          conversions_count: leadsData.filter(l => l.campaign_id === campaign.id && l.funnel_stage === 'Venda Ganha').length
-        }));
-
-        setCampaigns(campaignsWithStats);
-        setLeads(leadsData);
-      }
+      setCampaigns(campaignsData);
+      setAssistants(assistantsData);
+      setFlows(flowsData);
+      setConnections(connectionsData);
     } catch (error) {
       console.error('Error loading campaigns:', error);
     } finally {
@@ -111,35 +101,27 @@ function Campaigns() {
   };
 
   const handleSave = async () => {
-    if (!formData.campaign_name) return;
+    if (!formData.name || !formData.assistant_id) return;
     
     setSaving(true);
     try {
       if (editingCampaign) {
         await base44.entities.Campaign.update(editingCampaign.id, formData);
-        setCampaigns(campaigns.map(c => 
-          c.id === editingCampaign.id ? { ...c, ...formData } : c
-        ));
+        await loadData();
       } else {
-        const newCampaign = await base44.entities.Campaign.create({
-          ...formData,
-          organization_id: organization.id
-        });
-        setCampaigns([{ ...newCampaign, leads_count: 0, conversions_count: 0 }, ...campaigns]);
+        await base44.entities.Campaign.create(formData);
+        await loadData();
       }
       
       setShowAddDialog(false);
       setEditingCampaign(null);
       setFormData({
-        campaign_name: '',
-        platform: 'facebook',
-        objective: 'lead_generation',
-        external_campaign_id: '',
-        external_adset_id: '',
-        external_ad_id: '',
-        adset_name: '',
-        ad_name: '',
-        status: 'active'
+        name: '',
+        assistant_id: '',
+        flow_id: '',
+        connection_id: '',
+        trigger_type: 'manual',
+        status: 'rascunho'
       });
     } catch (error) {
       console.error('Error saving campaign:', error);
@@ -151,14 +133,11 @@ function Campaigns() {
   const handleEdit = (campaign) => {
     setEditingCampaign(campaign);
     setFormData({
-      campaign_name: campaign.campaign_name,
-      platform: campaign.platform,
-      objective: campaign.objective || 'lead_generation',
-      external_campaign_id: campaign.external_campaign_id || '',
-      external_adset_id: campaign.external_adset_id || '',
-      external_ad_id: campaign.external_ad_id || '',
-      adset_name: campaign.adset_name || '',
-      ad_name: campaign.ad_name || '',
+      name: campaign.name,
+      assistant_id: campaign.assistant_id || '',
+      flow_id: campaign.flow_id || '',
+      connection_id: campaign.connection_id || '',
+      trigger_type: campaign.trigger_type || 'manual',
       status: campaign.status
     });
     setShowAddDialog(true);
@@ -174,16 +153,14 @@ function Campaigns() {
   };
 
   const filteredCampaigns = campaigns.filter(c =>
-    c.campaign_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.adset_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    c.ad_name?.toLowerCase().includes(searchQuery.toLowerCase())
+    c.name?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const stats = {
     totalCampaigns: campaigns.length,
-    activeCampaigns: campaigns.filter(c => c.status === 'active').length,
-    totalLeads: campaigns.reduce((sum, c) => sum + (c.leads_count || 0), 0),
-    totalConversions: campaigns.reduce((sum, c) => sum + (c.conversions_count || 0), 0)
+    activeCampaigns: campaigns.filter(c => c.status === 'ativa').length,
+    totalContacted: campaigns.reduce((sum, c) => sum + (c.leads_contacted || 0), 0),
+    totalResponded: campaigns.reduce((sum, c) => sum + (c.leads_responded || 0), 0)
   };
 
   if (loading) {
@@ -228,8 +205,8 @@ function Campaigns() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Total de Leads</p>
-                <p className="text-2xl font-bold text-slate-900">{stats.totalLeads}</p>
+                <p className="text-sm text-slate-500">Leads Contatados</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.totalContacted}</p>
               </div>
               <div className="p-3 rounded-xl bg-blue-100">
                 <Users className="w-5 h-5 text-blue-600" />
@@ -241,8 +218,8 @@ function Campaigns() {
           <CardContent className="p-6">
             <div className="flex items-center justify-between">
               <div>
-                <p className="text-sm text-slate-500">Conversões</p>
-                <p className="text-2xl font-bold text-slate-900">{stats.totalConversions}</p>
+                <p className="text-sm text-slate-500">Respostas</p>
+                <p className="text-2xl font-bold text-slate-900">{stats.totalResponded}</p>
               </div>
               <div className="p-3 rounded-xl bg-violet-100">
                 <BarChart3 className="w-5 h-5 text-violet-600" />
@@ -274,12 +251,12 @@ function Campaigns() {
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>Campanha</TableHead>
-              <TableHead>Plataforma</TableHead>
+              <TableHead>Nome</TableHead>
+              <TableHead>Assistente IA</TableHead>
+              <TableHead>Conexão</TableHead>
               <TableHead>Status</TableHead>
-              <TableHead className="text-center">Leads</TableHead>
-              <TableHead className="text-center">Conversões</TableHead>
-              <TableHead className="text-center">Taxa Conv.</TableHead>
+              <TableHead className="text-center">Contatados</TableHead>
+              <TableHead className="text-center">Respondidos</TableHead>
               <TableHead className="w-12"></TableHead>
             </TableRow>
           </TableHeader>
@@ -292,52 +269,31 @@ function Campaigns() {
               </TableRow>
             ) : (
               filteredCampaigns.map((campaign) => {
-                const platform = platformConfig[campaign.platform] || platformConfig.manual;
-                const PlatformIcon = platform.icon;
-                const convRate = campaign.leads_count > 0 
-                  ? ((campaign.conversions_count / campaign.leads_count) * 100).toFixed(1)
-                  : 0;
+                const assistant = assistants.find(a => a.id === campaign.assistant_id);
+                const connection = connections.find(c => c.id === campaign.connection_id);
 
                 return (
                   <TableRow key={campaign.id}>
                     <TableCell>
-                      <div>
-                        <p className="font-medium text-slate-900">{campaign.campaign_name}</p>
-                        {campaign.adset_name && (
-                          <p className="text-xs text-slate-500">Ad Set: {campaign.adset_name}</p>
-                        )}
-                        {campaign.ad_name && (
-                          <p className="text-xs text-slate-500">Ad: {campaign.ad_name}</p>
-                        )}
-                      </div>
+                      <p className="font-medium text-slate-900">{campaign.name}</p>
                     </TableCell>
                     <TableCell>
-                      <div className={cn("inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium", platform.color)}>
-                        <PlatformIcon className="w-3.5 h-3.5" />
-                        <span className="capitalize">{campaign.platform}</span>
-                      </div>
+                      <span className="text-sm text-slate-600">{assistant?.name || '-'}</span>
+                    </TableCell>
+                    <TableCell>
+                      <span className="text-sm text-slate-600">{connection?.name || '-'}</span>
                     </TableCell>
                     <TableCell>
                       <Badge className={cn(
-                        campaign.status === 'active' ? "bg-emerald-100 text-emerald-700" :
-                        campaign.status === 'paused' ? "bg-amber-100 text-amber-700" :
+                        campaign.status === 'ativa' ? "bg-emerald-100 text-emerald-700" :
+                        campaign.status === 'pausada' ? "bg-amber-100 text-amber-700" :
                         "bg-slate-100 text-slate-700"
                       )}>
                         {campaign.status}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-center font-medium">{campaign.leads_count}</TableCell>
-                    <TableCell className="text-center font-medium">{campaign.conversions_count}</TableCell>
-                    <TableCell className="text-center">
-                      <span className={cn(
-                        "font-medium",
-                        convRate >= 20 ? "text-emerald-600" :
-                        convRate >= 10 ? "text-amber-600" :
-                        "text-slate-600"
-                      )}>
-                        {convRate}%
-                      </span>
-                    </TableCell>
+                    <TableCell className="text-center font-medium">{campaign.leads_contacted || 0}</TableCell>
+                    <TableCell className="text-center font-medium">{campaign.leads_responded || 0}</TableCell>
                     <TableCell>
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
@@ -372,102 +328,115 @@ function Campaigns() {
       <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>{editingCampaign ? 'Editar Campanha' : 'Adicionar Campanha'}</DialogTitle>
+            <DialogTitle>{editingCampaign ? 'Editar Campanha' : 'Nova Campanha'}</DialogTitle>
             <DialogDescription>
-              {editingCampaign ? 'Atualizar detalhes da campanha' : 'Criar uma nova campanha para rastrear leads'}
+              Configure quando e como a IA deve agir
             </DialogDescription>
           </DialogHeader>
 
           <div className="grid gap-4 py-4">
             <div className="space-y-2">
-              <Label>Nome da Campanha *</Label>
+              <Label>Nome *</Label>
               <Input
-                value={formData.campaign_name}
-                onChange={(e) => setFormData({ ...formData, campaign_name: e.target.value })}
-                placeholder="Promoção Verão 2024"
+                value={formData.name}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Ex: Reengajamento 7 dias"
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Plataforma</Label>
-                <Select
-                  value={formData.platform}
-                  onValueChange={(value) => setFormData({ ...formData, platform: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="facebook">Facebook</SelectItem>
-                    <SelectItem value="instagram">Instagram</SelectItem>
-                    <SelectItem value="google">Google</SelectItem>
-                    <SelectItem value="manual">Manual</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label>Objetivo</Label>
-                <Select
-                  value={formData.objective}
-                  onValueChange={(value) => setFormData({ ...formData, objective: value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="lead_generation">Geração de Leads</SelectItem>
-                    <SelectItem value="messages">Mensagens</SelectItem>
-                    <SelectItem value="conversions">Conversões</SelectItem>
-                    <SelectItem value="traffic">Tráfego</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-
             <div className="space-y-2">
-              <Label>ID da Campanha Facebook</Label>
-              <Input
-                value={formData.external_campaign_id}
-                onChange={(e) => setFormData({ ...formData, external_campaign_id: e.target.value })}
-                placeholder="123456789"
-              />
-            </div>
-
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label>Nome do Conjunto de Anúncios</Label>
-                <Input
-                  value={formData.adset_name}
-                  onChange={(e) => setFormData({ ...formData, adset_name: e.target.value })}
-                  placeholder="Público A"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>Nome do Anúncio</Label>
-                <Input
-                  value={formData.ad_name}
-                  onChange={(e) => setFormData({ ...formData, ad_name: e.target.value })}
-                  placeholder="Criativo 1"
-                />
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Status</Label>
+              <Label>Assistente IA *</Label>
               <Select
-                value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value })}
+                value={formData.assistant_id}
+                onValueChange={(value) => setFormData({ ...formData, assistant_id: value })}
               >
                 <SelectTrigger>
-                  <SelectValue />
+                  <SelectValue placeholder="Selecione..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="active">Ativa</SelectItem>
-                  <SelectItem value="paused">Pausada</SelectItem>
-                  <SelectItem value="completed">Concluída</SelectItem>
+                  {assistants.map(assistant => (
+                    <SelectItem key={assistant.id} value={assistant.id}>
+                      {assistant.name}
+                    </SelectItem>
+                  ))}
                 </SelectContent>
               </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Fluxo IA (Opcional)</Label>
+              <Select
+                value={formData.flow_id}
+                onValueChange={(value) => setFormData({ ...formData, flow_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Nenhum" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>Nenhum</SelectItem>
+                  {flows.map(flow => (
+                    <SelectItem key={flow.id} value={flow.id}>
+                      {flow.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="space-y-2">
+              <Label>Conexão</Label>
+              <Select
+                value={formData.connection_id}
+                onValueChange={(value) => setFormData({ ...formData, connection_id: value })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Selecione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  {connections.map(conn => (
+                    <SelectItem key={conn.id} value={conn.id}>
+                      {conn.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label>Tipo de Disparo</Label>
+                <Select
+                  value={formData.trigger_type}
+                  onValueChange={(value) => setFormData({ ...formData, trigger_type: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="manual">Manual</SelectItem>
+                    <SelectItem value="automatico">Automático</SelectItem>
+                    <SelectItem value="agendado">Agendado</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Status</Label>
+                <Select
+                  value={formData.status}
+                  onValueChange={(value) => setFormData({ ...formData, status: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="rascunho">Rascunho</SelectItem>
+                    <SelectItem value="ativa">Ativa</SelectItem>
+                    <SelectItem value="pausada">Pausada</SelectItem>
+                    <SelectItem value="finalizada">Finalizada</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 
@@ -480,7 +449,7 @@ function Campaigns() {
             </Button>
             <Button 
               onClick={handleSave}
-              disabled={!formData.campaign_name || saving}
+              disabled={!formData.name || !formData.assistant_id || saving}
               className="bg-indigo-600 hover:bg-indigo-700"
             >
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}

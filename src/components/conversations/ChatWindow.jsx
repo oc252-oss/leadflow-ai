@@ -83,23 +83,22 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
   };
 
   const handleSend = async () => {
-    if (!newMessage.trim() || sending || !conversation?.id) return;
+    if (!newMessage.trim() || sending || !conversation?.id || !lead?.id) return;
 
     setSending(true);
     try {
       const messageContent = newMessage.trim();
       
-      // Determine sender type based on conversation status
-      const senderType = conversation.status === 'bot_active' ? 'lead' : 'agent';
-      const user = senderType === 'agent' ? await base44.auth.me() : null;
+      // Get current user
+      const user = await base44.auth.me();
 
       // Create message in Message entity
       const newMsg = await base44.entities.Message.create({
-        company_id: conversation.company_id,
-        unit_id: conversation.unit_id,
+        company_id: conversation.company_id || null,
+        unit_id: conversation.unit_id || null,
         conversation_id: conversation.id,
         lead_id: lead.id,
-        sender_type: senderType,
+        sender_type: 'agent',
         sender_id: user?.id || null,
         content: messageContent,
         message_type: 'text',

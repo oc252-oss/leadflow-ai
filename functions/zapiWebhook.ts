@@ -29,6 +29,13 @@ Deno.serve(async (req) => {
     const messageBody = payload.message?.body || payload.text?.message || payload.body || '';
     const messageId = payload.message?.id || payload.messageId || payload.id || '';
     const instance = payload.instance || payload.instanceId || '';
+    
+    // Extrair informações de campanha (se vieram no webhook)
+    const campaignId = payload.campaign_id || payload.campaignId || null;
+    const campaignName = payload.campaign_name || payload.campaignName || null;
+    const utmSource = payload.utm_source || payload.utmSource || null;
+    const utmCampaign = payload.utm_campaign || payload.utmCampaign || null;
+    const utmMedium = payload.utm_medium || payload.utmMedium || null;
 
     console.log('📞 Dados extraídos - Phone:', rawPhone, 'Body:', messageBody?.substring(0, 50));
 
@@ -113,6 +120,11 @@ Deno.serve(async (req) => {
         status: 'new',
         pipeline_id: defaultPipeline?.id || null,
         pipeline_stage_id: firstStage?.id || null,
+        campaign_id: campaignId,
+        campaign_name: campaignName,
+        utm_source: utmSource,
+        utm_campaign: utmCampaign,
+        utm_medium: utmMedium,
         score: 0,
         last_interaction_type: 'ia_chat',
         last_interaction_at: new Date().toISOString(),
@@ -427,6 +439,20 @@ Deno.serve(async (req) => {
 
           const isFirstMessage = previousMessages.length === 1;
 
+          // Buscar contexto da campanha se houver
+          let campaignContext = '';
+          if (lead.campaign_id) {
+            try {
+              const campaigns = await base44.asServiceRole.entities.Campaign.filter({ id: lead.campaign_id });
+              if (campaigns.length > 0 && campaigns[0].campaign_context) {
+                campaignContext = campaigns[0].campaign_context;
+                console.log('📋 Contexto da campanha:', campaignContext);
+              }
+            } catch (error) {
+              console.log('⚠️ Erro ao buscar campanha:', error.message);
+            }
+          }
+
           // Montar contexto para IA
           const conversationHistory = previousMessages
             .slice(0, -1)
@@ -440,6 +466,14 @@ Deno.serve(async (req) => {
           
           if (assistant.rules && assistant.rules.length > 0) {
             prompt += '\n\nRegras de comportamento:\n' + assistant.rules.map(r => `- ${r}`).join('\n');
+          }
+
+          // CONTEXTO DA CAMPANHA - Informação crucial para resposta assertiva
+          if (campaignContext) {
+            prompt += `\n\n🎯 CONTEXTO DA CAMPANHA:\n${campaignContext}`;
+            prompt += '\n\nIMPORTANTE: Use este contexto para ser mais assertivo e relevante nas suas respostas. O lead veio desta campanha específica.';
+          } else if (lead.campaign_name) {
+            prompt += `\n\n🎯 Lead veio da campanha: "${lead.campaign_name}"`;
           }
 
           if (isFirstMessage && assistant.greeting_message) {

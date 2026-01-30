@@ -86,6 +86,7 @@ import WhatsAppConfiguration from './pages/WhatsAppConfiguration';
 import WhatsAppIntegration from './pages/WhatsAppIntegration';
 import WhatsAppServerConfig from './pages/WhatsAppServerConfig';
 import WhatsAppServerSetup from './pages/WhatsAppServerSetup';
+import Team from './pages/Team';
 import __Layout from './Layout.jsx';
 
 
@@ -129,6 +130,7 @@ export const PAGES = {
     "WhatsAppIntegration": WhatsAppIntegration,
     "WhatsAppServerConfig": WhatsAppServerConfig,
     "WhatsAppServerSetup": WhatsAppServerSetup,
+    "Team": Team,
 }
 
 export const pagesConfig = {

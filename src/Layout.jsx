@@ -106,6 +106,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'AIFlows', label: 'Fluxos de IA', href: createPageUrl('AIFlows'), icon: Zap },
     { name: 'Campaigns', label: 'Campanhas', href: createPageUrl('Campaigns'), icon: Target },
     { type: 'divider' },
+    { name: 'Team', label: 'Equipe', href: createPageUrl('Team'), icon: Users },
     { name: 'Conexoes', label: 'Conexões', href: createPageUrl('Conexoes'), icon: MessageSquare },
     { name: 'SimulationTraining', label: 'Simulação & Treinamento', href: createPageUrl('SimulationTraining'), icon: Bot },
     { type: 'divider' },

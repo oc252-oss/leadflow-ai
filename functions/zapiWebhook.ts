@@ -189,13 +189,66 @@ Deno.serve(async (req) => {
       }
 
       // Verificar se conversa está em atendimento humano
-      if (conversation.status === 'human_active') {
+      if (conversation.status === 'human_active' || conversation.human_handoff) {
         console.log('👤 Conversa em atendimento humano, pulando IA');
         return Response.json({ 
           success: true, 
           lead_id: lead.id,
           conversation_id: conversation.id,
           message_id: message.id
+        }, { status: 200 });
+      }
+
+      // Detectar gatilhos de handoff automático
+      const messageText = messageBody.toLowerCase();
+      const handoffKeywords = ['atendente', 'pessoa', 'humano', 'falar com alguém', 'pessoa real'];
+      const shouldHandoff = handoffKeywords.some(keyword => messageText.includes(keyword));
+
+      if (shouldHandoff) {
+        console.log('🔔 Gatilho de handoff detectado');
+        
+        // Atualizar conversa para handoff
+        await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+          human_handoff: true,
+          handoff_reason: 'lead_request',
+          handoff_at: new Date().toISOString(),
+          status: 'human_active'
+        });
+
+        // Enviar mensagem de transferência
+        const handoffMessage = 'Perfeito 😊 vou te colocar em contato com uma de nossas consultoras agora.';
+        
+        const sendResult = await base44.asServiceRole.functions.invoke('zapiSendMessage', {
+          phone: rawPhone,
+          message: handoffMessage,
+          connection_id: connection.id
+        });
+
+        if (sendResult.data?.success) {
+          await base44.asServiceRole.entities.Message.create({
+            company_id: company.id,
+            conversation_id: conversation.id,
+            lead_id: lead.id,
+            sender_type: 'bot',
+            sender_id: null,
+            content: handoffMessage,
+            message_type: 'text',
+            direction: 'outbound',
+            metadata: { handoff_message: true },
+            delivered: true,
+            read: true,
+            created_at: new Date().toISOString()
+          });
+        }
+
+        console.log('✅ Conversa transferida para atendimento humano');
+        
+        return Response.json({ 
+          success: true, 
+          lead_id: lead.id,
+          conversation_id: conversation.id,
+          message_id: message.id,
+          handoff: true
         }, { status: 200 });
       }
 

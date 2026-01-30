@@ -150,9 +150,32 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
 
   const handleTakeOver = async () => {
     try {
+      const user = await base44.auth.me();
+      const teamMembers = await base44.entities.TeamMember.filter({ user_email: user.email });
+      
       await base44.entities.Conversation.update(conversation.id, {
-        status: 'human_active'
+        status: 'human_active',
+        human_handoff: true,
+        handoff_reason: 'manual_takeover',
+        handoff_at: new Date().toISOString(),
+        assigned_agent_id: teamMembers[0]?.id || null
       });
+
+      // Criar mensagem de sistema
+      await base44.entities.Message.create({
+        company_id: conversation.company_id,
+        unit_id: conversation.unit_id,
+        conversation_id: conversation.id,
+        lead_id: lead.id,
+        sender_type: 'system',
+        content: `${user.full_name} assumiu o atendimento`,
+        message_type: 'system_event',
+        direction: 'inbound',
+        delivered: true,
+        read: true
+      });
+
+      await onMessageSent?.();
     } catch (error) {
       console.error('Error taking over conversation:', error);
     }
@@ -229,11 +252,17 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
               Iniciar Qualificação por IA
             </Button>
           )}
-          {conversation.status === 'bot_active' && (
+          {(conversation.status === 'bot_active' || conversation.human_handoff) && (
             <Button variant="outline" size="sm" onClick={handleTakeOver}>
               <User className="w-4 h-4 mr-2" />
               Assumir Atendimento
             </Button>
+          )}
+          {conversation.human_handoff && (
+            <Badge className="bg-amber-100 text-amber-800 gap-1">
+              <User className="w-3 h-3" />
+              Aguardando atendente
+            </Badge>
           )}
           <Link to={createPageUrl('LeadDetail') + `?id=${lead?.id}`}>
             <Button variant="outline" size="sm">

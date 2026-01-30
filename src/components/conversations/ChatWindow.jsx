@@ -15,7 +15,8 @@ import {
   ExternalLink,
   Loader2,
   Play,
-  Info
+  Info,
+  Clock
 } from 'lucide-react';
 import LeadInfoPanel from './LeadInfoPanel';
 import { useEffect as useEffectHook, useState as useStateHook } from 'react';

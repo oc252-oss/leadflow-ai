@@ -14,8 +14,10 @@ import {
   Mail,
   ExternalLink,
   Loader2,
-  Play
+  Play,
+  Info
 } from 'lucide-react';
+import LeadInfoPanel from './LeadInfoPanel';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -30,6 +32,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
   const [newMessage, setNewMessage] = useState('');
   const [sending, setSending] = useState(false);
   const [startingAI, setStartingAI] = useState(false);
+  const [showLeadInfo, setShowLeadInfo] = useState(true);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const pollingIntervalRef = useRef(null);
@@ -216,9 +219,11 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
   }
 
   return (
-    <div className="flex-1 flex flex-col bg-white">
-      {/* Header */}
-      <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
+    <div className="flex-1 flex gap-0">
+      {/* Chat Principal */}
+      <div className={`flex flex-col bg-white transition-all ${showLeadInfo ? 'flex-1' : 'w-full'}`}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-6 py-4 border-b border-slate-200">
         <div className="flex items-center gap-3">
           <div className={cn(
             "w-10 h-10 rounded-full flex items-center justify-center text-white font-medium",
@@ -237,6 +242,14 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
           </div>
         </div>
         <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={() => setShowLeadInfo(!showLeadInfo)}
+            title={showLeadInfo ? 'Ocultar informações' : 'Mostrar informações'}
+          >
+            <Info className="w-4 h-4" />
+          </Button>
           {conversation.status !== 'bot_active' && conversation.ai_flow_id === null && (
             <Button 
               variant="outline" 
@@ -371,7 +384,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
 
       {/* Painel de Informações do Lead */}
       {showLeadInfo && (
-        <div className="w-80 flex-shrink-0">
+        <div className="w-80 flex-shrink-0 border-l border-slate-200 bg-slate-50 overflow-y-auto p-4">
           <LeadInfoPanel lead={lead} conversation={conversation} />
         </div>
       )}

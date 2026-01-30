@@ -41,21 +41,13 @@ export default function Leads() {
 
   const loadData = async () => {
     try {
-      const org = await getDefaultOrganization();
-      const unitData = org ? await getDefaultUnit(org.id) : null;
-      
-      setOrganization(org);
-      setUnit(unitData);
+      const [leadsData, campaignsData] = await Promise.all([
+        base44.entities.Lead.list('-created_date', 100),
+        base44.entities.Campaign.list()
+      ]);
 
-      if (org) {
-        const [leadsData, campaignsData] = await Promise.all([
-          base44.entities.Lead.filter({ organization_id: org.id }, '-created_date').catch(() => []),
-          base44.entities.Campaign.filter({ organization_id: org.id }).catch(() => [])
-        ]);
-
-        setLeads(leadsData);
-        setCampaigns(campaignsData);
-      }
+      setLeads(leadsData);
+      setCampaigns(campaignsData);
     } catch (error) {
       console.error('Error loading leads:', error);
     } finally {
@@ -64,45 +56,23 @@ export default function Leads() {
   };
 
   const handleAddLead = async (leadData) => {
-    const user = await base44.auth.me();
-    const newLead = await base44.entities.Lead.create({
-      ...leadData,
-      organization_id: organization.id,
-      unit_id: unit?.id || null,
-      funnel_stage: 'Novo Lead',
-      temperature: 'cold',
-      score: 20
-    });
+    try {
+      const newLead = await base44.entities.Lead.create({
+        ...leadData,
+        status: 'ativo',
+        last_interaction_type: 'nenhum'
+      });
 
-    await base44.entities.ActivityLog.create({
-      organization_id: organization.id,
-      lead_id: newLead.id,
-      user_email: user.email,
-      action: 'lead_created',
-      details: { lead_name: leadData.name }
-    });
-
-    setLeads([newLead, ...leads]);
+      setLeads([newLead, ...leads]);
+      setShowAddDialog(false);
+    } catch (error) {
+      console.error('Erro ao criar lead:', error);
+    }
   };
 
   const handleOpenChat = async (lead) => {
     try {
-      console.log('Opening chat for lead:', lead.id);
-
-      // Call backend to create or get conversation
-      const response = await base44.functions.invoke('createOrGetConversation', {
-        lead_id: lead.id,
-        organization_id: organization.id,
-        unit_id: unit?.id || null
-      });
-
-      if (response.data?.conversation) {
-        console.log('Conversation ready:', response.data.conversation.id);
-        // Navigate to Conversations page with conversation selected
-        navigate(createPageUrl('Conversations') + `?conversation_id=${response.data.conversation.id}`);
-      } else {
-        console.error('No conversation in response:', response.data);
-      }
+      navigate(createPageUrl('Conversations') + `?lead_id=${lead.id}`);
     } catch (error) {
       console.error('Error opening chat:', error);
     }

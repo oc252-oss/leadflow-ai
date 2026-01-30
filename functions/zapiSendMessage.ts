@@ -22,19 +22,27 @@ Deno.serve(async (req) => {
     }
 
     console.log('🔑 Using Z-API credentials from environment');
+    console.log('📞 Sending to phone:', phone);
+    console.log('💬 Message:', message.substring(0, 50));
 
-    // Enviar mensagem via Z-API
+    // Enviar mensagem via Z-API  
     const zapiUrl = `https://api.z-api.io/instances/${instance_id}/token/${token}/send-text`;
+    
+    const payload = {
+      phone: phone,
+      message: message
+    };
+
+    console.log('🌐 Z-API URL:', zapiUrl);
+    console.log('📦 Payload:', JSON.stringify(payload));
     
     const zapiResponse = await fetch(zapiUrl, {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json'
+        'Content-Type': 'application/json',
+        'Client-Token': token
       },
-      body: JSON.stringify({
-        phone: phone,
-        message: message
-      })
+      body: JSON.stringify(payload)
     });
 
     const zapiData = await zapiResponse.json();

@@ -81,20 +81,19 @@ export default function AIAssistants() {
 
   const loadData = async () => {
     try {
-      const user = await base44.auth.me();
       const [assistantsData, flowsData] = await Promise.all([
         base44.entities.Assistant.list('-updated_date', 100),
-        base44.entities.AIConversationFlow.list('-updated_date', 100)
+        base44.entities.AIFlow.list('-updated_date', 100)
       ]);
       setAssistants(assistantsData);
       setFlows(flowsData.sort((a, b) => {
         if (a.is_default) return -1;
         if (b.is_default) return 1;
-        return new Date(b.updated_date) - new Date(a.updated_date);
+        return 0;
       }));
     } catch (error) {
       console.error('Erro ao carregar dados:', error);
-      toast.error('Erro ao carregar fluxos de IA');
+      toast.error('Erro ao carregar dados');
     } finally {
       setLoading(false);
     }
@@ -165,12 +164,7 @@ export default function AIAssistants() {
     
     setIsSaving(true);
     try {
-      const user = await base44.auth.me();
-      const payload = {
-        ...formData,
-        organization_id: user.organization_id || 'default',
-        brand_id: user.brand_id || 'default'
-      };
+      const payload = { ...formData };
 
       if (editingAssistant) {
         await base44.entities.Assistant.update(editingAssistant.id, payload);
@@ -183,7 +177,7 @@ export default function AIAssistants() {
       setShowDialog(false);
     } catch (error) {
       console.error('Erro ao salvar assistente:', error);
-      toast.error('Erro ao salvar assistente: ' + error.message);
+      toast.error('Erro ao salvar: ' + error.message);
     } finally {
       setIsSaving(false);
     }

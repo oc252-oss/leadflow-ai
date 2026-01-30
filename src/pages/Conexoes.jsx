@@ -13,12 +13,17 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { MessageSquare, Instagram, Facebook, Phone, Plus, Settings, CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
+import { MessageSquare, Instagram, Facebook, Phone, Plus, Settings, CheckCircle, XCircle, Loader2, AlertCircle, Bot } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { cn } from "@/lib/utils";
 import { toast } from "sonner";
 
 export default function Conexoes() {
   const [connections, setConnections] = useState([]);
+  const [assistants, setAssistants] = useState([]);
+  const [flows, setFlows] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [selectedType, setSelectedType] = useState(null);
@@ -28,19 +33,27 @@ export default function Conexoes() {
   const [formData, setFormData] = useState({});
 
   useEffect(() => {
-    loadConnections();
+    loadData();
   }, []);
 
-  const loadConnections = async () => {
+  const loadData = async () => {
     try {
-      const data = await base44.entities.Connection.list('-created_date');
-      setConnections(data);
+      const [conns, assts, fls] = await Promise.all([
+        base44.entities.Connection.list('-created_date'),
+        base44.entities.Assistant.filter({ is_active: true }),
+        base44.entities.AIConversationFlow.filter({ is_active: true })
+      ]);
+      setConnections(conns);
+      setAssistants(assts);
+      setFlows(fls);
     } catch (error) {
-      console.error('Erro ao carregar conexões:', error);
+      console.error('Erro ao carregar dados:', error);
     } finally {
       setLoading(false);
     }
   };
+
+  const loadConnections = loadData;
 
   const connectionTypes = [
     {
@@ -94,7 +107,14 @@ export default function Conexoes() {
 
   const handleNewConnection = (type) => {
     setSelectedType(type);
-    setFormData({ name: '', credentials: {} });
+    setFormData({ 
+      name: '', 
+      credentials: {},
+      assistant_id: '',
+      default_flow_id: '',
+      auto_reply_enabled: true,
+      fallback_message: 'Olá! Recebemos sua mensagem 😊 Em instantes alguém do nosso time irá te atender.'
+    });
     setShowNewDialog(false);
     setShowConfigDialog(true);
   };
@@ -105,7 +125,11 @@ export default function Conexoes() {
     setSelectedType(typeConfig);
     setFormData({
       name: conn.name,
-      credentials: conn.credentials || {}
+      credentials: conn.credentials || {},
+      assistant_id: conn.assistant_id || '',
+      default_flow_id: conn.default_flow_id || '',
+      auto_reply_enabled: conn.auto_reply_enabled !== false,
+      fallback_message: conn.fallback_message || 'Olá! Recebemos sua mensagem 😊 Em instantes alguém do nosso time irá te atender.'
     });
     setShowConfigDialog(true);
   };
@@ -141,6 +165,11 @@ export default function Conexoes() {
       return;
     }
 
+    if (!formData.assistant_id) {
+      toast.error('Selecione um Assistente IA');
+      return;
+    }
+
     try {
       const payload = {
         name: formData.name,
@@ -148,7 +177,11 @@ export default function Conexoes() {
         credentials: formData.credentials,
         webhook_url: `${window.location.origin}/api/webhook/${selectedType.type}`,
         status: 'conectado',
-        last_checked_at: new Date().toISOString()
+        last_checked_at: new Date().toISOString(),
+        assistant_id: formData.assistant_id,
+        default_flow_id: formData.default_flow_id || null,
+        auto_reply_enabled: formData.auto_reply_enabled,
+        fallback_message: formData.fallback_message
       };
 
       if (editingConnection) {
@@ -379,6 +412,81 @@ export default function Conexoes() {
                 />
               </div>
             ))}
+
+            <div className="border-t pt-4 space-y-4">
+              <div className="flex items-center gap-2 text-indigo-700">
+                <Bot className="w-5 h-5" />
+                <h3 className="font-semibold">Assistente IA da Conexão</h3>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Assistente IA *</Label>
+                <Select
+                  value={formData.assistant_id || ''}
+                  onValueChange={(value) => setFormData({ ...formData, assistant_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione um assistente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {assistants.map((assistant) => (
+                      <SelectItem key={assistant.id} value={assistant.id}>
+                        {assistant.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-slate-500">
+                  Apenas assistentes ativos são listados
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Fluxo de IA Padrão (opcional)</Label>
+                <Select
+                  value={formData.default_flow_id || ''}
+                  onValueChange={(value) => setFormData({ ...formData, default_flow_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Usar fluxo do assistente" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>Nenhum (usar padrão do assistente)</SelectItem>
+                    {flows.map((flow) => (
+                      <SelectItem key={flow.id} value={flow.id}>
+                        {flow.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="space-y-0.5">
+                  <Label>Ativar resposta automática</Label>
+                  <p className="text-xs text-slate-500">
+                    Enviar respostas automáticas da IA
+                  </p>
+                </div>
+                <Switch
+                  checked={formData.auto_reply_enabled}
+                  onCheckedChange={(checked) => setFormData({ ...formData, auto_reply_enabled: checked })}
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Mensagem de Fallback</Label>
+                <Textarea
+                  value={formData.fallback_message || ''}
+                  onChange={(e) => setFormData({ ...formData, fallback_message: e.target.value })}
+                  placeholder="Mensagem enviada quando a IA não estiver disponível"
+                  rows={3}
+                />
+                <p className="text-xs text-slate-500">
+                  Usada quando houver erro ou assistente indisponível
+                </p>
+              </div>
+            </div>
 
             <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
               <p className="font-medium mb-1">Webhook URL:</p>

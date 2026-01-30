@@ -153,7 +153,7 @@ Deno.serve(async (req) => {
     // ==========================================
 
     try {
-      // Buscar conexão Z-API ativa
+      // Buscar conexão Z-API ativa com credenciais que correspondem
       const connections = await base44.asServiceRole.entities.Connection.filter({
         type: 'whatsapp_zapi',
         is_active: true
@@ -169,58 +169,116 @@ Deno.serve(async (req) => {
         }, { status: 200 });
       }
 
-      const connection = connections[0];
+      // Tentar encontrar conexão específica por instance_id
+      let connection = connections.find(c => c.credentials?.instance_id === instance);
+      if (!connection) {
+        connection = connections[0]; // Fallback para primeira ativa
+      }
 
-      // Buscar assistente ativo
-      const assistants = await base44.asServiceRole.entities.Assistant.filter({
-        is_active: true,
-        channel: 'whatsapp'
-      });
+      console.log('🔌 Conexão identificada:', connection.name);
+
+      // Verificar se resposta automática está ativada
+      if (connection.auto_reply_enabled === false) {
+        console.log('⏸️ Resposta automática desativada para esta conexão');
+        return Response.json({ 
+          success: true, 
+          lead_id: lead.id,
+          conversation_id: conversation.id,
+          message_id: message.id
+        }, { status: 200 });
+      }
+
+      // Verificar se conversa está em atendimento humano
+      if (conversation.status === 'human_active') {
+        console.log('👤 Conversa em atendimento humano, pulando IA');
+        return Response.json({ 
+          success: true, 
+          lead_id: lead.id,
+          conversation_id: conversation.id,
+          message_id: message.id
+        }, { status: 200 });
+      }
 
       let responseMessage = '';
+      let assistant = null;
+      let flow = null;
 
-      if (assistants.length > 0) {
-        const assistant = assistants[0];
-        console.log('🤖 Assistente encontrado:', assistant.name);
+      // Buscar assistente vinculado à conexão
+      if (connection.assistant_id) {
+        const assistants = await base44.asServiceRole.entities.Assistant.filter({
+          id: connection.assistant_id,
+          is_active: true
+        });
 
-        // Buscar histórico de mensagens da conversa
-        const previousMessages = await base44.asServiceRole.entities.Message.filter(
-          { conversation_id: conversation.id },
-          'created_date',
-          20
-        );
+        if (assistants.length > 0) {
+          assistant = assistants[0];
+          console.log('🤖 Assistente da conexão:', assistant.name);
 
-        // Montar contexto para IA
-        const conversationHistory = previousMessages
-          .slice(0, -1) // Remove a última (que acabou de chegar)
-          .map(msg => ({
-            role: msg.sender_type === 'lead' ? 'user' : 'assistant',
-            content: msg.content
-          }));
+          // Buscar fluxo (prioridade: fluxo da conexão > fluxo do assistente)
+          const flowId = connection.default_flow_id || null;
+          if (flowId) {
+            const flows = await base44.asServiceRole.entities.AIConversationFlow.filter({
+              id: flowId,
+              is_active: true
+            });
+            if (flows.length > 0) {
+              flow = flows[0];
+              console.log('📋 Fluxo da conexão:', flow.name);
+            }
+          }
 
-        // Gerar resposta usando IA
-        const prompt = `${assistant.system_prompt || 'Você é um assistente de atendimento profissional e prestativo.'}
+          // Buscar histórico de mensagens da conversa
+          const previousMessages = await base44.asServiceRole.entities.Message.filter(
+            { conversation_id: conversation.id },
+            'created_date',
+            20
+          );
 
-${assistant.greeting_message && conversationHistory.length === 0 ? `Mensagem de saudação: ${assistant.greeting_message}` : ''}
+          const isFirstMessage = previousMessages.length === 1;
 
-Histórico da conversa:
+          // Montar contexto para IA
+          const conversationHistory = previousMessages
+            .slice(0, -1)
+            .map(msg => ({
+              role: msg.sender_type === 'lead' ? 'user' : 'assistant',
+              content: msg.content
+            }));
+
+          // Construir prompt com regras do assistente
+          let prompt = assistant.system_prompt || 'Você é um assistente de atendimento profissional e prestativo.';
+          
+          if (assistant.rules && assistant.rules.length > 0) {
+            prompt += '\n\nRegras de comportamento:\n' + assistant.rules.map(r => `- ${r}`).join('\n');
+          }
+
+          if (isFirstMessage && assistant.greeting_message) {
+            prompt += `\n\nMensagem de saudação: ${assistant.greeting_message}`;
+          }
+
+          if (flow?.greeting_message && isFirstMessage) {
+            prompt += `\n\nFluxo selecionado: ${flow.name}`;
+          }
+
+          prompt += `\n\nHistórico da conversa:
 ${conversationHistory.map(m => `${m.role === 'user' ? 'Cliente' : 'Assistente'}: ${m.content}`).join('\n')}
 
 Cliente: ${messageBody}
 
 Responda de forma ${assistant.tone || 'humanizada'} e profissional. Seja breve e direto.`;
 
-        const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
-          prompt: prompt
-        });
+          const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+            prompt: prompt
+          });
 
-        responseMessage = aiResponse.response || aiResponse;
-        console.log('🧠 Resposta gerada pela IA');
+          responseMessage = aiResponse.response || aiResponse;
+          console.log('🧠 Resposta gerada pela IA');
+        }
+      }
 
-      } else {
-        // Fallback se não houver assistente
-        responseMessage = 'Olá! Recebemos sua mensagem 😊 Em instantes alguém do nosso time irá te atender.';
-        console.log('⚠️ Nenhum assistente ativo, usando mensagem padrão');
+      // Fallback se não houver assistente ou erro
+      if (!responseMessage) {
+        responseMessage = connection.fallback_message || 'Olá! Recebemos sua mensagem 😊 Em instantes alguém do nosso time irá te atender.';
+        console.log('⚠️ Usando mensagem de fallback');
       }
 
       // Enviar resposta via Z-API
@@ -239,12 +297,16 @@ Responda de forma ${assistant.tone || 'humanizada'} e profissional. Seja breve e
           conversation_id: conversation.id,
           lead_id: lead.id,
           sender_type: 'bot',
-          sender_id: null,
+          sender_id: assistant?.id || null,
           content: responseMessage,
           message_type: 'text',
           direction: 'outbound',
           metadata: {
-            assistant_response: true
+            assistant_id: assistant?.id,
+            flow_id: flow?.id,
+            connection_id: connection.id,
+            assistant_response: true,
+            response_time_ms: Date.now() - new Date(message.created_at).getTime()
           },
           delivered: true,
           read: true,

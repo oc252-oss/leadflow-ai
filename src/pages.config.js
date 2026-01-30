@@ -54,7 +54,10 @@ import AIFlowsSimple from './pages/AIFlowsSimple';
 import AISimulator from './pages/AISimulator';
 import AssistantCentral from './pages/AssistantCentral';
 import Automations from './pages/Automations';
+import CRM from './pages/CRM';
 import Campaigns from './pages/Campaigns';
+import ChannelsIntegrations from './pages/ChannelsIntegrations';
+import Conexoes from './pages/Conexoes';
 import ConversationFlows from './pages/ConversationFlows';
 import Conversations from './pages/Conversations';
 import Dashboard from './pages/Dashboard';
@@ -83,9 +86,6 @@ import WhatsAppConfiguration from './pages/WhatsAppConfiguration';
 import WhatsAppIntegration from './pages/WhatsAppIntegration';
 import WhatsAppServerConfig from './pages/WhatsAppServerConfig';
 import WhatsAppServerSetup from './pages/WhatsAppServerSetup';
-import ChannelsIntegrations from './pages/ChannelsIntegrations';
-import CRM from './pages/CRM';
-import Conexoes from './pages/Conexoes';
 import __Layout from './Layout.jsx';
 
 
@@ -97,7 +97,10 @@ export const PAGES = {
     "AISimulator": AISimulator,
     "AssistantCentral": AssistantCentral,
     "Automations": Automations,
+    "CRM": CRM,
     "Campaigns": Campaigns,
+    "ChannelsIntegrations": ChannelsIntegrations,
+    "Conexoes": Conexoes,
     "ConversationFlows": ConversationFlows,
     "Conversations": Conversations,
     "Dashboard": Dashboard,
@@ -126,9 +129,6 @@ export const PAGES = {
     "WhatsAppIntegration": WhatsAppIntegration,
     "WhatsAppServerConfig": WhatsAppServerConfig,
     "WhatsAppServerSetup": WhatsAppServerSetup,
-    "ChannelsIntegrations": ChannelsIntegrations,
-    "CRM": CRM,
-    "Conexoes": Conexoes,
 }
 
 export const pagesConfig = {

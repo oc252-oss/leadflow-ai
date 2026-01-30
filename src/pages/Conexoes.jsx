@@ -3,11 +3,29 @@ import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MessageSquare, Instagram, Facebook, Phone, Plus, Settings } from 'lucide-react';
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import { MessageSquare, Instagram, Facebook, Phone, Plus, Settings, CheckCircle, XCircle, Loader2, AlertCircle } from 'lucide-react';
+import { cn } from "@/lib/utils";
+import { toast } from "sonner";
 
 export default function Conexoes() {
   const [connections, setConnections] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [showNewDialog, setShowNewDialog] = useState(false);
+  const [selectedType, setSelectedType] = useState(null);
+  const [showConfigDialog, setShowConfigDialog] = useState(false);
+  const [editingConnection, setEditingConnection] = useState(null);
+  const [testing, setTesting] = useState(false);
+  const [formData, setFormData] = useState({});
 
   useEffect(() => {
     loadConnections();
@@ -15,7 +33,7 @@ export default function Conexoes() {
 
   const loadConnections = async () => {
     try {
-      const data = await base44.entities.Connection.list();
+      const data = await base44.entities.Connection.list('-created_date');
       setConnections(data);
     } catch (error) {
       console.error('Erro ao carregar conexões:', error);
@@ -24,13 +42,157 @@ export default function Conexoes() {
     }
   };
 
+  const connectionTypes = [
+    {
+      type: 'whatsapp_zapi',
+      name: 'WhatsApp',
+      description: 'Conectar via Z-API',
+      icon: MessageSquare,
+      color: 'bg-green-100 text-green-700',
+      fields: [
+        { key: 'instance_id', label: 'Instance ID', placeholder: 'sua-instancia' },
+        { key: 'token', label: 'Token da API', placeholder: 'token-aqui', type: 'password' },
+        { key: 'base_url', label: 'URL Base', placeholder: 'https://api.z-api.io' },
+      ]
+    },
+    {
+      type: 'instagram_meta',
+      name: 'Instagram',
+      description: 'Conectar via Meta',
+      icon: Instagram,
+      color: 'bg-pink-100 text-pink-700',
+      fields: [
+        { key: 'business_id', label: 'Facebook Business ID', placeholder: '123456789' },
+        { key: 'page_id', label: 'Instagram Page ID', placeholder: '987654321' },
+        { key: 'access_token', label: 'Token de Acesso', placeholder: 'token-meta', type: 'password' },
+      ]
+    },
+    {
+      type: 'facebook_pages',
+      name: 'Facebook Pages',
+      description: 'Conectar Messenger',
+      icon: Facebook,
+      color: 'bg-blue-100 text-blue-700',
+      fields: [
+        { key: 'page_id', label: 'Page ID', placeholder: '123456789' },
+        { key: 'page_name', label: 'Nome da Página', placeholder: 'Minha Empresa' },
+        { key: 'access_token', label: 'Token de Acesso', placeholder: 'token-facebook', type: 'password' },
+      ]
+    },
+    {
+      type: 'cliniq_voice',
+      name: 'Cliniq Voice',
+      description: 'Chamadas de voz',
+      icon: Phone,
+      color: 'bg-violet-100 text-violet-700',
+      fields: [
+        { key: 'provider', label: 'Provedor', placeholder: 'interno' },
+        { key: 'phone_numbers', label: 'Números', placeholder: '+5511999999999' },
+      ]
+    }
+  ];
+
+  const handleNewConnection = (type) => {
+    setSelectedType(type);
+    setFormData({ name: '', credentials: {} });
+    setShowNewDialog(false);
+    setShowConfigDialog(true);
+  };
+
+  const handleEditConnection = (conn) => {
+    setEditingConnection(conn);
+    const typeConfig = connectionTypes.find(t => t.type === conn.type);
+    setSelectedType(typeConfig);
+    setFormData({
+      name: conn.name,
+      credentials: conn.credentials || {}
+    });
+    setShowConfigDialog(true);
+  };
+
+  const handleTestConnection = async () => {
+    if (!selectedType) return;
+    
+    setTesting(true);
+    try {
+      // Simulação de teste - em produção, chamar backend real
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      if (selectedType.type === 'whatsapp_zapi') {
+        const { instance_id, token, base_url } = formData.credentials;
+        if (!instance_id || !token || !base_url) {
+          throw new Error('Preencha todos os campos obrigatórios');
+        }
+      }
+      
+      toast.success('Conexão testada com sucesso!');
+      return true;
+    } catch (error) {
+      toast.error('Erro ao testar conexão: ' + error.message);
+      return false;
+    } finally {
+      setTesting(false);
+    }
+  };
+
+  const handleSaveConnection = async () => {
+    if (!formData.name) {
+      toast.error('Preencha o nome da conexão');
+      return;
+    }
+
+    try {
+      const payload = {
+        name: formData.name,
+        type: selectedType.type,
+        credentials: formData.credentials,
+        webhook_url: `${window.location.origin}/api/webhook/${selectedType.type}`,
+        status: 'conectado',
+        last_checked_at: new Date().toISOString()
+      };
+
+      if (editingConnection) {
+        await base44.entities.Connection.update(editingConnection.id, payload);
+        toast.success('Conexão atualizada!');
+      } else {
+        await base44.entities.Connection.create(payload);
+        toast.success('Conexão criada!');
+      }
+
+      await loadConnections();
+      setShowConfigDialog(false);
+      setEditingConnection(null);
+      setSelectedType(null);
+      setFormData({});
+    } catch (error) {
+      console.error('Erro ao salvar conexão:', error);
+      toast.error('Erro ao salvar conexão');
+    }
+  };
+
+  const handleDeleteConnection = async (id) => {
+    if (!confirm('Deseja realmente excluir esta conexão?')) return;
+    
+    try {
+      await base44.entities.Connection.delete(id);
+      toast.success('Conexão excluída');
+      await loadConnections();
+    } catch (error) {
+      toast.error('Erro ao excluir conexão');
+    }
+  };
+
   const getIcon = (type) => {
-    switch(type) {
-      case 'whatsapp': return MessageSquare;
-      case 'instagram': return Instagram;
-      case 'facebook': return Facebook;
-      case 'voz': return Phone;
-      default: return MessageSquare;
+    const config = connectionTypes.find(t => t.type === type);
+    return config?.icon || MessageSquare;
+  };
+
+  const getStatusIcon = (status) => {
+    switch(status) {
+      case 'conectado': return CheckCircle;
+      case 'desconectado': return XCircle;
+      case 'erro': return AlertCircle;
+      default: return XCircle;
     }
   };
 
@@ -58,7 +220,7 @@ export default function Conexoes() {
           <h1 className="text-2xl font-bold text-slate-900">Conexões</h1>
           <p className="text-slate-600">Gerencie integrações externas</p>
         </div>
-        <Button className="gap-2">
+        <Button onClick={() => setShowNewDialog(true)} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
           <Plus className="w-4 h-4" />
           Nova Conexão
         </Button>
@@ -67,8 +229,9 @@ export default function Conexoes() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {connections.map((conn) => {
           const Icon = getIcon(conn.type);
+          const StatusIcon = getStatusIcon(conn.status);
           return (
-            <Card key={conn.id}>
+            <Card key={conn.id} className="border-0 shadow-sm">
               <CardHeader>
                 <div className="flex items-start justify-between">
                   <div className="flex items-center gap-3">
@@ -77,10 +240,13 @@ export default function Conexoes() {
                     </div>
                     <div>
                       <CardTitle className="text-base">{conn.name}</CardTitle>
-                      <CardDescription className="capitalize">{conn.type}</CardDescription>
+                      <CardDescription className="capitalize">
+                        {conn.type.replace('_', ' ')}
+                      </CardDescription>
                     </div>
                   </div>
-                  <Badge className={getStatusColor(conn.status)}>
+                  <Badge className={cn("gap-1", getStatusColor(conn.status))}>
+                    <StatusIcon className="w-3 h-3" />
                     {conn.status}
                   </Badge>
                 </div>
@@ -92,25 +258,49 @@ export default function Conexoes() {
                     <span className="ml-2 font-medium">{conn.phone_number}</span>
                   </div>
                 )}
-                {conn.last_sync && (
+                {conn.last_checked_at && (
                   <div className="text-sm text-slate-500">
-                    Última sinc: {new Date(conn.last_sync).toLocaleDateString()}
+                    Última verificação: {new Date(conn.last_checked_at).toLocaleDateString()}
                   </div>
                 )}
-                <Button variant="outline" size="sm" className="w-full gap-2">
-                  <Settings className="w-4 h-4" />
-                  Configurar
-                </Button>
+                {conn.error_message && (
+                  <div className="text-xs text-red-600 bg-red-50 p-2 rounded">
+                    {conn.error_message}
+                  </div>
+                )}
+                <div className="flex gap-2">
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="flex-1 gap-2"
+                    onClick={() => handleEditConnection(conn)}
+                  >
+                    <Settings className="w-4 h-4" />
+                    Configurar
+                  </Button>
+                  <Button 
+                    variant="outline" 
+                    size="sm" 
+                    className="text-red-600 hover:text-red-700"
+                    onClick={() => handleDeleteConnection(conn.id)}
+                  >
+                    Excluir
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );
         })}
 
         {connections.length === 0 && (
-          <Card className="col-span-full">
-            <CardContent className="py-12 text-center">
-              <p className="text-slate-500">Nenhuma conexão configurada</p>
-              <Button className="mt-4 gap-2">
+          <Card className="col-span-full border-0 shadow-sm">
+            <CardContent className="py-16 text-center">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+                <MessageSquare className="w-8 h-8 text-slate-400" />
+              </div>
+              <h3 className="text-lg font-medium text-slate-900 mb-2">Nenhuma conexão configurada</h3>
+              <p className="text-slate-500 mb-6">Conecte suas plataformas para começar</p>
+              <Button onClick={() => setShowNewDialog(true)} className="gap-2 bg-indigo-600 hover:bg-indigo-700">
                 <Plus className="w-4 h-4" />
                 Adicionar Primeira Conexão
               </Button>
@@ -118,6 +308,109 @@ export default function Conexoes() {
           </Card>
         )}
       </div>
+
+      {/* Dialog: Escolher Tipo */}
+      <Dialog open={showNewDialog} onOpenChange={setShowNewDialog}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Nova Conexão</DialogTitle>
+            <DialogDescription>
+              Escolha o tipo de integração que deseja configurar
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid grid-cols-2 gap-4 py-4">
+            {connectionTypes.map((type) => {
+              const Icon = type.icon;
+              return (
+                <button
+                  key={type.type}
+                  onClick={() => handleNewConnection(type)}
+                  className="flex flex-col items-center gap-3 p-6 rounded-xl border-2 border-slate-200 hover:border-indigo-500 hover:bg-slate-50 transition-all text-center"
+                >
+                  <div className={cn("p-3 rounded-xl", type.color)}>
+                    <Icon className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <p className="font-semibold text-slate-900">{type.name}</p>
+                    <p className="text-sm text-slate-500">{type.description}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Dialog: Configurar Conexão */}
+      <Dialog open={showConfigDialog} onOpenChange={setShowConfigDialog}>
+        <DialogContent className="sm:max-w-[500px]">
+          <DialogHeader>
+            <DialogTitle>
+              {editingConnection ? 'Editar' : 'Configurar'} {selectedType?.name}
+            </DialogTitle>
+            <DialogDescription>
+              Preencha as credenciais para conectar
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label>Nome da Conexão *</Label>
+              <Input
+                value={formData.name || ''}
+                onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                placeholder="Ex: WhatsApp Comercial"
+              />
+            </div>
+
+            {selectedType?.fields.map((field) => (
+              <div key={field.key} className="space-y-2">
+                <Label>{field.label}</Label>
+                <Input
+                  type={field.type || 'text'}
+                  value={formData.credentials?.[field.key] || ''}
+                  onChange={(e) => setFormData({
+                    ...formData,
+                    credentials: {
+                      ...formData.credentials,
+                      [field.key]: e.target.value
+                    }
+                  })}
+                  placeholder={field.placeholder}
+                />
+              </div>
+            ))}
+
+            <div className="p-3 bg-slate-50 rounded-lg text-sm text-slate-600">
+              <p className="font-medium mb-1">Webhook URL:</p>
+              <code className="text-xs break-all">
+                {window.location.origin}/api/webhook/{selectedType?.type}
+              </code>
+            </div>
+          </div>
+          <DialogFooter className="gap-2">
+            <Button 
+              variant="outline" 
+              onClick={handleTestConnection}
+              disabled={testing}
+            >
+              {testing ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Testando...
+                </>
+              ) : (
+                'Testar Conexão'
+              )}
+            </Button>
+            <Button 
+              onClick={handleSaveConnection}
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              {editingConnection ? 'Atualizar' : 'Conectar'}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

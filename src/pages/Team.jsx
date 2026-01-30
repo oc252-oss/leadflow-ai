@@ -70,11 +70,9 @@ export default function Team() {
 
     setInviting(true);
     try {
-      // Convidar usuário via Base44
-      await base44.users.inviteUser(inviteEmail, inviteRole === 'organization_admin' ? 'admin' : 'user');
-
-      // Criar TeamMember
-      await base44.entities.TeamMember.create({
+      // Primeiro criar o TeamMember pendente
+      const newMember = await base44.entities.TeamMember.create({
+        organization_id: company.organization_id || null,
         company_id: company.id,
         user_email: inviteEmail,
         role: inviteRole,
@@ -83,14 +81,17 @@ export default function Team() {
         assigned_leads_count: 0
       });
 
-      toast.success('Convite enviado com sucesso!');
+      // Depois enviar o convite via Base44
+      await base44.users.inviteUser(inviteEmail, inviteRole === 'organization_admin' ? 'admin' : 'user');
+
+      toast.success('Convite enviado! Quando o usuário aceitar, o registro será ativado automaticamente.');
       setShowInviteDialog(false);
       setInviteEmail('');
       setInviteRole('sales_agent');
       await loadData();
     } catch (error) {
       console.error('Erro ao convidar:', error);
-      toast.error('Erro ao enviar convite');
+      toast.error(error.message || 'Erro ao enviar convite');
     } finally {
       setInviting(false);
     }

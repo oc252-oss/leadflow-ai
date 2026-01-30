@@ -158,6 +158,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
       
       await base44.entities.Conversation.update(conversation.id, {
         status: 'human_active',
+        ai_active: false,
         human_handoff: true,
         handoff_reason: 'manual_takeover',
         handoff_at: new Date().toISOString(),
@@ -171,7 +172,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
         conversation_id: conversation.id,
         lead_id: lead.id,
         sender_type: 'system',
-        content: `${user.full_name} assumiu o atendimento`,
+        content: `${user.full_name} assumiu o atendimento e desabilitou a IA`,
         message_type: 'system_event',
         direction: 'inbound',
         delivered: true,
@@ -181,6 +182,33 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
       await onMessageSent?.();
     } catch (error) {
       console.error('Error taking over conversation:', error);
+    }
+  };
+
+  const handleDisableAI = async () => {
+    try {
+      await base44.entities.Conversation.update(conversation.id, {
+        ai_active: false,
+        status: 'human_active'
+      });
+
+      const user = await base44.auth.me();
+      await base44.entities.Message.create({
+        company_id: conversation.company_id,
+        unit_id: conversation.unit_id,
+        conversation_id: conversation.id,
+        lead_id: lead.id,
+        sender_type: 'system',
+        content: `IA desabilitada por ${user.full_name}`,
+        message_type: 'system_event',
+        direction: 'inbound',
+        delivered: true,
+        read: true
+      });
+
+      await onMessageSent?.();
+    } catch (error) {
+      console.error('Error disabling AI:', error);
     }
   };
 
@@ -263,6 +291,17 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
                 <Play className="w-4 h-4 mr-2" />
               )}
               Iniciar Qualificação por IA
+            </Button>
+          )}
+          {conversation.ai_active && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleDisableAI}
+              className="border-amber-300 text-amber-700 hover:bg-amber-50"
+            >
+              <Bot className="w-4 h-4 mr-2" />
+              Desabilitar IA
             </Button>
           )}
           {(conversation.status === 'bot_active' || conversation.human_handoff) && (

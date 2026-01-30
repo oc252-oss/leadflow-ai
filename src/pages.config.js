@@ -60,6 +60,7 @@ import ChannelsIntegrations from './pages/ChannelsIntegrations';
 import Conexoes from './pages/Conexoes';
 import ConversationFlows from './pages/ConversationFlows';
 import Conversations from './pages/Conversations';
+import ConversionReport from './pages/ConversionReport';
 import Dashboard from './pages/Dashboard';
 import FranchiseDashboard from './pages/FranchiseDashboard';
 import Help from './pages/Help';
@@ -75,7 +76,9 @@ import ScriptLibrary from './pages/ScriptLibrary';
 import Scripts from './pages/Scripts';
 import Settings from './pages/Settings';
 import SimulationTraining from './pages/SimulationTraining';
+import SystemValidation from './pages/SystemValidation';
 import Tasks from './pages/Tasks';
+import Team from './pages/Team';
 import TreinarAssistente from './pages/TreinarAssistente';
 import Units from './pages/Units';
 import VoiceCampaigns from './pages/VoiceCampaigns';
@@ -86,9 +89,6 @@ import WhatsAppConfiguration from './pages/WhatsAppConfiguration';
 import WhatsAppIntegration from './pages/WhatsAppIntegration';
 import WhatsAppServerConfig from './pages/WhatsAppServerConfig';
 import WhatsAppServerSetup from './pages/WhatsAppServerSetup';
-import Team from './pages/Team';
-import SystemValidation from './pages/SystemValidation';
-import ConversionReport from './pages/ConversionReport';
 import __Layout from './Layout.jsx';
 
 
@@ -106,6 +106,7 @@ export const PAGES = {
     "Conexoes": Conexoes,
     "ConversationFlows": ConversationFlows,
     "Conversations": Conversations,
+    "ConversionReport": ConversionReport,
     "Dashboard": Dashboard,
     "FranchiseDashboard": FranchiseDashboard,
     "Help": Help,
@@ -121,7 +122,9 @@ export const PAGES = {
     "Scripts": Scripts,
     "Settings": Settings,
     "SimulationTraining": SimulationTraining,
+    "SystemValidation": SystemValidation,
     "Tasks": Tasks,
+    "Team": Team,
     "TreinarAssistente": TreinarAssistente,
     "Units": Units,
     "VoiceCampaigns": VoiceCampaigns,
@@ -132,9 +135,6 @@ export const PAGES = {
     "WhatsAppIntegration": WhatsAppIntegration,
     "WhatsAppServerConfig": WhatsAppServerConfig,
     "WhatsAppServerSetup": WhatsAppServerSetup,
-    "Team": Team,
-    "SystemValidation": SystemValidation,
-    "ConversionReport": ConversionReport,
 }
 
 export const pagesConfig = {

@@ -54,6 +54,26 @@ Deno.serve(async (req) => {
     const company = companies[0];
     console.log('🏢 Empresa:', company.name, company.id);
 
+    // Buscar pipeline padrão da empresa
+    const pipelines = await base44.asServiceRole.entities.Pipeline.filter({
+      company_id: company.id,
+      is_default: true
+    });
+
+    let defaultPipeline = null;
+    let firstStage = null;
+
+    if (pipelines.length > 0) {
+      defaultPipeline = pipelines[0];
+      const stages = await base44.asServiceRole.entities.PipelineStage.filter(
+        { pipeline_id: defaultPipeline.id },
+        'order',
+        1
+      );
+      firstStage = stages[0] || null;
+      console.log('📊 Pipeline:', defaultPipeline.name, '- Primeiro estágio:', firstStage?.name);
+    }
+
     // Buscar ou criar Lead
     let leads = await base44.asServiceRole.entities.Lead.filter({ phone });
     let lead;
@@ -89,12 +109,26 @@ Deno.serve(async (req) => {
         name: contactName,
         phone,
         source: 'whatsapp',
-        status: 'ativo'
+        source_channel: 'whatsapp',
+        status: 'new',
+        pipeline_id: defaultPipeline?.id || null,
+        pipeline_stage_id: firstStage?.id || null,
+        score: 0,
+        last_interaction_type: 'ia_chat',
+        last_interaction_at: new Date().toISOString(),
+        last_contact_at: new Date().toISOString()
       });
-      console.log('✅ Lead criado:', lead.id, lead.name);
+      console.log('✅ Lead criado:', lead.id, lead.name, '- Estágio:', firstStage?.name);
     } else {
       lead = leads[0];
       console.log('✅ Lead encontrado:', lead.id, lead.name);
+      
+      // Atualizar última interação
+      await base44.asServiceRole.entities.Lead.update(lead.id, {
+        last_interaction_type: 'ia_chat',
+        last_interaction_at: new Date().toISOString(),
+        last_contact_at: new Date().toISOString()
+      });
     }
 
     // Buscar ou criar Conversation

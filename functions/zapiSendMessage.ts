@@ -12,18 +12,16 @@ Deno.serve(async (req) => {
       );
     }
 
-    // Buscar credenciais da conexão Z-API
-    const connections = await base44.asServiceRole.entities.Connection.filter({ id: connection_id });
-    if (connections.length === 0) {
-      return Response.json({ error: 'Connection not found' }, { status: 404 });
-    }
-
-    const connection = connections[0];
-    const { instance_id, token } = connection.credentials || {};
+    // Usar credenciais das variáveis de ambiente (mais confiável)
+    const instance_id = Deno.env.get('ZAPI_INSTANCE_ID');
+    const token = Deno.env.get('ZAPI_TOKEN');
 
     if (!instance_id || !token) {
-      return Response.json({ error: 'Invalid connection credentials' }, { status: 400 });
+      console.error('❌ ZAPI_INSTANCE_ID ou ZAPI_TOKEN não configurados');
+      return Response.json({ error: 'Z-API credentials not configured in environment' }, { status: 500 });
     }
+
+    console.log('🔑 Using Z-API credentials from environment');
 
     // Enviar mensagem via Z-API
     const zapiUrl = `https://api.z-api.io/instances/${instance_id}/token/${token}/send-text`;

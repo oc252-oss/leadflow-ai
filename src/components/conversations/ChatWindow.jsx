@@ -380,7 +380,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
           </Button>
         </div>
       </div>
-      </div>
+    </div>
 
       {/* Painel de Informações do Lead */}
       {showLeadInfo && (

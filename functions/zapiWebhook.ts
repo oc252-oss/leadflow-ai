@@ -148,6 +148,117 @@ Deno.serve(async (req) => {
 
     console.log('✅ Mensagem salva:', message.id, 'Conteúdo:', messageBody.substring(0, 50));
 
+    // ==========================================
+    // RESPOSTA AUTOMÁTICA VIA IA
+    // ==========================================
+
+    try {
+      // Buscar conexão Z-API ativa
+      const connections = await base44.asServiceRole.entities.Connection.filter({
+        type: 'whatsapp_zapi',
+        is_active: true
+      });
+
+      if (connections.length === 0) {
+        console.log('⚠️ Nenhuma conexão Z-API ativa encontrada');
+        return Response.json({ 
+          success: true, 
+          lead_id: lead.id,
+          conversation_id: conversation.id,
+          message_id: message.id
+        }, { status: 200 });
+      }
+
+      const connection = connections[0];
+
+      // Buscar assistente ativo
+      const assistants = await base44.asServiceRole.entities.Assistant.filter({
+        is_active: true,
+        channel: 'whatsapp'
+      });
+
+      let responseMessage = '';
+
+      if (assistants.length > 0) {
+        const assistant = assistants[0];
+        console.log('🤖 Assistente encontrado:', assistant.name);
+
+        // Buscar histórico de mensagens da conversa
+        const previousMessages = await base44.asServiceRole.entities.Message.filter(
+          { conversation_id: conversation.id },
+          'created_date',
+          20
+        );
+
+        // Montar contexto para IA
+        const conversationHistory = previousMessages
+          .slice(0, -1) // Remove a última (que acabou de chegar)
+          .map(msg => ({
+            role: msg.sender_type === 'lead' ? 'user' : 'assistant',
+            content: msg.content
+          }));
+
+        // Gerar resposta usando IA
+        const prompt = `${assistant.system_prompt || 'Você é um assistente de atendimento profissional e prestativo.'}
+
+${assistant.greeting_message && conversationHistory.length === 0 ? `Mensagem de saudação: ${assistant.greeting_message}` : ''}
+
+Histórico da conversa:
+${conversationHistory.map(m => `${m.role === 'user' ? 'Cliente' : 'Assistente'}: ${m.content}`).join('\n')}
+
+Cliente: ${messageBody}
+
+Responda de forma ${assistant.tone || 'humanizada'} e profissional. Seja breve e direto.`;
+
+        const aiResponse = await base44.asServiceRole.integrations.Core.InvokeLLM({
+          prompt: prompt
+        });
+
+        responseMessage = aiResponse.response || aiResponse;
+        console.log('🧠 Resposta gerada pela IA');
+
+      } else {
+        // Fallback se não houver assistente
+        responseMessage = 'Olá! Recebemos sua mensagem 😊 Em instantes alguém do nosso time irá te atender.';
+        console.log('⚠️ Nenhum assistente ativo, usando mensagem padrão');
+      }
+
+      // Enviar resposta via Z-API
+      const sendResult = await base44.asServiceRole.functions.invoke('zapiSendMessage', {
+        phone: rawPhone,
+        message: responseMessage,
+        connection_id: connection.id
+      });
+
+      if (sendResult.data?.success) {
+        console.log('✅ Resposta enviada via Z-API');
+
+        // Salvar mensagem enviada no banco
+        await base44.asServiceRole.entities.Message.create({
+          company_id: company.id,
+          conversation_id: conversation.id,
+          lead_id: lead.id,
+          sender_type: 'bot',
+          sender_id: null,
+          content: responseMessage,
+          message_type: 'text',
+          direction: 'outbound',
+          metadata: {
+            assistant_response: true
+          },
+          delivered: true,
+          read: true,
+          created_at: new Date().toISOString()
+        });
+
+        console.log('💬 Resposta salva no banco');
+      }
+
+    } catch (aiError) {
+      console.error('❌ Erro ao processar resposta automática:', aiError);
+      // Não falha o webhook se a resposta automática der erro
+    }
+
     return Response.json({ 
       success: true, 
       lead_id: lead.id,

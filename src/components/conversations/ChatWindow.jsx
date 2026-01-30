@@ -137,8 +137,9 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
       setMessages(prev => [...prev, newMsg]);
       setNewMessage('');
 
-      // If bot is active, process answer for AI flow
-      if (conversation.status === 'bot_active' && conversation.ai_flow_id) {
+      // Se for atendimento humano, não processar IA
+      // Apenas processar IA se status for bot_active E ai_active for true
+      if (conversation.status === 'bot_active' && conversation.ai_active && conversation.ai_flow_id) {
         try {
           const response = await base44.functions.invoke('processAIFlowAnswer', {
             conversation_id: conversation.id,
@@ -179,17 +180,17 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
 
       const teamMember = teamMembers[0];
       
-      // Validar permissão
-      if (!teamMember.can_assume_conversation) {
+      // Validar permissão (se não tiver o campo, permitir por padrão)
+      if (teamMember.can_assume_conversation === false) {
         alert('Você não tem permissão para assumir conversas');
         return;
       }
 
-      // Atualizar conversa
+      // Atualizar conversa - human_active permite enviar mensagens
       await base44.entities.Conversation.update(conversation.id, {
         status: 'human_active',
         ai_active: false,
-        human_handoff: true,
+        human_handoff: false,
         handoff_reason: 'manual_takeover',
         handoff_at: new Date().toISOString(),
         assigned_agent_id: teamMember.id
@@ -202,7 +203,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
         conversation_id: conversation.id,
         lead_id: lead.id,
         sender_type: 'system',
-        content: `${user.full_name} assumiu o atendimento e desabilitou a IA`,
+        content: `${user.full_name} assumiu o atendimento`,
         message_type: 'system_event',
         direction: 'inbound',
         delivered: true,
@@ -240,16 +241,17 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
 
       const teamMember = teamMembers[0];
       
-      // Validar permissão
-      if (!teamMember.can_disable_ai) {
+      // Validar permissão (se não tiver o campo, permitir por padrão)
+      if (teamMember.can_disable_ai === false) {
         alert('Você não tem permissão para desabilitar a IA');
         return;
       }
 
-      // Atualizar conversa
+      // Atualizar conversa - status waiting permite humano enviar
       await base44.entities.Conversation.update(conversation.id, {
         ai_active: false,
-        status: 'waiting'
+        status: 'waiting',
+        assigned_agent_id: teamMember.id
       });
 
       // Criar mensagem de sistema
@@ -259,7 +261,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
         conversation_id: conversation.id,
         lead_id: lead.id,
         sender_type: 'system',
-        content: `IA desabilitada por ${user.full_name}`,
+        content: `IA desabilitada por ${user.full_name} - Aguardando atendimento`,
         message_type: 'system_event',
         direction: 'inbound',
         delivered: true,
@@ -508,29 +510,39 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
 
       {/* Input */}
       <div className="p-4 border-t border-slate-200 bg-white">
-        <div className="flex items-center gap-3">
-          <Input
-            ref={inputRef}
-            placeholder="Digite sua mensagem..."
-            value={newMessage}
-            onChange={(e) => setNewMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            disabled={sending}
-            className="flex-1"
-            autoFocus
-          />
-          <Button 
-            onClick={handleSend}
-            disabled={!newMessage.trim() || sending}
-            className="bg-indigo-600 hover:bg-indigo-700"
-          >
-            {sending ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : (
-              <Send className="w-4 h-4" />
-            )}
-          </Button>
-        </div>
+        {conversation.status === 'closed' ? (
+          <div className="text-center text-slate-500 py-2">
+            Conversa encerrada
+          </div>
+        ) : (
+          <div className="flex items-center gap-3">
+            <Input
+              ref={inputRef}
+              placeholder={
+                conversation.status === 'bot_active' && conversation.ai_active 
+                  ? "IA está respondendo..." 
+                  : "Digite sua mensagem..."
+              }
+              value={newMessage}
+              onChange={(e) => setNewMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={sending}
+              className="flex-1"
+              autoFocus
+            />
+            <Button 
+              onClick={handleSend}
+              disabled={!newMessage.trim() || sending}
+              className="bg-indigo-600 hover:bg-indigo-700"
+            >
+              {sending ? (
+                <Loader2 className="w-4 h-4 animate-spin" />
+              ) : (
+                <Send className="w-4 h-4" />
+              )}
+            </Button>
+          </div>
+        )}
       </div>
     </div>
 

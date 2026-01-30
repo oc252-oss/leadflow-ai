@@ -8,7 +8,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Edit2, Trash2, Loader } from 'lucide-react';
+import { Plus, Edit2, Trash2, Loader, X, Calendar } from 'lucide-react';
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function AIFlows() {
   const [flows, setFlows] = useState([]);
@@ -24,12 +32,19 @@ export default function AIFlows() {
     is_active: true,
     greeting_message: '',
     outside_hours_message: '',
-    handoff_message: ''
+    handoff_message: '',
+    data_collection_fields: [],
+    pipeline_routing_rules: [],
+    scheduling_enabled: false,
+    scheduling_prompt: '',
+    available_time_slots: []
   });
   const [isSaving, setIsSaving] = useState(false);
+  const [pipelines, setPipelines] = useState([]);
 
   useEffect(() => {
     loadFlows();
+    loadPipelines();
   }, []);
 
   const loadFlows = async () => {
@@ -40,6 +55,15 @@ export default function AIFlows() {
       console.error('Erro ao carregar fluxos:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadPipelines = async () => {
+    try {
+      const data = await base44.entities.Pipeline.list();
+      setPipelines(data);
+    } catch (error) {
+      console.error('Erro ao carregar pipelines:', error);
     }
   };
 
@@ -55,7 +79,12 @@ export default function AIFlows() {
         is_active: flow.is_active !== false,
         greeting_message: flow.greeting_message || '',
         outside_hours_message: flow.outside_hours_message || '',
-        handoff_message: flow.handoff_message || ''
+        handoff_message: flow.handoff_message || '',
+        data_collection_fields: flow.data_collection_fields || [],
+        pipeline_routing_rules: flow.pipeline_routing_rules || [],
+        scheduling_enabled: flow.scheduling_enabled || false,
+        scheduling_prompt: flow.scheduling_prompt || '',
+        available_time_slots: flow.available_time_slots || []
       });
     } else {
       setEditingFlow(null);
@@ -68,7 +97,12 @@ export default function AIFlows() {
         is_active: true,
         greeting_message: '',
         outside_hours_message: '',
-        handoff_message: ''
+        handoff_message: '',
+        data_collection_fields: [],
+        pipeline_routing_rules: [],
+        scheduling_enabled: false,
+        scheduling_prompt: 'Gostaria de agendar uma avaliação? Temos horários disponíveis!',
+        available_time_slots: []
       });
     }
     setShowDialog(true);
@@ -198,13 +232,12 @@ export default function AIFlows() {
            </DialogHeader>
 
            <Tabs defaultValue="geral" className="w-full">
-             <TabsList className="grid w-full grid-cols-6">
+             <TabsList className="grid w-full grid-cols-5">
                <TabsTrigger value="geral">Geral</TabsTrigger>
-               <TabsTrigger value="gatilhos">Gatilhos</TabsTrigger>
                <TabsTrigger value="mensagens">Mensagens</TabsTrigger>
-               <TabsTrigger value="pontuacao">Pontuação</TabsTrigger>
-               <TabsTrigger value="perguntas">Perguntas</TabsTrigger>
-               <TabsTrigger value="avancado">Avançado</TabsTrigger>
+               <TabsTrigger value="coleta">Coleta de Dados</TabsTrigger>
+               <TabsTrigger value="roteamento">Roteamento CRM</TabsTrigger>
+               <TabsTrigger value="agendamento">Agendamento</TabsTrigger>
              </TabsList>
 
              {/* Geral */}
@@ -269,9 +302,118 @@ export default function AIFlows() {
                </div>
              </TabsContent>
 
-             {/* Gatilhos */}
-             <TabsContent value="gatilhos" className="mt-4">
-               <p className="text-sm text-slate-600">Configurar gatilhos que iniciam este fluxo (em desenvolvimento)</p>
+             {/* Coleta de Dados */}
+             <TabsContent value="coleta" className="space-y-4 mt-4">
+               <div className="flex items-center justify-between">
+                 <div>
+                   <h3 className="text-sm font-medium text-slate-900">Campos para Coletar</h3>
+                   <p className="text-xs text-slate-500 mt-1">Informações que a IA coletará do lead no início da conversa</p>
+                 </div>
+                 <Button
+                   size="sm"
+                   variant="outline"
+                   onClick={() => {
+                     setFormData({
+                       ...formData,
+                       data_collection_fields: [
+                         ...formData.data_collection_fields,
+                         {
+                           id: Date.now().toString(),
+                           field_name: 'name',
+                           prompt: 'Para começar, qual é o seu nome?',
+                           required: true,
+                           order: formData.data_collection_fields.length
+                         }
+                       ]
+                     });
+                   }}
+                 >
+                   <Plus className="w-4 h-4 mr-1" />
+                   Adicionar Campo
+                 </Button>
+               </div>
+               
+               <div className="space-y-3">
+                 {formData.data_collection_fields.map((field, index) => (
+                   <div key={field.id} className="border rounded-lg p-4 space-y-3">
+                     <div className="flex items-center justify-between">
+                       <span className="text-xs font-medium text-slate-500">Campo {index + 1}</span>
+                       <Button
+                         size="sm"
+                         variant="ghost"
+                         onClick={() => {
+                           setFormData({
+                             ...formData,
+                             data_collection_fields: formData.data_collection_fields.filter(f => f.id !== field.id)
+                           });
+                         }}
+                       >
+                         <X className="w-4 h-4" />
+                       </Button>
+                     </div>
+                     
+                     <div className="grid grid-cols-2 gap-3">
+                       <div>
+                         <Label className="text-xs">Campo do Lead</Label>
+                         <Select
+                           value={field.field_name}
+                           onValueChange={(value) => {
+                             const updated = [...formData.data_collection_fields];
+                             updated[index].field_name = value;
+                             setFormData({...formData, data_collection_fields: updated});
+                           }}
+                         >
+                           <SelectTrigger className="h-9 text-sm">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="name">Nome</SelectItem>
+                             <SelectItem value="email">Email</SelectItem>
+                             <SelectItem value="phone">Telefone</SelectItem>
+                             <SelectItem value="interest">Interesse</SelectItem>
+                             <SelectItem value="budget_range">Orçamento</SelectItem>
+                             <SelectItem value="urgency">Urgência</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                       
+                       <div className="flex items-center gap-2 pt-6">
+                         <input
+                           type="checkbox"
+                           checked={field.required}
+                           onChange={(e) => {
+                             const updated = [...formData.data_collection_fields];
+                             updated[index].required = e.target.checked;
+                             setFormData({...formData, data_collection_fields: updated});
+                           }}
+                           className="rounded"
+                         />
+                         <Label className="text-xs">Obrigatório</Label>
+                       </div>
+                     </div>
+                     
+                     <div>
+                       <Label className="text-xs">Pergunta da IA</Label>
+                       <Input
+                         value={field.prompt}
+                         onChange={(e) => {
+                           const updated = [...formData.data_collection_fields];
+                           updated[index].prompt = e.target.value;
+                           setFormData({...formData, data_collection_fields: updated});
+                         }}
+                         placeholder="Ex: Como posso te chamar?"
+                         className="h-9 text-sm"
+                       />
+                     </div>
+                   </div>
+                 ))}
+                 
+                 {formData.data_collection_fields.length === 0 && (
+                   <div className="text-center py-8 text-slate-500 text-sm border border-dashed rounded-lg">
+                     Nenhum campo configurado. Clique em "Adicionar Campo" para começar.
+                   </div>
+                 )}
+               </div>
              </TabsContent>
 
              {/* Mensagens */}
@@ -305,19 +447,211 @@ export default function AIFlows() {
                </div>
              </TabsContent>
 
-             {/* Pontuação */}
-             <TabsContent value="pontuacao" className="mt-4">
-               <p className="text-sm text-slate-600">Configurar regras de pontuação (em desenvolvimento)</p>
+             {/* Roteamento CRM */}
+             <TabsContent value="roteamento" className="space-y-4 mt-4">
+               <div className="flex items-center justify-between">
+                 <div>
+                   <h3 className="text-sm font-medium text-slate-900">Regras de Roteamento</h3>
+                   <p className="text-xs text-slate-500 mt-1">Direcione leads para pipelines específicos baseado em condições</p>
+                 </div>
+                 <Button
+                   size="sm"
+                   variant="outline"
+                   onClick={() => {
+                     setFormData({
+                       ...formData,
+                       pipeline_routing_rules: [
+                         ...formData.pipeline_routing_rules,
+                         {
+                           condition_field: 'interest',
+                           condition_operator: 'equals',
+                           condition_value: '',
+                           target_pipeline_id: '',
+                           target_stage_type: 'qualified'
+                         }
+                       ]
+                     });
+                   }}
+                 >
+                   <Plus className="w-4 h-4 mr-1" />
+                   Adicionar Regra
+                 </Button>
+               </div>
+               
+               <div className="space-y-3">
+                 {formData.pipeline_routing_rules.map((rule, index) => (
+                   <div key={index} className="border rounded-lg p-4 space-y-3">
+                     <div className="flex items-center justify-between">
+                       <span className="text-xs font-medium text-slate-500">Regra {index + 1}</span>
+                       <Button
+                         size="sm"
+                         variant="ghost"
+                         onClick={() => {
+                           setFormData({
+                             ...formData,
+                             pipeline_routing_rules: formData.pipeline_routing_rules.filter((_, i) => i !== index)
+                           });
+                         }}
+                       >
+                         <X className="w-4 h-4" />
+                       </Button>
+                     </div>
+                     
+                     <div className="grid grid-cols-3 gap-3">
+                       <div>
+                         <Label className="text-xs">Campo</Label>
+                         <Select
+                           value={rule.condition_field}
+                           onValueChange={(value) => {
+                             const updated = [...formData.pipeline_routing_rules];
+                             updated[index].condition_field = value;
+                             setFormData({...formData, pipeline_routing_rules: updated});
+                           }}
+                         >
+                           <SelectTrigger className="h-9 text-sm">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="interest">Interesse</SelectItem>
+                             <SelectItem value="score">Score</SelectItem>
+                             <SelectItem value="source">Origem</SelectItem>
+                             <SelectItem value="budget_range">Orçamento</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                       
+                       <div>
+                         <Label className="text-xs">Operador</Label>
+                         <Select
+                           value={rule.condition_operator}
+                           onValueChange={(value) => {
+                             const updated = [...formData.pipeline_routing_rules];
+                             updated[index].condition_operator = value;
+                             setFormData({...formData, pipeline_routing_rules: updated});
+                           }}
+                         >
+                           <SelectTrigger className="h-9 text-sm">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="equals">É igual a</SelectItem>
+                             <SelectItem value="contains">Contém</SelectItem>
+                             <SelectItem value="greater_than">Maior que</SelectItem>
+                             <SelectItem value="less_than">Menor que</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                       
+                       <div>
+                         <Label className="text-xs">Valor</Label>
+                         <Input
+                           value={rule.condition_value}
+                           onChange={(e) => {
+                             const updated = [...formData.pipeline_routing_rules];
+                             updated[index].condition_value = e.target.value;
+                             setFormData({...formData, pipeline_routing_rules: updated});
+                           }}
+                           placeholder="Ex: Botox"
+                           className="h-9 text-sm"
+                         />
+                       </div>
+                     </div>
+                     
+                     <div className="grid grid-cols-2 gap-3">
+                       <div>
+                         <Label className="text-xs">Pipeline Destino</Label>
+                         <Select
+                           value={rule.target_pipeline_id}
+                           onValueChange={(value) => {
+                             const updated = [...formData.pipeline_routing_rules];
+                             updated[index].target_pipeline_id = value;
+                             setFormData({...formData, pipeline_routing_rules: updated});
+                           }}
+                         >
+                           <SelectTrigger className="h-9 text-sm">
+                             <SelectValue placeholder="Selecione..." />
+                           </SelectTrigger>
+                           <SelectContent>
+                             {pipelines.map(p => (
+                               <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                             ))}
+                           </SelectContent>
+                         </Select>
+                       </div>
+                       
+                       <div>
+                         <Label className="text-xs">Estágio</Label>
+                         <Select
+                           value={rule.target_stage_type}
+                           onValueChange={(value) => {
+                             const updated = [...formData.pipeline_routing_rules];
+                             updated[index].target_stage_type = value;
+                             setFormData({...formData, pipeline_routing_rules: updated});
+                           }}
+                         >
+                           <SelectTrigger className="h-9 text-sm">
+                             <SelectValue />
+                           </SelectTrigger>
+                           <SelectContent>
+                             <SelectItem value="new">Novo</SelectItem>
+                             <SelectItem value="ai_handling">Em Atendimento IA</SelectItem>
+                             <SelectItem value="qualified">Qualificado</SelectItem>
+                             <SelectItem value="scheduled">Agendado</SelectItem>
+                           </SelectContent>
+                         </Select>
+                       </div>
+                     </div>
+                   </div>
+                 ))}
+                 
+                 {formData.pipeline_routing_rules.length === 0 && (
+                   <div className="text-center py-8 text-slate-500 text-sm border border-dashed rounded-lg">
+                     Nenhuma regra configurada. Leads seguirão o pipeline padrão.
+                   </div>
+                 )}
+               </div>
              </TabsContent>
 
-             {/* Perguntas */}
-             <TabsContent value="perguntas" className="mt-4">
-               <p className="text-sm text-slate-600">Gerenciar perguntas de qualificação (em desenvolvimento)</p>
-             </TabsContent>
-
-             {/* Avançado */}
-             <TabsContent value="avancado" className="mt-4">
-               <p className="text-sm text-slate-600">Configurações avançadas (em desenvolvimento)</p>
+             {/* Agendamento */}
+             <TabsContent value="agendamento" className="space-y-4 mt-4">
+               <div className="flex items-center justify-between p-3 rounded-lg border">
+                 <div>
+                   <span className="text-sm font-medium text-slate-700">Habilitar Agendamento</span>
+                   <p className="text-xs text-slate-500 mt-1">Oferecer horários disponíveis no chat</p>
+                 </div>
+                 <Switch 
+                   checked={formData.scheduling_enabled}
+                   onCheckedChange={(checked) => setFormData({...formData, scheduling_enabled: checked})}
+                 />
+               </div>
+               
+               {formData.scheduling_enabled && (
+                 <>
+                   <div>
+                     <Label className="text-sm">Prompt de Agendamento</Label>
+                     <Textarea 
+                       value={formData.scheduling_prompt}
+                       onChange={(e) => setFormData({...formData, scheduling_prompt: e.target.value})}
+                       placeholder="Ex: Gostaria de agendar uma avaliação? Temos horários disponíveis!"
+                       className="mt-1 h-20"
+                     />
+                     <p className="text-xs text-slate-500 mt-1">Mensagem que a IA usará para oferecer agendamento</p>
+                   </div>
+                   
+                   <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                     <div className="flex items-start gap-2">
+                       <Calendar className="w-5 h-5 text-blue-600 mt-0.5" />
+                       <div className="text-sm text-blue-900">
+                         <p className="font-medium">Integração com Calendário</p>
+                         <p className="text-xs text-blue-700 mt-1">
+                           A IA verificará automaticamente horários disponíveis e oferecerá opções ao lead.
+                           Configure horários de atendimento nas Configurações da Empresa.
+                         </p>
+                       </div>
+                     </div>
+                   </div>
+                 </>
+               )}
              </TabsContent>
            </Tabs>
 

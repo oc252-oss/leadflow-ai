@@ -111,6 +111,7 @@ export default function Layout({ children, currentPageName }) {
     { name: 'SimulationTraining', label: 'Simulação & Treinamento', href: createPageUrl('SimulationTraining'), icon: Bot },
     { type: 'divider' },
     { name: 'Reports', label: 'Relatórios', href: createPageUrl('Reports'), icon: BarChart3 },
+    { name: 'ConversionReport', label: 'Conversão por Etapa', href: createPageUrl('ConversionReport'), icon: BarChart3 },
     { name: 'Settings', label: 'Configurações', href: createPageUrl('Settings'), icon: Settings },
     { name: 'Help', label: 'Ajuda', href: createPageUrl('Help'), icon: BarChart3 },
     ];

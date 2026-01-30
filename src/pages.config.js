@@ -88,6 +88,7 @@ import WhatsAppServerConfig from './pages/WhatsAppServerConfig';
 import WhatsAppServerSetup from './pages/WhatsAppServerSetup';
 import Team from './pages/Team';
 import SystemValidation from './pages/SystemValidation';
+import ConversionReport from './pages/ConversionReport';
 import __Layout from './Layout.jsx';
 
 
@@ -133,6 +134,7 @@ export const PAGES = {
     "WhatsAppServerSetup": WhatsAppServerSetup,
     "Team": Team,
     "SystemValidation": SystemValidation,
+    "ConversionReport": ConversionReport,
 }
 
 export const pagesConfig = {

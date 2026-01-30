@@ -233,10 +233,72 @@ Deno.serve(async (req) => {
         }, { status: 200 });
       }
 
-      // Detectar gatilhos de handoff automático
+      // Detectar gatilhos de handoff automático e status
       const messageText = messageBody.toLowerCase();
       const handoffKeywords = ['atendente', 'pessoa', 'humano', 'falar com alguém', 'pessoa real'];
       const shouldHandoff = handoffKeywords.some(keyword => messageText.includes(keyword));
+      
+      // Detectar keywords de status
+      const scheduleKeywords = ['agendar', 'marcar avaliação', 'quero agendar', 'fazer avaliação', 'sim quero'];
+      const refuseKeywords = ['não quero', 'não tenho interesse', 'não me interessa', 'não obrigado', 'para de mandar'];
+      
+      const wantsSchedule = scheduleKeywords.some(keyword => messageText.includes(keyword));
+      const wantsToStop = refuseKeywords.some(keyword => messageText.includes(keyword));
+
+      // Processar solicitação de parada
+      if (wantsToStop) {
+        console.log('🛑 Lead solicitou parar contato');
+        
+        // Atualizar lead
+        await base44.asServiceRole.entities.Lead.update(lead.id, {
+          status: 'lost',
+          last_interaction_at: new Date().toISOString()
+        });
+
+        // Buscar estágio "Perdido"
+        if (defaultPipeline && firstStage) {
+          const lostStages = await base44.asServiceRole.entities.PipelineStage.filter({
+            pipeline_id: defaultPipeline.id,
+            stage_type: 'lost'
+          });
+          
+          if (lostStages.length > 0) {
+            await base44.asServiceRole.entities.Lead.update(lead.id, {
+              pipeline_stage_id: lostStages[0].id
+            });
+            
+            // Criar histórico
+            await base44.asServiceRole.entities.ActivityLog.create({
+              company_id: company.id,
+              lead_id: lead.id,
+              action: 'stage_changed',
+              old_value: firstStage?.name,
+              new_value: lostStages[0].name,
+              details: { reason: 'lead_refused', auto: true }
+            });
+          }
+        }
+
+        // Pausar IA
+        await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+          ai_active: false,
+          status: 'closed'
+        });
+
+        const stopMessage = 'Entendido! Obrigado pelo seu tempo. Caso mude de ideia, estou por aqui. 😊';
+        
+        await base44.asServiceRole.functions.invoke('zapiSendMessage', {
+          phone: rawPhone,
+          message: stopMessage,
+          connection_id: connection.id
+        });
+
+        return Response.json({ 
+          success: true, 
+          lead_id: lead.id,
+          status: 'stopped'
+        }, { status: 200 });
+      }
 
       if (shouldHandoff) {
         console.log('🔔 Gatilho de handoff detectado');
@@ -359,6 +421,71 @@ Responda de forma ${assistant.tone || 'humanizada'} e profissional. Seja breve e
 
           responseMessage = aiResponse.response || aiResponse;
           console.log('🧠 Resposta gerada pela IA');
+          
+          // Atualizar status do lead baseado no progresso
+          const previousMessagesCount = previousMessages.length;
+          let newLeadStatus = lead.status;
+          let shouldUpdateStage = false;
+          let targetStageType = null;
+
+          // Primeira interação: contacted
+          if (previousMessagesCount === 1 && lead.status === 'new') {
+            newLeadStatus = 'contacted';
+            console.log('📊 Lead status: new → contacted');
+          }
+
+          // Após 3+ mensagens: qualified (indicando engajamento)
+          if (previousMessagesCount >= 3 && lead.status === 'contacted') {
+            newLeadStatus = 'qualified';
+            targetStageType = 'qualified';
+            shouldUpdateStage = true;
+            console.log('📊 Lead status: contacted → qualified');
+          }
+
+          // Detectar agendamento
+          if (wantsSchedule) {
+            newLeadStatus = 'qualified';
+            targetStageType = 'scheduled';
+            shouldUpdateStage = true;
+            console.log('📅 Lead quer agendar - status → scheduled');
+          }
+
+          // Atualizar lead se status mudou
+          if (newLeadStatus !== lead.status || shouldUpdateStage) {
+            const updateData = {
+              status: newLeadStatus,
+              last_interaction_at: new Date().toISOString()
+            };
+
+            if (shouldUpdateStage && defaultPipeline) {
+              const targetStages = await base44.asServiceRole.entities.PipelineStage.filter({
+                pipeline_id: defaultPipeline.id,
+                stage_type: targetStageType
+              });
+
+              if (targetStages.length > 0) {
+                updateData.pipeline_stage_id = targetStages[0].id;
+                
+                // Criar histórico de mudança de estágio
+                await base44.asServiceRole.entities.ActivityLog.create({
+                  company_id: company.id,
+                  lead_id: lead.id,
+                  action: 'stage_changed',
+                  old_value: firstStage?.name,
+                  new_value: targetStages[0].name,
+                  details: { 
+                    reason: wantsSchedule ? 'wants_schedule' : 'qualified_by_ai',
+                    auto: true,
+                    messages_count: previousMessagesCount
+                  }
+                });
+
+                console.log('📊 Lead movido para estágio:', targetStages[0].name);
+              }
+            }
+
+            await base44.asServiceRole.entities.Lead.update(lead.id, updateData);
+          }
         }
       }
 

@@ -253,10 +253,15 @@ Deno.serve(async (req) => {
         }, { status: 200 });
       }
 
-      // Detectar gatilhos de handoff automático e status
-      const messageText = messageBody.toLowerCase();
-      const handoffKeywords = ['atendente', 'pessoa', 'humano', 'falar com alguém', 'pessoa real'];
-      const shouldHandoff = handoffKeywords.some(keyword => messageText.includes(keyword));
+      // Detectar gatilhos de handoff automático usando função dedicada
+      const handoffDetection = await base44.asServiceRole.functions.invoke('detectHandoffTriggers', {
+        message: messageBody,
+        lead_id: lead.id,
+        conversation_id: conversation.id
+      });
+
+      const shouldHandoff = handoffDetection.data?.should_handoff || false;
+      const handoffReason = handoffDetection.data?.handoff_reason || 'unknown';
       
       // Detectar keywords de status
       const scheduleKeywords = ['agendar', 'marcar avaliação', 'quero agendar', 'fazer avaliação', 'sim quero'];
@@ -321,18 +326,16 @@ Deno.serve(async (req) => {
       }
 
       if (shouldHandoff) {
-        console.log('🔔 Gatilho de handoff detectado');
+        console.log('🔔 Gatilho de handoff detectado:', handoffReason);
         
-        // Atualizar conversa para handoff
-        await base44.asServiceRole.entities.Conversation.update(conversation.id, {
-          human_handoff: true,
-          handoff_reason: 'lead_request',
-          handoff_at: new Date().toISOString(),
-          status: 'human_active'
-        });
-
         // Enviar mensagem de transferência
-        const handoffMessage = 'Perfeito 😊 vou te colocar em contato com uma de nossas consultoras agora.';
+        let handoffMessage = 'Perfeito 😊 vou te colocar em contato com um de nossos consultores agora.';
+        
+        if (handoffReason === 'scheduling_request') {
+          handoffMessage = 'Que ótimo! Vou te conectar com nosso time para agendar seu horário. Um momento! 😊';
+        } else if (handoffReason === 'sensitive_objection_qualified_lead') {
+          handoffMessage = 'Entendo! Vou te conectar com um consultor que pode te dar todas as informações sobre valores e condições. Um instante! 😊';
+        }
         
         const sendResult = await base44.asServiceRole.functions.invoke('zapiSendMessage', {
           phone: rawPhone,
@@ -350,7 +353,7 @@ Deno.serve(async (req) => {
             content: handoffMessage,
             message_type: 'text',
             direction: 'outbound',
-            metadata: { handoff_message: true },
+            metadata: { handoff_message: true, handoff_reason: handoffReason },
             delivered: true,
             read: true,
             created_at: new Date().toISOString()
@@ -364,7 +367,8 @@ Deno.serve(async (req) => {
           lead_id: lead.id,
           conversation_id: conversation.id,
           message_id: message.id,
-          handoff: true
+          handoff: true,
+          handoff_reason: handoffReason
         }, { status: 200 });
       }
 
@@ -466,18 +470,40 @@ Responda de forma ${assistant.tone || 'humanizada'} e profissional. Seja breve e
           let shouldUpdateStage = false;
           let targetStageType = null;
 
-          // Primeira interação: contacted
+          // Primeira interação: mover para "Em Atendimento IA"
           if (previousMessagesCount === 1 && lead.status === 'new') {
             newLeadStatus = 'contacted';
-            console.log('📊 Lead status: new → contacted');
+            targetStageType = 'ai_handling';
+            shouldUpdateStage = true;
+            console.log('📊 Lead iniciou qualificação: new → Em Atendimento IA');
+            
+            // Registrar início da qualificação
+            await base44.asServiceRole.entities.Lead.update(lead.id, {
+              qualification_started_at: new Date().toISOString()
+            });
           }
 
-          // Após 3+ mensagens: qualified (indicando engajamento)
-          if (previousMessagesCount >= 3 && lead.status === 'contacted') {
-            newLeadStatus = 'qualified';
-            targetStageType = 'qualified';
-            shouldUpdateStage = true;
-            console.log('📊 Lead status: contacted → qualified');
+          // Após 5+ mensagens: tentar qualificar automaticamente
+          if (previousMessagesCount >= 5 && !lead.qualification_completed_at) {
+            console.log('🤖 Tentando qualificação automática...');
+            
+            try {
+              const qualificationResult = await base44.asServiceRole.functions.invoke('qualifyLeadByAI', {
+                lead_id: lead.id,
+                conversation_id: conversation.id
+              });
+
+              if (qualificationResult.data?.success) {
+                console.log('✅ Qualificação automática concluída - Score:', qualificationResult.data.qualification_score);
+                
+                // Se gerou mensagem de resposta, enviar
+                if (qualificationResult.data.response_message) {
+                  responseMessage = qualificationResult.data.response_message;
+                }
+              }
+            } catch (error) {
+              console.log('⚠️ Erro na qualificação automática:', error.message);
+            }
           }
 
           // Detectar agendamento

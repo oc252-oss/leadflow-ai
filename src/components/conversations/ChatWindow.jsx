@@ -18,6 +18,7 @@ import {
   Info
 } from 'lucide-react';
 import LeadInfoPanel from './LeadInfoPanel';
+import { useEffect as useEffectHook, useState as useStateHook } from 'react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -36,10 +37,25 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
   const pollingIntervalRef = useRef(null);
+  const [currentStage, setCurrentStage] = useState(null);
 
   useEffect(() => {
     setMessages(initialMessages || []);
+    loadCurrentStage();
   }, [initialMessages]);
+
+  const loadCurrentStage = async () => {
+    if (!lead?.pipeline_stage_id) return;
+    
+    try {
+      const stages = await base44.entities.PipelineStage.filter({ id: lead.pipeline_stage_id });
+      if (stages.length > 0) {
+        setCurrentStage(stages[0]);
+      }
+    } catch (error) {
+      console.error('Error loading current stage:', error);
+    }
+  };
 
   useEffect(() => {
     scrollToBottom();
@@ -327,7 +343,23 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
           </div>
         </div>
         <div className="flex items-center gap-2">
-          {/* Status Badge */}
+          {/* Status Badges */}
+          {currentStage && (
+            <Badge 
+              className={cn(
+                "gap-1",
+                currentStage.stage_type === 'new' && "bg-slate-100 text-slate-800",
+                currentStage.stage_type === 'ai_handling' && "bg-violet-100 text-violet-800",
+                currentStage.stage_type === 'qualified' && "bg-emerald-100 text-emerald-800",
+                currentStage.stage_type === 'attended' && "bg-green-100 text-green-800",
+                currentStage.stage_type === 'scheduled' && "bg-blue-100 text-blue-800",
+                currentStage.stage_type === 'lost' && "bg-red-100 text-red-800"
+              )}
+            >
+              {currentStage.name}
+            </Badge>
+          )}
+          
           {conversation.status === 'bot_active' && conversation.ai_active && (
             <Badge className="bg-violet-100 text-violet-800 gap-1">
               <Bot className="w-3 h-3" />
@@ -344,6 +376,12 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
             <Badge className="bg-amber-100 text-amber-800 gap-1">
               <User className="w-3 h-3" />
               Aguardando Atendente
+            </Badge>
+          )}
+          
+          {lead?.qualification_score > 0 && (
+            <Badge variant="outline" className="gap-1">
+              Score: {lead.qualification_score}
             </Badge>
           )}
           

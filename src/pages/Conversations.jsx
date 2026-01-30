@@ -3,9 +3,10 @@ import { base44 } from '@/api/base44Client';
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Bot, User, Clock, MessageSquare } from 'lucide-react';
+import { Search, Bot, User, Clock, MessageSquare, Bell } from 'lucide-react';
 import ConversationList from '@/components/conversations/ConversationList';
 import ChatWindow from '@/components/conversations/ChatWindow';
+import { toast } from "sonner";
 
 export default function Conversations() {
   const [conversations, setConversations] = useState([]);
@@ -16,6 +17,7 @@ export default function Conversations() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [lastConversationCount, setLastConversationCount] = useState(0);
 
   useEffect(() => {
     loadData();
@@ -101,8 +103,13 @@ export default function Conversations() {
           base44.entities.Lead.filter({ company_id: companyId })
         ]);
 
-        setConversations(conversationsData);
+        // Priorizar conversas atribuídas ao usuário
+        const myConversations = conversationsData.filter(c => c.assigned_agent_id === members[0].id);
+        const otherConversations = conversationsData.filter(c => c.assigned_agent_id !== members[0].id);
+        
+        setConversations([...myConversations, ...otherConversations]);
         setLeads(leadsData);
+        setLastConversationCount(myConversations.length);
       }
     } catch (error) {
       console.error('Error loading conversations:', error);
@@ -153,6 +160,25 @@ export default function Conversations() {
     }
     
     return true;
+  }).sort((a, b) => {
+    // Priorizar conversas atribuídas ao usuário
+    if (teamMember) {
+      const aIsAssigned = a.assigned_agent_id === teamMember.id;
+      const bIsAssigned = b.assigned_agent_id === teamMember.id;
+      
+      if (aIsAssigned && !bIsAssigned) return -1;
+      if (!aIsAssigned && bIsAssigned) return 1;
+    }
+    
+    // Depois priorizar por urgência/prioridade
+    const priorityOrder = { urgent: 0, high: 1, normal: 2, low: 3 };
+    const aPriority = priorityOrder[a.priority] ?? 2;
+    const bPriority = priorityOrder[b.priority] ?? 2;
+    
+    if (aPriority !== bPriority) return aPriority - bPriority;
+    
+    // Por último, por última mensagem
+    return new Date(b.last_message_at || 0) - new Date(a.last_message_at || 0);
   });
 
   const selectedLead = selectedConversation 

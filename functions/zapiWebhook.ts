@@ -163,6 +163,15 @@ Deno.serve(async (req) => {
       });
     }
 
+    // Garantir que lead está em um pipeline CRM
+    try {
+      await base44.asServiceRole.functions.invoke('ensureLeadInPipeline', {
+        lead_id: lead.id
+      });
+    } catch (error) {
+      console.log('⚠️ Erro ao garantir lead no pipeline:', error.message);
+    }
+
     // Criar Message
     const message = await base44.asServiceRole.entities.Message.create({
       company_id: company.id,
@@ -222,15 +231,25 @@ Deno.serve(async (req) => {
         }, { status: 200 });
       }
 
-      // Verificar se conversa está em atendimento humano OU se IA está desabilitada
-      if (conversation.status === 'human_active' || conversation.human_handoff || conversation.ai_active === false) {
-        console.log('👤 Conversa em atendimento humano ou IA desabilitada, pulando IA');
+      // REGRAS DE ENVIO: Verificar se IA pode responder
+      // 1. Se status = human_active → Apenas humano pode responder
+      // 2. Se ai_active = false → IA está desabilitada
+      // 3. Se status = waiting → Aguardando atendente, sem resposta automática
+      const shouldSkipAI = 
+        conversation.status === 'human_active' || 
+        conversation.status === 'waiting' ||
+        conversation.ai_active === false ||
+        conversation.human_handoff === true;
+
+      if (shouldSkipAI) {
+        console.log('⏸️ IA bloqueada - Status:', conversation.status, 'AI Active:', conversation.ai_active);
         return Response.json({ 
           success: true, 
           lead_id: lead.id,
           conversation_id: conversation.id,
           message_id: message.id,
-          skipped_reason: conversation.ai_active === false ? 'ai_disabled' : 'human_active'
+          skipped_reason: conversation.ai_active === false ? 'ai_disabled' : 
+                         conversation.status === 'waiting' ? 'waiting_human' : 'human_active'
         }, { status: 200 });
       }
 

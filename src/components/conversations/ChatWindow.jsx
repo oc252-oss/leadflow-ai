@@ -156,13 +156,27 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
       const user = await base44.auth.me();
       const teamMembers = await base44.entities.TeamMember.filter({ user_email: user.email });
       
+      if (teamMembers.length === 0) {
+        alert('Usuário não encontrado na equipe');
+        return;
+      }
+
+      const teamMember = teamMembers[0];
+      
+      // Validar permissão
+      if (!teamMember.can_assume_conversation) {
+        alert('Você não tem permissão para assumir conversas');
+        return;
+      }
+
+      // Atualizar conversa
       await base44.entities.Conversation.update(conversation.id, {
         status: 'human_active',
         ai_active: false,
         human_handoff: true,
         handoff_reason: 'manual_takeover',
         handoff_at: new Date().toISOString(),
-        assigned_agent_id: teamMembers[0]?.id || null
+        assigned_agent_id: teamMember.id
       });
 
       // Criar mensagem de sistema
@@ -179,20 +193,50 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
         read: true
       });
 
+      // Criar log de atividade
+      await base44.entities.ActivityLog.create({
+        company_id: conversation.company_id,
+        lead_id: lead.id,
+        action: 'conversation_takeover',
+        details: {
+          user_name: user.full_name,
+          user_email: user.email,
+          conversation_id: conversation.id
+        }
+      });
+
       await onMessageSent?.();
     } catch (error) {
       console.error('Error taking over conversation:', error);
+      alert('Erro ao assumir atendimento');
     }
   };
 
   const handleDisableAI = async () => {
     try {
+      const user = await base44.auth.me();
+      const teamMembers = await base44.entities.TeamMember.filter({ user_email: user.email });
+      
+      if (teamMembers.length === 0) {
+        alert('Usuário não encontrado na equipe');
+        return;
+      }
+
+      const teamMember = teamMembers[0];
+      
+      // Validar permissão
+      if (!teamMember.can_disable_ai) {
+        alert('Você não tem permissão para desabilitar a IA');
+        return;
+      }
+
+      // Atualizar conversa
       await base44.entities.Conversation.update(conversation.id, {
         ai_active: false,
-        status: 'human_active'
+        status: 'waiting'
       });
 
-      const user = await base44.auth.me();
+      // Criar mensagem de sistema
       await base44.entities.Message.create({
         company_id: conversation.company_id,
         unit_id: conversation.unit_id,
@@ -206,9 +250,22 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
         read: true
       });
 
+      // Criar log de atividade
+      await base44.entities.ActivityLog.create({
+        company_id: conversation.company_id,
+        lead_id: lead.id,
+        action: 'ai_disabled',
+        details: {
+          user_name: user.full_name,
+          user_email: user.email,
+          conversation_id: conversation.id
+        }
+      });
+
       await onMessageSent?.();
     } catch (error) {
       console.error('Error disabling AI:', error);
+      alert('Erro ao desabilitar IA');
     }
   };
 
@@ -270,6 +327,26 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
           </div>
         </div>
         <div className="flex items-center gap-2">
+          {/* Status Badge */}
+          {conversation.status === 'bot_active' && conversation.ai_active && (
+            <Badge className="bg-violet-100 text-violet-800 gap-1">
+              <Bot className="w-3 h-3" />
+              IA Ativa
+            </Badge>
+          )}
+          {conversation.status === 'human_active' && (
+            <Badge className="bg-green-100 text-green-800 gap-1">
+              <User className="w-3 h-3" />
+              Atendimento Humano
+            </Badge>
+          )}
+          {conversation.status === 'waiting' && (
+            <Badge className="bg-amber-100 text-amber-800 gap-1">
+              <User className="w-3 h-3" />
+              Aguardando Atendente
+            </Badge>
+          )}
+          
           <Button
             variant="outline"
             size="icon"
@@ -278,6 +355,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
           >
             <Info className="w-4 h-4" />
           </Button>
+          
           {conversation.status !== 'bot_active' && conversation.ai_flow_id === null && (
             <Button 
               variant="outline" 
@@ -293,6 +371,7 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
               Iniciar Qualificação por IA
             </Button>
           )}
+          
           {conversation.ai_active && (
             <Button 
               variant="outline" 
@@ -304,18 +383,14 @@ export default function ChatWindow({ conversation, lead, messages: initialMessag
               Desabilitar IA
             </Button>
           )}
-          {(conversation.status === 'bot_active' || conversation.human_handoff) && (
+          
+          {conversation.status !== 'human_active' && !conversation.assigned_agent_id && (
             <Button variant="outline" size="sm" onClick={handleTakeOver}>
               <User className="w-4 h-4 mr-2" />
               Assumir Atendimento
             </Button>
           )}
-          {conversation.human_handoff && (
-            <Badge className="bg-amber-100 text-amber-800 gap-1">
-              <User className="w-3 h-3" />
-              Aguardando atendente
-            </Badge>
-          )}
+          
           <Link to={createPageUrl('LeadDetail') + `?id=${lead?.id}`}>
             <Button variant="outline" size="sm">
               <ExternalLink className="w-4 h-4 mr-2" />

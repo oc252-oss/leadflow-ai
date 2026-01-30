@@ -222,14 +222,15 @@ Deno.serve(async (req) => {
         }, { status: 200 });
       }
 
-      // Verificar se conversa está em atendimento humano
-      if (conversation.status === 'human_active' || conversation.human_handoff) {
-        console.log('👤 Conversa em atendimento humano, pulando IA');
+      // Verificar se conversa está em atendimento humano OU se IA está desabilitada
+      if (conversation.status === 'human_active' || conversation.human_handoff || conversation.ai_active === false) {
+        console.log('👤 Conversa em atendimento humano ou IA desabilitada, pulando IA');
         return Response.json({ 
           success: true, 
           lead_id: lead.id,
           conversation_id: conversation.id,
-          message_id: message.id
+          message_id: message.id,
+          skipped_reason: conversation.ai_active === false ? 'ai_disabled' : 'human_active'
         }, { status: 200 });
       }
 
@@ -352,19 +353,29 @@ Deno.serve(async (req) => {
       let assistant = null;
       let flow = null;
 
-      // Buscar assistente vinculado à conexão
-      if (connection.assistant_id) {
+      // Buscar assistente vinculado à conexão ou da conversa
+      const assistantId = connection.assistant_id || conversation.assigned_assistant_id;
+      
+      if (assistantId) {
         const assistants = await base44.asServiceRole.entities.Assistant.filter({
-          id: connection.assistant_id,
+          id: assistantId,
           is_active: true
         });
 
         if (assistants.length > 0) {
           assistant = assistants[0];
-          console.log('🤖 Assistente da conexão:', assistant.name);
+          console.log('🤖 Assistente identificado:', assistant.name);
+          
+          // Vincular assistente à conversa se ainda não estiver
+          if (!conversation.assigned_assistant_id) {
+            await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+              assigned_assistant_id: assistant.id
+            });
+            console.log('✅ Assistente vinculado à conversa');
+          }
 
-          // Buscar fluxo (prioridade: fluxo da conexão > fluxo do assistente)
-          const flowId = connection.default_flow_id || null;
+          // Buscar fluxo (prioridade: fluxo da conversa > fluxo da conexão > fluxo padrão)
+          const flowId = conversation.ai_flow_id || connection.default_flow_id || null;
           if (flowId) {
             const flows = await base44.asServiceRole.entities.AIConversationFlow.filter({
               id: flowId,
@@ -372,7 +383,15 @@ Deno.serve(async (req) => {
             });
             if (flows.length > 0) {
               flow = flows[0];
-              console.log('📋 Fluxo da conexão:', flow.name);
+              console.log('📋 Fluxo identificado:', flow.name);
+              
+              // Vincular fluxo à conversa se ainda não estiver
+              if (!conversation.ai_flow_id) {
+                await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+                  ai_flow_id: flow.id
+                });
+                console.log('✅ Fluxo vinculado à conversa');
+              }
             }
           }
 
@@ -486,7 +505,18 @@ Responda de forma ${assistant.tone || 'humanizada'} e profissional. Seja breve e
 
             await base44.asServiceRole.entities.Lead.update(lead.id, updateData);
           }
+          
+          // Atualizar também o lead na conversa
+          if (conversation.assigned_assistant_id !== assistant.id) {
+            await base44.asServiceRole.entities.Conversation.update(conversation.id, {
+              assigned_assistant_id: assistant.id
+            });
+          }
+        } else {
+          console.log('⚠️ Assistente não encontrado ou inativo');
         }
+      } else {
+        console.log('⚠️ Nenhum assistente vinculado à conexão ou conversa');
       }
 
       // Fallback se não houver assistente ou erro

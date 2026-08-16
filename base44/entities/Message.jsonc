@@ -1,0 +1,94 @@
+{
+  "name": "Message",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company"
+    },
+    "unit_id": {
+      "type": "string",
+      "description": "Reference to business unit / clinic / branch"
+    },
+    "conversation_id": {
+      "type": "string",
+      "description": "Reference to Conversation"
+    },
+    "lead_id": {
+      "type": "string",
+      "description": "Reference to Lead"
+    },
+    "sender_type": {
+      "type": "string",
+      "enum": [
+        "bot",
+        "lead",
+        "agent",
+        "system"
+      ],
+      "default": "lead"
+    },
+    "sender_id": {
+      "type": "string",
+      "description": "Agent TeamMember ID if sender is agent or system"
+    },
+    "content": {
+      "type": "string"
+    },
+    "message_type": {
+      "type": "string",
+      "enum": [
+        "text",
+        "image",
+        "file",
+        "audio",
+        "video",
+        "quick_reply",
+        "template",
+        "system_event"
+      ],
+      "default": "text"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional structured data like buttons, quick replies, attachments, payloads"
+    },
+    "read": {
+      "type": "boolean",
+      "default": false
+    },
+    "delivered": {
+      "type": "boolean",
+      "default": false
+    },
+    "failed": {
+      "type": "boolean",
+      "default": false
+    },
+    "external_message_id": {
+      "type": "string",
+      "description": "Message ID from external platform (Meta, WhatsApp, etc)"
+    },
+    "direction": {
+      "type": "string",
+      "enum": [
+        "inbound",
+        "outbound"
+      ],
+      "default": "inbound"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "conversation_id",
+    "content",
+    "sender_type"
+  ]
+}

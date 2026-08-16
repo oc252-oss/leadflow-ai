@@ -1,0 +1,74 @@
+{
+  "name": "VoiceCall",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company"
+    },
+    "campaign_id": {
+      "type": "string",
+      "description": "Reference to VoiceCampaign"
+    },
+    "lead_id": {
+      "type": "string",
+      "description": "Reference to Lead"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Phone number called"
+    },
+    "external_call_id": {
+      "type": "string",
+      "description": "Call ID from Zenvia API"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "initiated",
+        "answered",
+        "completed",
+        "no_answer",
+        "failed"
+      ],
+      "default": "initiated"
+    },
+    "intent": {
+      "type": "string",
+      "enum": [
+        "yes",
+        "maybe",
+        "no",
+        "unknown"
+      ],
+      "default": "unknown",
+      "description": "Detected intent from response"
+    },
+    "transcript": {
+      "type": "string",
+      "description": "Speech-to-text transcript"
+    },
+    "confidence_score": {
+      "type": "number",
+      "description": "Intent detection confidence (0-100)"
+    },
+    "duration": {
+      "type": "number",
+      "description": "Call duration in seconds"
+    },
+    "attempt_number": {
+      "type": "number",
+      "default": 1
+    },
+    "recording_url": {
+      "type": "string",
+      "description": "URL to call recording"
+    }
+  },
+  "required": [
+    "company_id",
+    "campaign_id",
+    "lead_id",
+    "phone"
+  ]
+}

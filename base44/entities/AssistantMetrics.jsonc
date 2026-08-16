@@ -1,0 +1,60 @@
+{
+  "name": "AssistantMetrics",
+  "type": "object",
+  "properties": {
+    "assistant_id": {
+      "type": "string",
+      "description": "Reference to Assistant"
+    },
+    "version_id": {
+      "type": "string",
+      "description": "Reference to AssistantVersion (optional, null = overall)"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Metrics date"
+    },
+    "conversations_total": {
+      "type": "number",
+      "default": 0,
+      "description": "Total conversations this assistant handled"
+    },
+    "conversations_completed": {
+      "type": "number",
+      "default": 0,
+      "description": "Conversations that reached completion"
+    },
+    "conversations_abandoned": {
+      "type": "number",
+      "default": 0,
+      "description": "Conversations abandoned by lead"
+    },
+    "scheduled_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Evaluations/appointments scheduled"
+    },
+    "converted_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Leads marked as converted"
+    },
+    "average_response_time": {
+      "type": "number",
+      "description": "Average response time in seconds"
+    },
+    "satisfaction_score": {
+      "type": "number",
+      "description": "Average satisfaction score 0-100"
+    },
+    "first_response_rate": {
+      "type": "number",
+      "description": "Percentage of conversations with immediate first response"
+    }
+  },
+  "required": [
+    "assistant_id",
+    "date"
+  ]
+}

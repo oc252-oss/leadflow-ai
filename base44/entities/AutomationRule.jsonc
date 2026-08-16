@@ -1,0 +1,129 @@
+{
+  "name": "AutomationRule",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company"
+    },
+    "unit_id": {
+      "type": "string",
+      "description": "Reference to business unit / clinic / branch"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "priority": {
+      "type": "number",
+      "default": 0,
+      "description": "Higher priority rules execute first"
+    },
+    "trigger_type": {
+      "type": "string",
+      "enum": [
+        "new_lead",
+        "lead_created",
+        "score_change",
+        "no_response",
+        "stage_change",
+        "keyword",
+        "time_based",
+        "conversation_started",
+        "conversation_closed"
+      ],
+      "default": "new_lead"
+    },
+    "trigger_delay_seconds": {
+      "type": "number",
+      "default": 0,
+      "description": "Delay before executing rule after trigger"
+    },
+    "conditions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "field": {
+            "type": "string"
+          },
+          "operator": {
+            "type": "string",
+            "enum": [
+              "equals",
+              "not_equals",
+              "contains",
+              "greater_than",
+              "less_than",
+              "in",
+              "not_in"
+            ]
+          },
+          "value": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "actions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "send_message",
+              "assign_agent",
+              "change_stage",
+              "change_status",
+              "update_field",
+              "notify_user",
+              "start_flow",
+              "stop_flow",
+              "schedule_followup",
+              "close_conversation",
+              "create_task"
+            ]
+          },
+          "config": {
+            "type": "object",
+            "description": "Action-specific configuration payload"
+          }
+        }
+      }
+    },
+    "max_executions_per_lead": {
+      "type": "number",
+      "default": 1,
+      "description": "Prevent infinite loops on same lead"
+    },
+    "executions_count": {
+      "type": "number",
+      "default": 0
+    },
+    "last_executed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "company_id",
+    "name",
+    "trigger_type"
+  ]
+}

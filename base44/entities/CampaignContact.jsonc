@@ -1,0 +1,47 @@
+{
+  "name": "CampaignContact",
+  "type": "object",
+  "properties": {
+    "campaign_id": {
+      "type": "string",
+      "description": "Reference to ReengagementCampaign"
+    },
+    "lead_id": {
+      "type": "string",
+      "description": "Reference to Lead"
+    },
+    "company_id": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "sent",
+        "replied",
+        "failed",
+        "skipped"
+      ],
+      "default": "pending"
+    },
+    "sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "replied_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "message_sent": {
+      "type": "string"
+    },
+    "error_message": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "campaign_id",
+    "lead_id",
+    "company_id"
+  ]
+}

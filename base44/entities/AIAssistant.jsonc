@@ -1,0 +1,52 @@
+{
+  "name": "AIAssistant",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do assistente de IA"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "whatsapp",
+        "voice",
+        "instagram"
+      ],
+      "description": "Canal de comunica\u00e7\u00e3o"
+    },
+    "tone": {
+      "type": "string",
+      "enum": [
+        "neutro",
+        "comercial",
+        "elegante",
+        "humanizado"
+      ],
+      "default": "elegante",
+      "description": "Tom de voz"
+    },
+    "ai_flow_id": {
+      "type": "string",
+      "description": "ID do Fluxo de IA associado"
+    },
+    "greeting_message": {
+      "type": "string",
+      "description": "Mensagem de sauda\u00e7\u00e3o inicial"
+    },
+    "system_prompt": {
+      "type": "string",
+      "description": "Instru\u00e7\u00f5es do sistema para o assistente"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Status do assistente"
+    }
+  },
+  "required": [
+    "name",
+    "channel",
+    "ai_flow_id"
+  ]
+}

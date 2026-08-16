@@ -1,0 +1,113 @@
+{
+  "name": "Conversation",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company"
+    },
+    "unit_id": {
+      "type": "string",
+      "description": "Reference to business unit / clinic / branch"
+    },
+    "lead_id": {
+      "type": "string",
+      "description": "Reference to Lead"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "messenger",
+        "webchat",
+        "whatsapp",
+        "instagram",
+        "email"
+      ],
+      "default": "webchat"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "waiting",
+        "bot_active",
+        "human_active",
+        "closed"
+      ],
+      "default": "waiting",
+      "description": "waiting=aguardando, bot_active=IA ativa, human_active=humano ativo, closed=fechada"
+    },
+    "assigned_agent_id": {
+      "type": "string",
+      "description": "Reference to TeamMember"
+    },
+    "assigned_assistant_id": {
+      "type": "string",
+      "description": "Reference to Assistant (AI)"
+    },
+    "ai_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a IA est\u00e1 ativa (controla respostas autom\u00e1ticas)"
+    },
+    "ai_flow_id": {
+      "type": "string",
+      "description": "Reference to AIConversationFlow"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "normal",
+        "high",
+        "urgent"
+      ],
+      "default": "normal"
+    },
+    "unread_count": {
+      "type": "number",
+      "default": 0
+    },
+    "last_message_preview": {
+      "type": "string"
+    },
+    "last_message_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "qualification_complete": {
+      "type": "boolean",
+      "default": false
+    },
+    "qualification_step": {
+      "type": "number",
+      "default": 0
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "closed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "human_handoff": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se a conversa foi transferida para humano"
+    },
+    "handoff_reason": {
+      "type": "string",
+      "description": "Motivo da transfer\u00eancia (solicita\u00e7\u00e3o lead, hot lead, erro IA)"
+    },
+    "handoff_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando foi transferida"
+    }
+  },
+  "required": [
+    "company_id",
+    "lead_id",
+    "channel"
+  ]
+}

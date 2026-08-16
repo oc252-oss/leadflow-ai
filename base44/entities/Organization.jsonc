@@ -1,0 +1,70 @@
+{
+  "name": "Organization",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Organization name (Franchisor / Group)"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "franchisor",
+        "group",
+        "enterprise"
+      ],
+      "default": "franchisor",
+      "description": "Type of organization"
+    },
+    "logo": {
+      "type": "string",
+      "description": "Organization logo URL"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "trial"
+      ],
+      "default": "trial"
+    },
+    "plan": {
+      "type": "string",
+      "enum": [
+        "free",
+        "pro",
+        "premium",
+        "enterprise"
+      ],
+      "default": "premium",
+      "description": "Organization-level plan"
+    },
+    "branding_config": {
+      "type": "object",
+      "properties": {
+        "show_powered_by": {
+          "type": "boolean",
+          "default": true,
+          "description": "Show 'Powered by CLINIQ.AI' in dashboards"
+        },
+        "ai_message_signature": {
+          "type": "boolean",
+          "default": false,
+          "description": "Include CLINIQ.AI signature in AI messages"
+        }
+      },
+      "default": {
+        "show_powered_by": true,
+        "ai_message_signature": false
+      }
+    },
+    "settings": {
+      "type": "object",
+      "description": "Global organization settings"
+    }
+  },
+  "required": [
+    "name"
+  ]
+}

@@ -1,0 +1,58 @@
+{
+  "name": "PipelineStage",
+  "type": "object",
+  "properties": {
+    "pipeline_id": {
+      "type": "string",
+      "description": "Reference to Pipeline"
+    },
+    "name": {
+      "type": "string",
+      "description": "Nome do est\u00e1gio"
+    },
+    "order": {
+      "type": "number",
+      "description": "Ordem de exibi\u00e7\u00e3o"
+    },
+    "stage_type": {
+      "type": "string",
+      "enum": [
+        "new",
+        "ai_handling",
+        "qualified",
+        "scheduled",
+        "attended",
+        "won",
+        "lost"
+      ],
+      "description": "Tipo do est\u00e1gio"
+    },
+    "color": {
+      "type": "string",
+      "description": "Cor do est\u00e1gio (gray, blue, purple, green, teal, emerald, red)"
+    },
+    "is_final": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se \u00e9 um est\u00e1gio final (won/lost)"
+    },
+    "auto_actions": {
+      "type": "object",
+      "description": "A\u00e7\u00f5es autom\u00e1ticas ao entrar no est\u00e1gio",
+      "properties": {
+        "on_enter": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          }
+        }
+      }
+    }
+  },
+  "required": [
+    "pipeline_id",
+    "name",
+    "order",
+    "stage_type"
+  ]
+}

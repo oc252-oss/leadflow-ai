@@ -1,0 +1,65 @@
+{
+  "name": "ChannelIntegration",
+  "type": "object",
+  "properties": {
+    "channel_type": {
+      "type": "string",
+      "enum": [
+        "whatsapp",
+        "instagram",
+        "facebook",
+        "chat_widget"
+      ],
+      "description": "Tipo de canal integrado"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "disconnected",
+        "awaiting_qr",
+        "connected",
+        "error"
+      ],
+      "default": "disconnected",
+      "description": "Status da conex\u00e3o"
+    },
+    "label": {
+      "type": "string",
+      "description": "Nome/identifica\u00e7\u00e3o da integra\u00e7\u00e3o"
+    },
+    "external_id": {
+      "type": "string",
+      "description": "ID do recurso na API externa"
+    },
+    "qr_code": {
+      "type": "string",
+      "description": "QR Code em base64 (apenas WhatsApp)"
+    },
+    "connected_account": {
+      "type": "string",
+      "description": "Email, n\u00famero ou nome da conta conectada"
+    },
+    "webhook_url": {
+      "type": "string",
+      "description": "URL do webhook para receber eventos"
+    },
+    "settings": {
+      "type": "object",
+      "description": "Configura\u00e7\u00f5es espec\u00edficas do canal (direto, coment\u00e1rios, etc)"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se a integra\u00e7\u00e3o est\u00e1 ativa"
+    },
+    "last_sync": {
+      "type": "string",
+      "format": "date-time",
+      "description": "\u00daltima sincroniza\u00e7\u00e3o"
+    }
+  },
+  "required": [
+    "channel_type",
+    "label"
+  ]
+}

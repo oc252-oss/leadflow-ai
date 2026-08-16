@@ -1,0 +1,114 @@
+{
+  "name": "TrainingSession",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company"
+    },
+    "unit_id": {
+      "type": "string",
+      "description": "Reference to Unit"
+    },
+    "assistant_id": {
+      "type": "string",
+      "description": "Reference to Assistant"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of user running the simulation"
+    },
+    "simulated_lead_context": {
+      "type": "object",
+      "properties": {
+        "lead_name": {
+          "type": "string"
+        },
+        "source": {
+          "type": "string"
+        },
+        "campaign_name": {
+          "type": "string"
+        },
+        "funnel_stage": {
+          "type": "string"
+        },
+        "last_interaction_date": {
+          "type": "string"
+        }
+      },
+      "default": {
+        "lead_name": "Cliente Simulado",
+        "source": "whatsapp",
+        "campaign_name": "Campanha Teste",
+        "funnel_stage": "Novo Lead",
+        "last_interaction_date": ""
+      }
+    },
+    "messages": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "user",
+              "assistant",
+              "system"
+            ]
+          },
+          "content": {
+            "type": "string"
+          },
+          "timestamp": {
+            "type": "string",
+            "format": "date-time"
+          }
+        }
+      },
+      "default": []
+    },
+    "ai_decision_log": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "timestamp": {
+            "type": "string"
+          },
+          "decision_type": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "data": {
+            "type": "object"
+          }
+        }
+      },
+      "default": []
+    },
+    "simulated_score": {
+      "type": "number",
+      "default": 0,
+      "description": "Current score in simulation"
+    },
+    "simulated_temperature": {
+      "type": "string",
+      "enum": [
+        "cold",
+        "warm",
+        "hot"
+      ],
+      "default": "cold"
+    }
+  },
+  "required": [
+    "company_id",
+    "unit_id",
+    "assistant_id",
+    "user_email"
+  ]
+}

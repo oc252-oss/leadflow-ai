@@ -1,0 +1,76 @@
+{
+  "name": "Assistant",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do assistente"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "whatsapp",
+        "instagram",
+        "facebook",
+        "voz",
+        "chat"
+      ],
+      "default": "whatsapp",
+      "description": "Canal de atua\u00e7\u00e3o"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "qualificacao",
+        "reengajamento_7d",
+        "reengajamento_30d",
+        "prospeccao"
+      ],
+      "default": "qualificacao",
+      "description": "Tipo de assistente"
+    },
+    "tone": {
+      "type": "string",
+      "enum": [
+        "neutro",
+        "comercial",
+        "elegante",
+        "humanizado",
+        "tecnico"
+      ],
+      "default": "humanizado",
+      "description": "Tom de voz"
+    },
+    "system_prompt": {
+      "type": "string",
+      "description": "Prompt do sistema"
+    },
+    "greeting_message": {
+      "type": "string",
+      "description": "Mensagem de sauda\u00e7\u00e3o"
+    },
+    "rules": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Regras de comportamento"
+    },
+    "supports_voice": {
+      "type": "boolean",
+      "default": false,
+      "description": "Suporta voz"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Assistente ativo"
+    }
+  },
+  "required": [
+    "name",
+    "channel",
+    "type"
+  ]
+}

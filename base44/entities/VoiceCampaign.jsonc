@@ -1,0 +1,173 @@
+{
+  "name": "VoiceCampaign",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Reference to Organization"
+    },
+    "brand_id": {
+      "type": "string",
+      "description": "Reference to Brand"
+    },
+    "unit_id": {
+      "type": "string",
+      "description": "Reference to Unit (if unit-specific activation)"
+    },
+    "is_brand_standard": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this campaign is a brand template"
+    },
+    "assistant_id": {
+      "type": "string",
+      "description": "Reference to Assistant - defines AI personality and behavior"
+    },
+    "name": {
+      "type": "string",
+      "description": "Campaign name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Campaign description"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "reengagement",
+        "active_prospecting"
+      ],
+      "default": "reengagement",
+      "description": "Campaign type: reengagement for stalled leads, active_prospecting for long-term inactive leads"
+    },
+    "target_funnel_stages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "Atendimento Iniciado",
+        "Qualificado"
+      ],
+      "description": "Funnel stages to target"
+    },
+    "days_inactive": {
+      "type": "number",
+      "enum": [
+        7,
+        30,
+        60,
+        90,
+        180
+      ],
+      "default": 7,
+      "description": "Days since last interaction"
+    },
+    "lead_sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Filter by lead sources (Facebook, WhatsApp, Importados)"
+    },
+    "exclude_open_tasks": {
+      "type": "boolean",
+      "default": true,
+      "description": "Exclude leads with open tasks"
+    },
+    "script": {
+      "type": "string",
+      "description": "Voice script text for AI to speak"
+    },
+    "assigned_to_type": {
+      "type": "string",
+      "enum": [
+        "specific",
+        "queue"
+      ],
+      "default": "queue",
+      "description": "Task assignment: specific assistant or clinic queue"
+    },
+    "assigned_to_user_id": {
+      "type": "string",
+      "description": "TeamMember ID if assigned_to_type is specific"
+    },
+    "allowed_hours_start": {
+      "type": "string",
+      "default": "09:00",
+      "description": "Start calling time (HH:MM)"
+    },
+    "allowed_hours_end": {
+      "type": "string",
+      "default": "18:00",
+      "description": "End calling time (HH:MM)"
+    },
+    "allowed_days": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday"
+      ],
+      "description": "Days of week allowed for calling"
+    },
+    "max_attempts": {
+      "type": "number",
+      "default": 1,
+      "description": "Maximum call attempts per lead"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Campaign active status"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "active",
+        "paused",
+        "completed"
+      ],
+      "default": "draft"
+    },
+    "calls_made_today": {
+      "type": "number",
+      "default": 0
+    },
+    "total_calls_made": {
+      "type": "number",
+      "default": 0
+    },
+    "total_yes_responses": {
+      "type": "number",
+      "default": 0
+    },
+    "total_maybe_responses": {
+      "type": "number",
+      "default": 0
+    },
+    "total_no_responses": {
+      "type": "number",
+      "default": 0
+    },
+    "last_run_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "organization_id",
+    "brand_id",
+    "name",
+    "script",
+    "days_inactive",
+    "type"
+  ]
+}

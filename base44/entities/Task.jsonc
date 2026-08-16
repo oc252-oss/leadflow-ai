@@ -1,0 +1,82 @@
+{
+  "name": "Task",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company"
+    },
+    "lead_id": {
+      "type": "string",
+      "description": "Reference to Lead"
+    },
+    "assigned_to_user_id": {
+      "type": "string",
+      "description": "TeamMember ID if assigned to specific user, null for queue"
+    },
+    "title": {
+      "type": "string",
+      "description": "Task title"
+    },
+    "description": {
+      "type": "string",
+      "description": "Task details"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "follow_up",
+        "evaluation",
+        "call_back",
+        "voice_campaign"
+      ],
+      "default": "follow_up"
+    },
+    "priority": {
+      "type": "string",
+      "enum": [
+        "low",
+        "medium",
+        "high",
+        "urgent"
+      ],
+      "default": "medium"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "open",
+        "in_progress",
+        "completed",
+        "cancelled"
+      ],
+      "default": "open"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When task should be completed"
+    },
+    "completed_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "completed_by": {
+      "type": "string",
+      "description": "User email who completed the task"
+    },
+    "source": {
+      "type": "string",
+      "description": "How task was created (voice_campaign, manual, automation)"
+    },
+    "source_id": {
+      "type": "string",
+      "description": "Reference to source (e.g., VoiceCall ID, Automation ID)"
+    }
+  },
+  "required": [
+    "company_id",
+    "lead_id",
+    "title"
+  ]
+}

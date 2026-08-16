@@ -1,0 +1,47 @@
+{
+  "name": "AssistantVersionHistory",
+  "type": "object",
+  "properties": {
+    "assistant_id": {
+      "type": "string",
+      "description": "Reference to Assistant"
+    },
+    "version_id": {
+      "type": "string",
+      "description": "Reference to AssistantVersion"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "created",
+        "cloned",
+        "activated",
+        "deactivated",
+        "archived",
+        "updated"
+      ],
+      "description": "Action performed"
+    },
+    "changed_fields": {
+      "type": "object",
+      "description": "Object with changes: {field: {old_value, new_value}}"
+    },
+    "action_description": {
+      "type": "string",
+      "description": "Human readable description of the change"
+    },
+    "performed_by": {
+      "type": "string",
+      "description": "Email of user who performed the action"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about the change"
+    }
+  },
+  "required": [
+    "assistant_id",
+    "action",
+    "performed_by"
+  ]
+}

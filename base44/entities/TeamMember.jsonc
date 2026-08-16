@@ -1,0 +1,70 @@
+{
+  "name": "TeamMember",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Reference to Organization"
+    },
+    "brand_id": {
+      "type": "string",
+      "description": "Reference to Brand (for brand managers)"
+    },
+    "unit_id": {
+      "type": "string",
+      "description": "Reference to Unit (for unit staff)"
+    },
+    "company_id": {
+      "type": "string",
+      "description": "DEPRECATED - Use unit_id instead"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "User email from User entity"
+    },
+    "role": {
+      "type": "string",
+      "enum": [
+        "platform_admin",
+        "organization_admin",
+        "brand_manager",
+        "unit_admin",
+        "sales_manager",
+        "sales_agent"
+      ],
+      "default": "sales_agent",
+      "description": "System role with hierarchical permissions"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active"
+    },
+    "can_assume_conversation": {
+      "type": "boolean",
+      "default": true,
+      "description": "Permission to take over conversations"
+    },
+    "can_disable_ai": {
+      "type": "boolean",
+      "default": true,
+      "description": "Permission to disable AI in conversations"
+    },
+    "max_concurrent_leads": {
+      "type": "number",
+      "default": 20
+    },
+    "assigned_leads_count": {
+      "type": "number",
+      "default": 0
+    }
+  },
+  "required": [
+    "organization_id",
+    "user_email",
+    "role"
+  ]
+}

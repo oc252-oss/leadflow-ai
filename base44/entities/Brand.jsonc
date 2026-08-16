@@ -1,0 +1,86 @@
+{
+  "name": "Brand",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Reference to Organization"
+    },
+    "name": {
+      "type": "string",
+      "description": "Brand name"
+    },
+    "logo": {
+      "type": "string",
+      "description": "Brand logo URL"
+    },
+    "industry": {
+      "type": "string",
+      "enum": [
+        "healthcare",
+        "aesthetics",
+        "dental",
+        "franchises",
+        "services",
+        "retail",
+        "other"
+      ],
+      "default": "aesthetics"
+    },
+    "tone_of_voice": {
+      "type": "string",
+      "enum": [
+        "professional",
+        "friendly",
+        "consultative",
+        "casual"
+      ],
+      "default": "consultative",
+      "description": "Brand communication tone"
+    },
+    "brand_guidelines": {
+      "type": "object",
+      "properties": {
+        "primary_color": {
+          "type": "string"
+        },
+        "messaging_style": {
+          "type": "string"
+        },
+        "target_audience": {
+          "type": "string"
+        }
+      }
+    },
+    "funnel_benchmarks": {
+      "type": "object",
+      "properties": {
+        "lead_to_qualified": {
+          "type": "number",
+          "default": 40
+        },
+        "qualified_to_evaluation": {
+          "type": "number",
+          "default": 60
+        },
+        "evaluation_to_sale": {
+          "type": "number",
+          "default": 70
+        }
+      },
+      "description": "Expected conversion rates between stages"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive"
+      ],
+      "default": "active"
+    }
+  },
+  "required": [
+    "organization_id",
+    "name"
+  ]
+}

@@ -1,0 +1,53 @@
+{
+  "name": "TrainingFeedback",
+  "type": "object",
+  "properties": {
+    "assistant_id": {
+      "type": "string",
+      "description": "Reference to Assistant"
+    },
+    "simulation_id": {
+      "type": "string",
+      "description": "Reference to Conversation (simulation mode)"
+    },
+    "message_id": {
+      "type": "string",
+      "description": "Reference to Message (AI response)"
+    },
+    "ai_response": {
+      "type": "string",
+      "description": "Original AI response"
+    },
+    "is_adequate": {
+      "type": "boolean",
+      "description": "Whether the AI response was adequate"
+    },
+    "ideal_response": {
+      "type": "string",
+      "description": "Ideal response provided by trainer"
+    },
+    "feedback_notes": {
+      "type": "string",
+      "description": "Additional notes about the feedback"
+    },
+    "topic": {
+      "type": "string",
+      "description": "Topic or context of the interaction"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "reviewed",
+        "applied"
+      ],
+      "default": "new",
+      "description": "Feedback processing status"
+    }
+  },
+  "required": [
+    "assistant_id",
+    "simulation_id",
+    "is_adequate"
+  ]
+}

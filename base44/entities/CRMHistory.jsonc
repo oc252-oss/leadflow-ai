@@ -1,0 +1,42 @@
+{
+  "name": "CRMHistory",
+  "type": "object",
+  "properties": {
+    "lead_id": {
+      "type": "string",
+      "description": "Refer\u00eancia ao Lead"
+    },
+    "from_stage": {
+      "type": "string",
+      "description": "Nome do est\u00e1gio anterior"
+    },
+    "to_stage": {
+      "type": "string",
+      "description": "Nome do novo est\u00e1gio"
+    },
+    "changed_by": {
+      "type": "string",
+      "enum": [
+        "ia_chat",
+        "ia_voice",
+        "humano",
+        "automacao"
+      ],
+      "description": "Quem moveu o lead"
+    },
+    "changed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data da mudan\u00e7a"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es da mudan\u00e7a"
+    }
+  },
+  "required": [
+    "lead_id",
+    "to_stage",
+    "changed_by"
+  ]
+}

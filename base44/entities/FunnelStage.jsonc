@@ -1,0 +1,62 @@
+{
+  "name": "FunnelStage",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Reference to Organization"
+    },
+    "brand_id": {
+      "type": "string",
+      "description": "Reference to Brand"
+    },
+    "is_brand_standard": {
+      "type": "boolean",
+      "default": true,
+      "description": "Brand-level funnel stages are standard across all units"
+    },
+    "company_id": {
+      "type": "string",
+      "description": "DEPRECATED"
+    },
+    "stage_name": {
+      "type": "string",
+      "description": "Name of the funnel stage"
+    },
+    "position": {
+      "type": "number",
+      "description": "Order position in the funnel"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether the stage is active"
+    },
+    "is_initial": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marks the initial stage for new leads"
+    },
+    "is_success": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marks the final success stage (won)"
+    },
+    "is_lost": {
+      "type": "boolean",
+      "default": false,
+      "description": "Marks the final lost stage (lost)"
+    },
+    "color": {
+      "type": "string",
+      "description": "Color code for the stage",
+      "default": "#6366f1"
+    }
+  },
+  "required": [
+    "organization_id",
+    "brand_id",
+    "stage_name",
+    "position"
+  ]
+}

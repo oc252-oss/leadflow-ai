@@ -1,0 +1,85 @@
+{
+  "name": "VoiceTrainingFeedback",
+  "type": "object",
+  "properties": {
+    "assistant_id": {
+      "type": "string",
+      "description": "Reference to Assistant"
+    },
+    "simulation_id": {
+      "type": "string",
+      "description": "Simulation ID or Conversation ID"
+    },
+    "sequence_number": {
+      "type": "number",
+      "description": "Order of the speech in the call"
+    },
+    "ai_speech": {
+      "type": "string",
+      "description": "Original AI generated speech"
+    },
+    "is_adequate": {
+      "type": "boolean",
+      "description": "Whether the AI speech was adequate for voice"
+    },
+    "ideal_speech": {
+      "type": "string",
+      "description": "Ideal speech provided by trainer"
+    },
+    "feedback_notes": {
+      "type": "string",
+      "description": "Additional notes about pronunciation, tone, pace"
+    },
+    "call_type": {
+      "type": "string",
+      "enum": [
+        "qualificacao",
+        "reengajamento",
+        "prospeccao"
+      ],
+      "description": "Type of call being trained"
+    },
+    "voice_settings": {
+      "type": "object",
+      "properties": {
+        "gender": {
+          "type": "string",
+          "enum": [
+            "masculine",
+            "feminine"
+          ]
+        },
+        "speed": {
+          "type": "number",
+          "description": "Speech speed 0.8-1.5"
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "neutral",
+            "professional",
+            "friendly",
+            "energetic"
+          ]
+        }
+      }
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "new",
+        "reviewed",
+        "applied"
+      ],
+      "default": "new",
+      "description": "Feedback processing status"
+    }
+  },
+  "required": [
+    "assistant_id",
+    "simulation_id",
+    "ai_speech",
+    "is_adequate",
+    "call_type"
+  ]
+}

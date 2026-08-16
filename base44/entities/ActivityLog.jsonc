@@ -1,0 +1,41 @@
+{
+  "name": "ActivityLog",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string"
+    },
+    "lead_id": {
+      "type": "string"
+    },
+    "user_email": {
+      "type": "string"
+    },
+    "action": {
+      "type": "string",
+      "enum": [
+        "lead_created",
+        "lead_updated",
+        "stage_changed",
+        "assigned",
+        "note_added",
+        "message_sent",
+        "score_updated",
+        "qualification_complete"
+      ]
+    },
+    "details": {
+      "type": "object"
+    },
+    "old_value": {
+      "type": "string"
+    },
+    "new_value": {
+      "type": "string"
+    }
+  },
+  "required": [
+    "company_id",
+    "action"
+  ]
+}

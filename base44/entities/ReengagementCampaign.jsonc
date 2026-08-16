@@ -1,0 +1,133 @@
+{
+  "name": "ReengagementCampaign",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company"
+    },
+    "unit_id": {
+      "type": "string",
+      "description": "Reference to business unit"
+    },
+    "name": {
+      "type": "string",
+      "description": "Campaign name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Campaign description"
+    },
+    "period_type": {
+      "type": "string",
+      "enum": [
+        "7_days",
+        "30_days",
+        "90_days",
+        "custom"
+      ],
+      "default": "7_days",
+      "description": "Predefined filter period"
+    },
+    "last_interaction_days": {
+      "type": "number",
+      "description": "Minimum days since last interaction"
+    },
+    "funnel_stages": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Target funnel stages"
+    },
+    "interest_types": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Target interest types"
+    },
+    "whatsapp_integration_id": {
+      "type": "string",
+      "description": "WhatsApp number to send from"
+    },
+    "message_template": {
+      "type": "string",
+      "description": "Message template with variables"
+    },
+    "max_messages_per_day": {
+      "type": "number",
+      "default": 100,
+      "description": "Maximum messages per day"
+    },
+    "interval_seconds_min": {
+      "type": "number",
+      "default": 60,
+      "description": "Minimum interval between messages"
+    },
+    "interval_seconds_max": {
+      "type": "number",
+      "default": 300,
+      "description": "Maximum interval between messages"
+    },
+    "active_hours_start": {
+      "type": "string",
+      "default": "09:00",
+      "description": "Start sending time"
+    },
+    "active_hours_end": {
+      "type": "string",
+      "default": "18:00",
+      "description": "Stop sending time"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "running",
+        "paused",
+        "finished"
+      ],
+      "default": "draft"
+    },
+    "messages_sent_today": {
+      "type": "number",
+      "default": 0
+    },
+    "total_messages_sent": {
+      "type": "number",
+      "default": 0
+    },
+    "total_replies": {
+      "type": "number",
+      "default": 0
+    },
+    "total_conversations_reopened": {
+      "type": "number",
+      "default": 0
+    },
+    "last_sent_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "started_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "finished_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "company_id",
+    "name",
+    "period_type",
+    "message_template",
+    "whatsapp_integration_id"
+  ]
+}

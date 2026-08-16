@@ -1,0 +1,44 @@
+{
+  "name": "FacebookIntegration",
+  "type": "object",
+  "properties": {
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company"
+    },
+    "page_id": {
+      "type": "string",
+      "description": "Facebook Page ID"
+    },
+    "page_name": {
+      "type": "string"
+    },
+    "ad_account_id": {
+      "type": "string",
+      "description": "Facebook Ad Account ID"
+    },
+    "access_token": {
+      "type": "string",
+      "description": "Page Access Token (encrypted)"
+    },
+    "webhook_verify_token": {
+      "type": "string"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "connected",
+        "disconnected",
+        "error"
+      ],
+      "default": "disconnected"
+    },
+    "last_sync": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "company_id"
+  ]
+}

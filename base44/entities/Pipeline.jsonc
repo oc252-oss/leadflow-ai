@@ -1,0 +1,32 @@
+{
+  "name": "Pipeline",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do pipeline"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o do pipeline"
+    },
+    "is_default": {
+      "type": "boolean",
+      "default": false,
+      "description": "Se \u00e9 o pipeline padr\u00e3o"
+    },
+    "company_id": {
+      "type": "string",
+      "description": "Reference to Company"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se o pipeline est\u00e1 ativo"
+    }
+  },
+  "required": [
+    "name",
+    "company_id"
+  ]
+}

@@ -1,0 +1,137 @@
+{
+  "name": "AIScript",
+  "type": "object",
+  "properties": {
+    "assistant_id": {
+      "type": "string",
+      "description": "Reference to Assistant"
+    },
+    "name": {
+      "type": "string",
+      "description": "Script name"
+    },
+    "description": {
+      "type": "string",
+      "description": "Script description"
+    },
+    "usage_type": {
+      "type": "string",
+      "enum": [
+        "qualificacao",
+        "reengajamento_7d",
+        "reengajamento_30d",
+        "reengajamento_90d",
+        "prospeccao_ativa",
+        "voz_reativacao",
+        "voz_qualificacao"
+      ],
+      "description": "Type of use for this script"
+    },
+    "channel": {
+      "type": "string",
+      "enum": [
+        "whatsapp",
+        "messenger",
+        "webchat",
+        "instagram",
+        "voice"
+      ],
+      "description": "Channel for this script"
+    },
+    "version": {
+      "type": "string",
+      "description": "Version identifier (v1, v2, v3, etc)"
+    },
+    "system_prompt": {
+      "type": "string",
+      "description": "System-level instructions for AI behavior"
+    },
+    "greeting_message": {
+      "type": "string",
+      "description": "First message from AI"
+    },
+    "tone": {
+      "type": "string",
+      "enum": [
+        "neutro",
+        "comercial",
+        "elegante",
+        "humanizado"
+      ],
+      "description": "Communication tone"
+    },
+    "behavior_rules": {
+      "type": "object",
+      "description": "Behavior configuration rules"
+    },
+    "voice_settings": {
+      "type": "object",
+      "properties": {
+        "gender": {
+          "type": "string",
+          "enum": [
+            "masculine",
+            "feminine"
+          ]
+        },
+        "speed": {
+          "type": "number",
+          "description": "Speech speed 0.8-1.5"
+        },
+        "tone": {
+          "type": "string",
+          "enum": [
+            "neutral",
+            "professional",
+            "friendly",
+            "energetic"
+          ]
+        }
+      },
+      "description": "Voice configuration (only for voice channel)"
+    },
+    "conversation_history": {
+      "type": "array",
+      "items": {
+        "type": "object"
+      },
+      "description": "Simulated conversation history"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "testing",
+        "approved",
+        "deprecated"
+      ],
+      "default": "draft",
+      "description": "Script approval status"
+    },
+    "is_approved": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether script is approved for production use"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "Email of user who approved the script"
+    },
+    "approved_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When script was approved"
+    },
+    "created_from_simulation": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this script was created from a simulation"
+    }
+  },
+  "required": [
+    "assistant_id",
+    "name",
+    "usage_type",
+    "channel"
+  ]
+}

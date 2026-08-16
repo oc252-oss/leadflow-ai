@@ -1,0 +1,88 @@
+{
+  "name": "WhatsAppSettings",
+  "type": "object",
+  "properties": {
+    "connection_id": {
+      "type": "string",
+      "description": "Refer\u00eancia ao ChannelConnection"
+    },
+    "default_assistant_id": {
+      "type": "string",
+      "description": "Assistente padr\u00e3o"
+    },
+    "default_flow_id": {
+      "type": "string",
+      "description": "Fluxo de IA padr\u00e3o"
+    },
+    "business_hours_start": {
+      "type": "string",
+      "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$",
+      "default": "09:00",
+      "description": "Hora de in\u00edcio do hor\u00e1rio comercial"
+    },
+    "business_hours_end": {
+      "type": "string",
+      "pattern": "^([0-1]?[0-9]|2[0-3]):[0-5][0-9]$",
+      "default": "18:00",
+      "description": "Hora de fim do hor\u00e1rio comercial"
+    },
+    "business_days": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": [
+          "segunda",
+          "ter\u00e7a",
+          "quarta",
+          "quinta",
+          "sexta",
+          "s\u00e1bado",
+          "domingo"
+        ]
+      },
+      "default": [
+        "segunda",
+        "ter\u00e7a",
+        "quarta",
+        "quinta",
+        "sexta"
+      ],
+      "description": "Dias de atendimento"
+    },
+    "outside_hours_behavior": {
+      "type": "string",
+      "enum": [
+        "auto_reply",
+        "queue",
+        "wait"
+      ],
+      "default": "auto_reply",
+      "description": "Comportamento fora do hor\u00e1rio"
+    },
+    "outside_hours_message": {
+      "type": "string",
+      "description": "Mensagem autom\u00e1tica fora do hor\u00e1rio"
+    },
+    "fallback_action": {
+      "type": "string",
+      "enum": [
+        "transfer_human",
+        "create_task",
+        "mark_no_response"
+      ],
+      "default": "transfer_human",
+      "description": "A\u00e7\u00e3o de fallback"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Se as configura\u00e7\u00f5es est\u00e3o ativas"
+    }
+  },
+  "required": [
+    "connection_id"
+  ],
+  "rls": {
+    "create": {}
+  }
+}

@@ -1,0 +1,105 @@
+{
+  "name": "Unit",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Reference to Organization"
+    },
+    "brand_id": {
+      "type": "string",
+      "description": "Reference to Brand (optional for single-brand organizations)"
+    },
+    "name": {
+      "type": "string",
+      "description": "Unit name (Clinic / Franchise / Branch)"
+    },
+    "code": {
+      "type": "string",
+      "description": "Unique unit code (e.g., SP001, RJ002)"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "clinic",
+        "franchise",
+        "headquarters"
+      ],
+      "default": "clinic"
+    },
+    "address": {
+      "type": "string",
+      "description": "Full address"
+    },
+    "city": {
+      "type": "string",
+      "description": "City"
+    },
+    "state": {
+      "type": "string",
+      "description": "State"
+    },
+    "postal_code": {
+      "type": "string",
+      "description": "Postal/ZIP code"
+    },
+    "country": {
+      "type": "string",
+      "default": "BR"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Contact phone"
+    },
+    "email": {
+      "type": "string",
+      "description": "Contact email"
+    },
+    "manager_name": {
+      "type": "string",
+      "description": "Unit manager name"
+    },
+    "business_hours_start": {
+      "type": "string",
+      "default": "09:00"
+    },
+    "business_hours_end": {
+      "type": "string",
+      "default": "18:00"
+    },
+    "working_days": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [
+        "monday",
+        "tuesday",
+        "wednesday",
+        "thursday",
+        "friday"
+      ]
+    },
+    "timezone": {
+      "type": "string",
+      "default": "America/Sao_Paulo"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "inactive",
+        "onboarding"
+      ],
+      "default": "active"
+    },
+    "opened_date": {
+      "type": "string",
+      "format": "date"
+    }
+  },
+  "required": [
+    "organization_id",
+    "name"
+  ]
+}

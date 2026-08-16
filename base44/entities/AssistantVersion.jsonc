@@ -1,0 +1,90 @@
+{
+  "name": "AssistantVersion",
+  "type": "object",
+  "properties": {
+    "assistant_id": {
+      "type": "string",
+      "description": "Reference to Assistant"
+    },
+    "version_number": {
+      "type": "number",
+      "description": "Version number (1, 2, 3...)"
+    },
+    "system_prompt": {
+      "type": "string",
+      "description": "System prompt for this version"
+    },
+    "greeting_message": {
+      "type": "string",
+      "description": "Greeting message for this version"
+    },
+    "behavior_rules": {
+      "type": "object",
+      "properties": {
+        "elegant_tone": {
+          "type": "boolean",
+          "default": true
+        },
+        "prioritize_evaluation": {
+          "type": "boolean",
+          "default": true
+        },
+        "no_pricing": {
+          "type": "boolean",
+          "default": false
+        },
+        "feminine_language": {
+          "type": "boolean",
+          "default": false
+        },
+        "respect_hours": {
+          "type": "boolean",
+          "default": true
+        }
+      }
+    },
+    "tone": {
+      "type": "string",
+      "enum": [
+        "neutro",
+        "comercial",
+        "elegante",
+        "humanizado"
+      ],
+      "default": "elegante"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": false,
+      "description": "Only one version can be active per assistant"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "draft",
+        "testing",
+        "production",
+        "archived"
+      ],
+      "default": "draft",
+      "description": "Version status"
+    },
+    "change_description": {
+      "type": "string",
+      "description": "What changed in this version"
+    },
+    "created_by": {
+      "type": "string",
+      "description": "Email of user who created this version"
+    },
+    "cloned_from_version": {
+      "type": "number",
+      "description": "If this was cloned, reference the source version number"
+    }
+  },
+  "required": [
+    "assistant_id",
+    "version_number",
+    "system_prompt"
+  ]
+}

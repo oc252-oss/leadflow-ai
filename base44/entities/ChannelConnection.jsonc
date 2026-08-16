@@ -1,0 +1,35 @@
+{
+  "name": "ChannelConnection",
+  "type": "object",
+  "properties": {
+    "channel_type": {
+      "type": "string",
+      "enum": [
+        "whatsapp"
+      ],
+      "default": "whatsapp",
+      "description": "Tipo de canal"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "disconnected",
+        "waiting_qr",
+        "connected"
+      ],
+      "default": "disconnected",
+      "description": "Status da conex\u00e3o"
+    },
+    "phone_number": {
+      "type": "string",
+      "description": "N\u00famero de telefone conectado"
+    },
+    "qr_code_base64": {
+      "type": "string",
+      "description": "QR Code em base64"
+    }
+  },
+  "required": [
+    "channel_type"
+  ]
+}

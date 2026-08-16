@@ -1,0 +1,254 @@
+{
+  "name": "AIConversationFlow",
+  "type": "object",
+  "properties": {
+    "organization_id": {
+      "type": "string",
+      "description": "Reference to Organization"
+    },
+    "brand_id": {
+      "type": "string",
+      "description": "Reference to Brand"
+    },
+    "unit_id": {
+      "type": "string",
+      "description": "Reference to Unit (if unit-specific, otherwise null)"
+    },
+    "company_id": {
+      "type": "string",
+      "description": "DEPRECATED - Use brand_id/unit_id instead"
+    },
+    "is_brand_standard": {
+      "type": "boolean",
+      "default": false,
+      "description": "If true, this flow is a brand standard and cannot be modified by units"
+    },
+    "name": {
+      "type": "string"
+    },
+    "description": {
+      "type": "string"
+    },
+    "industry": {
+      "type": "string",
+      "description": "Segment or industry this flow is designed for (dentistry, aesthetics, retail, etc)"
+    },
+    "is_default": {
+      "type": "boolean",
+      "default": false
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true
+    },
+    "priority": {
+      "type": "number",
+      "default": 0,
+      "description": "Higher priority flows override lower ones"
+    },
+    "trigger_campaigns": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Campaign IDs that trigger this flow"
+    },
+    "trigger_sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Sources that trigger this flow (facebook_lead_ad, messenger, webchat, etc)"
+    },
+    "trigger_keywords": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Keywords in first message that trigger this flow"
+    },
+    "greeting_message": {
+      "type": "string"
+    },
+    "outside_hours_message": {
+      "type": "string"
+    },
+    "handoff_message": {
+      "type": "string"
+    },
+    "data_collection_fields": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "field_name": {
+            "type": "string",
+            "description": "Lead field to update (name, email, interest, budget_range, etc)"
+          },
+          "prompt": {
+            "type": "string",
+            "description": "Question to ask the lead"
+          },
+          "required": {
+            "type": "boolean",
+            "default": false
+          },
+          "order": {
+            "type": "number",
+            "description": "Order in which to ask"
+          }
+        }
+      },
+      "description": "Fields to collect from lead at conversation start"
+    },
+    "qualification_questions": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string"
+          },
+          "field_to_update": {
+            "type": "string",
+            "description": "Lead field to update (interest_type, urgency_level, budget_range, etc)"
+          },
+          "expected_answers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "score_impact": {
+            "type": "number",
+            "description": "Score change based on answer"
+          },
+          "next_step": {
+            "type": "string",
+            "description": "ID of next question or 'handoff' or 'finish'"
+          }
+        }
+      }
+    },
+    "pipeline_routing_rules": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "condition_field": {
+            "type": "string",
+            "description": "Lead field to check (interest, score, source, etc)"
+          },
+          "condition_operator": {
+            "type": "string",
+            "enum": [
+              "equals",
+              "contains",
+              "greater_than",
+              "less_than"
+            ],
+            "default": "equals"
+          },
+          "condition_value": {
+            "type": "string"
+          },
+          "target_pipeline_id": {
+            "type": "string",
+            "description": "Pipeline to route lead to"
+          },
+          "target_stage_type": {
+            "type": "string",
+            "enum": [
+              "new",
+              "ai_handling",
+              "qualified",
+              "scheduled",
+              "attended",
+              "won",
+              "lost"
+            ],
+            "description": "Stage type within pipeline"
+          }
+        }
+      },
+      "description": "Rules to route leads to specific pipelines based on conditions"
+    },
+    "scheduling_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Enable scheduling offers in chat"
+    },
+    "scheduling_prompt": {
+      "type": "string",
+      "description": "Prompt to offer scheduling to qualified leads"
+    },
+    "available_time_slots": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "day_of_week": {
+            "type": "number",
+            "description": "0=Sunday, 6=Saturday"
+          },
+          "start_time": {
+            "type": "string",
+            "description": "HH:MM format"
+          },
+          "end_time": {
+            "type": "string",
+            "description": "HH:MM format"
+          },
+          "slot_duration_minutes": {
+            "type": "number",
+            "default": 30
+          }
+        }
+      },
+      "description": "Available time slots for scheduling"
+    },
+    "hot_lead_threshold": {
+      "type": "number",
+      "default": 80
+    },
+    "warm_lead_threshold": {
+      "type": "number",
+      "default": 50
+    },
+    "auto_assign_hot_leads": {
+      "type": "boolean",
+      "default": true
+    },
+    "auto_assign_agent_role": {
+      "type": "string",
+      "enum": [
+        "sales_agent",
+        "sales_manager"
+      ],
+      "default": "sales_agent"
+    },
+    "fallback_flow_id": {
+      "type": "string",
+      "description": "Reference to another AIConversationFlow if this one fails or ends"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "required": [
+    "organization_id",
+    "brand_id",
+    "name"
+  ]
+}

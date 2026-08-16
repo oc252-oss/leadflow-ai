@@ -1,0 +1,57 @@
+{
+  "name": "AIFlow",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do fluxo"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "qualificacao",
+        "reengajamento",
+        "agendamento",
+        "confirmacao",
+        "custom"
+      ],
+      "default": "qualificacao",
+      "description": "Tipo de fluxo"
+    },
+    "description": {
+      "type": "string",
+      "description": "Descri\u00e7\u00e3o do fluxo"
+    },
+    "steps": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "question": {
+            "type": "string"
+          },
+          "field_to_update": {
+            "type": "string"
+          },
+          "next_step": {
+            "type": "string"
+          }
+        }
+      },
+      "default": [],
+      "description": "Etapas do fluxo"
+    },
+    "is_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Fluxo ativo"
+    }
+  },
+  "required": [
+    "name",
+    "type"
+  ]
+}

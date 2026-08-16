@@ -1,0 +1,201 @@
+{
+  "name": "Lead",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Nome do lead"
+    },
+    "phone": {
+      "type": "string",
+      "description": "Telefone principal"
+    },
+    "email": {
+      "type": "string",
+      "description": "Email (opcional)"
+    },
+    "source": {
+      "type": "string",
+      "enum": [
+        "facebook",
+        "whatsapp",
+        "instagram",
+        "importacao",
+        "manual",
+        "site"
+      ],
+      "default": "manual",
+      "description": "Origem do lead"
+    },
+    "campaign_id": {
+      "type": "string",
+      "description": "Reference to Campaign de origem"
+    },
+    "campaign_name": {
+      "type": "string",
+      "description": "Nome da campanha de origem"
+    },
+    "utm_source": {
+      "type": "string",
+      "description": "UTM source da campanha"
+    },
+    "utm_campaign": {
+      "type": "string",
+      "description": "UTM campaign"
+    },
+    "utm_medium": {
+      "type": "string",
+      "description": "UTM medium"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "ativo",
+        "inativo",
+        "perdido",
+        "new",
+        "contacted",
+        "qualified",
+        "won",
+        "lost"
+      ],
+      "default": "ativo",
+      "description": "Status geral"
+    },
+    "crm_stage_id": {
+      "type": "string",
+      "description": "Est\u00e1gio atual no CRM (DEPRECATED - usar pipeline_stage_id)"
+    },
+    "pipeline_id": {
+      "type": "string",
+      "description": "Reference to Pipeline"
+    },
+    "pipeline_stage_id": {
+      "type": "string",
+      "description": "Reference to PipelineStage"
+    },
+    "score": {
+      "type": "number",
+      "default": 0,
+      "description": "Score de qualifica\u00e7\u00e3o do lead"
+    },
+    "qualification_score": {
+      "type": "number",
+      "default": 0,
+      "description": "Score de qualifica\u00e7\u00e3o IA (0-100)"
+    },
+    "interest": {
+      "type": "string",
+      "description": "Interesse principal do lead"
+    },
+    "interest_level": {
+      "type": "string",
+      "enum": [
+        "baixo",
+        "medio",
+        "alto"
+      ],
+      "description": "Grau de interesse"
+    },
+    "urgency": {
+      "type": "string",
+      "enum": [
+        "imediato",
+        "breve",
+        "futuro"
+      ],
+      "description": "Urg\u00eancia do lead"
+    },
+    "availability": {
+      "type": "boolean",
+      "description": "Disponibilidade para agendamento"
+    },
+    "objection_type": {
+      "type": "string",
+      "enum": [
+        "preco",
+        "tempo",
+        "indecisao",
+        "outro",
+        "nenhum"
+      ],
+      "description": "Obje\u00e7\u00e3o principal identificada"
+    },
+    "assigned_assistant_id": {
+      "type": "string",
+      "description": "Assistente IA respons\u00e1vel"
+    },
+    "assigned_agent_id": {
+      "type": "string",
+      "description": "Reference to TeamMember atendente humano"
+    },
+    "assigned_agent_name": {
+      "type": "string",
+      "description": "Nome do atendente humano (DEPRECATED)"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Observa\u00e7\u00f5es"
+    },
+    "tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "default": [],
+      "description": "Tags do lead"
+    },
+    "last_interaction_type": {
+      "type": "string",
+      "enum": [
+        "ia_chat",
+        "ia_voice",
+        "humano",
+        "nenhum"
+      ],
+      "default": "nenhum",
+      "description": "Tipo da \u00faltima intera\u00e7\u00e3o"
+    },
+    "last_interaction_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data da \u00faltima intera\u00e7\u00e3o"
+    },
+    "last_contact_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Data do \u00faltimo contato"
+    },
+    "qualification_started_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando a qualifica\u00e7\u00e3o foi iniciada"
+    },
+    "qualification_completed_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Quando a qualifica\u00e7\u00e3o foi conclu\u00edda"
+    },
+    "source_channel": {
+      "type": "string",
+      "enum": [
+        "whatsapp",
+        "instagram",
+        "facebook",
+        "voice",
+        "manual",
+        "site"
+      ],
+      "description": "Canal de origem"
+    },
+    "custom_fields": {
+      "type": "object",
+      "description": "Campos customizados"
+    }
+  },
+  "required": [
+    "name",
+    "phone",
+    "source"
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "name": "Auto-start AI Flow on Conversation Create",
+  "description": "Automatically starts AI flow when a new conversation is created based on lead source and channel",
+  "trigger": {
+    "condition": null,
+    "config": {
+      "trigger_type": "entity",
+      "events": [
+        "create"
+      ],
+      "entity_name": "Conversation"
+    }
+  },
+  "definition": {
+    "document": {
+      "dsl": "1.0.0",
+      "name": "auto_start_ai_flow_on_conversation_create",
+      "version": "1.0",
+      "namespace": "base44"
+    },
+    "do": [
+      {
+        "run_function": {
+          "call": "invoke_backend_function",
+          "with": {
+            "function_name": "autoStartAIFlow",
+            "args": {
+              "conversation_id": "{{entity_id}}"
+            }
+          },
+          "then": "end"
+        }
+      }
+    ]
+  },
+  "x-base44-migrated-from-automation": {
+    "legacy_payload_function": "autoStartAIFlow"
+  }
+}
